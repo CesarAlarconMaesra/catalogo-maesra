@@ -41,13 +41,14 @@ function abrirDetalle(p) {
   dUnidad.textContent = "Unidad: " + p.unidad;
   dMaster.textContent = "Master: " + p.master;
   dInner.textContent = "Inner: " + p.inner;
+  dPrecio.className = "precio";
   dPrecio.textContent = "Precio: $" + Number(p.precio).toFixed(2);
 }
 
 document.getElementById("cerrar").onclick = () =>
   document.getElementById("modal").classList.add("oculto");
 
-const CLAVE_PRECIO = "MaesraFebrero2026"; // 👈 cambia esto
+const CLAVE_PRECIO = "MaesraFebrero2026";
 
 // Al cargar la página
 if (localStorage.getItem("verPrecios") === "si") {
@@ -64,10 +65,12 @@ document.getElementById("btnPrecio").onclick = () => {
   } else {
     alert("❌ Contraseña incorrecta");
   }
+};
+
+// 👇 FUERA del onclick
 function ocultarPrecios() {
   localStorage.removeItem("verPrecios");
   document.body.classList.remove("mostrar-precios");
 }
-
 
 };

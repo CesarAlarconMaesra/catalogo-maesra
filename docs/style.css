@@ -34,6 +34,8 @@ header {
 
 body.mostrar-precios .precio {
   display: block;
+  font-weight: bold;
+  color: #0a7a2f;
 }
 
 .card {
