@@ -71,6 +71,7 @@ if (localStorage.getItem("verPrecios") === "si") {
   document.body.classList.add("mostrar-precios");
 }
 
+// Ver precios
 document.getElementById("btnPrecio").onclick = () => {
   const pass = prompt("Ingresa la contraseña para ver precios:");
 
@@ -83,11 +84,7 @@ document.getElementById("btnPrecio").onclick = () => {
   }
 };
 
-document.getElementById("btnOcultarPrecio").onclick = () => {
-  localStorage.removeItem("verPrecios");
-  document.body.classList.remove("mostrar-precios");
-};
-
+// Ocultar precios
 function ocultarPrecios() {
   localStorage.removeItem("verPrecios");
   document.body.classList.remove("mostrar-precios");
