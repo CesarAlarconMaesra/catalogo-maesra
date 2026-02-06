@@ -13,9 +13,9 @@ header {
 }
 
 #buscador {
-  width: 100%;
+  width: 70%;
   padding: 10px;
-  font-size: 16px;
+  font-size: 20px;
   margin-top: 5px;
 }
 
@@ -54,7 +54,7 @@ header {
   background: white;
   padding: 20px;
   max-width: 520px;
-  width: 90%;
+  width: 80%;
   border-radius: 10px;
 }
 
