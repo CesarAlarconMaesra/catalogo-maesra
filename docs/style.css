@@ -58,4 +58,14 @@ header {
   border-radius: 10px;
 }
 
+.detalle-img {
+  max-width: 400px;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 10px auto 20px auto;
+}
+
 .oculto { display: none; }
