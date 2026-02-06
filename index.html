@@ -6,6 +6,14 @@
   <title>Catálogo MAESRA</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+<button id="btnPrecio" style="margin-top:5px;">
+  🔐 Ver precios
+</button>
+
+function ocultarPrecios() {
+  localStorage.removeItem("verPrecios");
+  document.body.classList.remove("mostrar-precios");
+}
 </head>
 <body>
 
@@ -19,6 +27,7 @@
 <!-- Modal detalle -->
 <div id="modal" class="modal oculto">
   <div class="modal-content">
+<p id="dPrecio" class="precio"></p>
     <span id="cerrar">&times;</span>
    <img id="dImagen" class="detalle-img" />
     <h2 id="dNombre"></h2>

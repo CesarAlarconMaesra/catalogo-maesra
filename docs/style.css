@@ -26,6 +26,16 @@ header {
   padding: 12px;
 }
 
+.precio {
+  display: none;
+  font-weight: bold;
+  color: #1e7f34;
+}
+
+body.mostrar-precios .precio {
+  display: block;
+}
+
 .card {
   background: white;
   border-radius: 8px;

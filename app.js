@@ -46,3 +46,22 @@ function abrirDetalle(p) {
 
 document.getElementById("cerrar").onclick = () =>
   document.getElementById("modal").classList.add("oculto");
+
+const CLAVE_PRECIO = "MaesraFebrero2026"; // 👈 cambia esto
+
+// Al cargar la página
+if (localStorage.getItem("verPrecios") === "si") {
+  document.body.classList.add("mostrar-precios");
+}
+
+document.getElementById("btnPrecio").onclick = () => {
+  const pass = prompt("Ingresa la contraseña para ver precios:");
+
+  if (pass === CLAVE_PRECIO) {
+    localStorage.setItem("verPrecios", "si");
+    document.body.classList.add("mostrar-precios");
+    alert("✅ Precios habilitados");
+  } else {
+    alert("❌ Contraseña incorrecta");
+  }
+};
