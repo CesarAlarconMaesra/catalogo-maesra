@@ -87,3 +87,9 @@ document.getElementById("btnOcultarPrecio").onclick = () => {
   localStorage.removeItem("verPrecios");
   document.body.classList.remove("mostrar-precios");
 };
+
+function ocultarPrecios() {
+  localStorage.removeItem("verPrecios");
+  document.body.classList.remove("mostrar-precios");
+  alert("🔒 Precios ocultos");
+}

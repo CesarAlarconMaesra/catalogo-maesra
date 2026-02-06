@@ -26,16 +26,16 @@ header {
   padding: 12px;
 }
 
+/* Precios ocultos por defecto */
 .precio {
   display: none;
   font-weight: bold;
-  color: #1e7f34;
+  color: #1E88E5;
 }
 
-body.mostrar-precios .precio {
+/* Cuando se habilitan precios */
+.mostrar-precios .precio {
   display: block;
-  font-weight: bold;
-  color: #0a7a2f;
 }
 
 .card {
