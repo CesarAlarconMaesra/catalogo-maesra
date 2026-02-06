@@ -64,4 +64,10 @@ document.getElementById("btnPrecio").onclick = () => {
   } else {
     alert("❌ Contraseña incorrecta");
   }
+function ocultarPrecios() {
+  localStorage.removeItem("verPrecios");
+  document.body.classList.remove("mostrar-precios");
+}
+
+
 };
