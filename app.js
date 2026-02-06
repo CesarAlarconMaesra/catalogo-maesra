@@ -15,7 +15,7 @@ function mostrarProductos(lista) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <img src="imagenes/${p.imagen}" onerror="this.src='imagenes/sin_imagen.jpg'">
+      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
     `;
@@ -23,7 +23,6 @@ function mostrarProductos(lista) {
     contenedor.appendChild(card);
   });
 }
-
 document.getElementById("buscador").addEventListener("input", e => {
   const t = e.target.value.toLowerCase();
   mostrarProductos(productos.filter(p =>
@@ -35,7 +34,7 @@ document.getElementById("buscador").addEventListener("input", e => {
 
 function abrirDetalle(p) {
   document.getElementById("modal").classList.remove("oculto");
-  dImagen.src = "imagenes/" + p.imagen;
+  dImagen.src = p.imagen;
   dNombre.textContent = p.producto;
   dCodigo.textContent = "Código: " + p.codigo;
   dMarca.textContent = "Marca: " + p.marca;
