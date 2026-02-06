@@ -51,18 +51,18 @@ header {
 }
 
 .modal-content {
+  text-align: center;
   background: white;
   padding: 20px;
   max-width: 520px;
-  width: 80%;
+  width: 90%;
+  max-height: 90vh;       /* 👈 CLAVE */
+  overflow-y: auto;       /* 👈 scroll si es necesario */
   border-radius: 10px;
 }
-
 .detalle-img {
-  max-width: 400px;
-  max-height: 400px;
-  width: auto;
-  height: auto;
+  max-width: 100%;
+  max-height: 45vh;       /* 👈 nunca más grande que la pantalla */
   object-fit: contain;
   display: block;
   margin: 10px auto 20px auto;
