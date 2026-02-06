@@ -26,6 +26,11 @@ header {
   padding: 12px;
 }
 
+function ocultarPrecios() {
+  localStorage.removeItem("verPrecios");
+  document.body.classList.remove("mostrar-precios");
+}
+
 .precio {
   display: none;
   font-weight: bold;
