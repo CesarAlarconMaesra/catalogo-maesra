@@ -26,11 +26,9 @@ header {
   padding: 12px;
 }
 
-/* Precios ocultos por defecto */
-.precio {
+/* Modo seguro por defecto */
+body:not(.mostrar-precios) .precio {
   display: none;
-  font-weight: bold;
-  color: #1E88E5;
 }
 
 /* Cuando se habilitan precios */
