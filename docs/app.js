@@ -92,7 +92,7 @@ function ocultarPrecios() {
 }
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("PWA lista ✅"))
-    .catch(err => console.log("Error SW:", err));
+  navigator.serviceWorker.register("/catalogo-maesra/service-worker.js")
+    .then(() => console.log("Service Worker registrado"))
+    .catch(err => console.log("Error:", err));
 }
