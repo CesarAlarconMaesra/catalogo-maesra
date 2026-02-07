@@ -90,3 +90,9 @@ function ocultarPrecios() {
   document.body.classList.remove("mostrar-precios");
   alert("🔒 Precios ocultos");
 }
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("PWA lista ✅"))
+    .catch(err => console.log("Error SW:", err));
+}
