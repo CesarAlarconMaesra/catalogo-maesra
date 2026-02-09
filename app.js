@@ -1,4 +1,19 @@
 let productos = [];
+let listaPrecioActiva = "LP4"; // default
+
+// Al cargar la página
+if (localStorage.getItem("listaPrecio") === "LP1") {
+  listaPrecioActiva = "LP1";
+} else {
+  listaPrecioActiva = "LP4";
+}
+
+function actualizarIndicadorLista() {
+  const info = document.getElementById("infoLista");
+  info.textContent = "📊 Lista activa: " + listaPrecioActiva;
+}
+
+actualizarIndicadorLista();
 
 // Cargar productos
 fetch("productos.json")
@@ -16,6 +31,15 @@ function mostrarProductos(lista) {
   contenedor.innerHTML = "";
 
   lista.forEach(p => {
+
+    let precioValor = 0;
+
+    if (listaPrecioActiva === "LP1") {
+      precioValor = p.precioLP1 ?? 0;
+    } else {
+      precioValor = p.precioLP4 ?? 0;
+    }
+
     const card = document.createElement("div");
     card.className = "card";
 
@@ -23,7 +47,9 @@ function mostrarProductos(lista) {
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
-      <p class="precio">$${Number(p.precio).toFixed(2)}</p>
+      <p style="font-weight:bold; color:#1E88E5;">
+        $ ${Number(precioValor).toFixed(2)}
+      </p>
     `;
 
     card.onclick = () => abrirDetalle(p);
@@ -45,6 +71,15 @@ document.getElementById("buscador").addEventListener("input", e => {
 
 // Modal detalle
 function abrirDetalle(p) {
+
+  let precioValor = 0;
+
+  if (listaPrecioActiva === "LP1") {
+    precioValor = p.precioLP1 ?? 0;
+  } else {
+    precioValor = p.precioLP4 ?? 0;
+  }
+
   document.getElementById("modal").classList.remove("oculto");
 
   dImagen.src = p.imagen;
@@ -54,9 +89,7 @@ function abrirDetalle(p) {
   dUnidad.textContent = "Unidad: " + p.unidad;
   dMaster.textContent = "Master: " + p.master;
   dInner.textContent = "Inner: " + p.inner;
-
-  dPrecio.className = "precio";
-  dPrecio.textContent = "Precio: $" + Number(p.precio).toFixed(2);
+  dPrecio.textContent = "Precio: $ " + Number(precioValor).toFixed(2);
 }
 
 document.getElementById("cerrar").onclick = () => {
@@ -64,35 +97,27 @@ document.getElementById("cerrar").onclick = () => {
 };
 
 // 🔐 Control de precios
-const CLAVE_PRECIO = "MaesraFebrero2026";
+const CLAVE_LP1 = "MaesraFebrero2026";
 
-// Al cargar
-if (localStorage.getItem("verPrecios") === "si") {
-  document.body.classList.add("mostrar-precios");
+document.getElementById("btnPrecio").onclick = () => {
+  const pass = prompt("Ingresa la contraseña para ver precios LP1:");
+
+  if (pass === CLAVE_LP1) {
+  listaPrecioActiva = "LP1";
+  localStorage.setItem("listaPrecio", "LP1");
+  actualizarIndicadorLista();
+  mostrarProductos(productos);
+  alert("✅ Lista LP1 activada");
 }
 
-// Ver precios
-document.getElementById("btnPrecio").onclick = () => {
-  const pass = prompt("Ingresa la contraseña para ver precios:");
-
-  if (pass === CLAVE_PRECIO) {
-    localStorage.setItem("verPrecios", "si");
-    document.body.classList.add("mostrar-precios");
-    alert("✅ Precios habilitados");
-  } else {
+   } else {
     alert("❌ Contraseña incorrecta");
   }
 };
-
-// Ocultar precios
+// Regresar a LP4 precios
 function ocultarPrecios() {
-  localStorage.removeItem("verPrecios");
-  document.body.classList.remove("mostrar-precios");
-  alert("🔒 Precios ocultos");
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("PWA lista ✅"))
-    .catch(err => console.log("Error SW:", err));
+  listaPrecioActiva = "LP4";
+  localStorage.setItem("listaPrecio", "LP4");
+  actualizarIndicadorLista();
+  mostrarProductos(productos);
 }
