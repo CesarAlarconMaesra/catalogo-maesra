@@ -109,7 +109,6 @@ document.getElementById("btnPrecio").onclick = () => {
   mostrarProductos(productos);
   alert("✅ Lista LP1 activada");
 }
-
    } else {
     alert("❌ Contraseña incorrecta");
   }
