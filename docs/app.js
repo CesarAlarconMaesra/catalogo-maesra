@@ -31,18 +31,27 @@ function mostrarProductos(lista) {
   contenedor.innerHTML = "";
 
   lista.forEach(p => {
-    const precioMostrar = listaPrecioActiva === "LP1"
-      ? p.precioLP1
-      : p.precioLP4;
+
+    let precioValor = 0;
+
+    if (listaPrecioActiva === "LP1") {
+      precioValor = p.precioLP1 ?? 0;
+    } else {
+      precioValor = p.precioLP4 ?? 0;
+    }
 
     const card = document.createElement("div");
     card.className = "card";
+
     card.innerHTML = `
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
-      <p class="precio">Precio: $${Number(precioMostrar).toFixed(2)}</p>
+      <p style="font-weight:bold; color:#1E88E5;">
+        $ ${Number(precioValor).toFixed(2)}
+      </p>
     `;
+
     card.onclick = () => abrirDetalle(p);
     contenedor.appendChild(card);
   });
@@ -63,9 +72,13 @@ document.getElementById("buscador").addEventListener("input", e => {
 // Modal detalle
 function abrirDetalle(p) {
 
-  const precioMostrar = listaPrecioActiva === "LP1"
-    ? p.precioLP1
-    : p.precioLP4;
+  let precioValor = 0;
+
+  if (listaPrecioActiva === "LP1") {
+    precioValor = p.precioLP1 ?? 0;
+  } else {
+    precioValor = p.precioLP4 ?? 0;
+  }
 
   document.getElementById("modal").classList.remove("oculto");
 
@@ -76,8 +89,9 @@ function abrirDetalle(p) {
   dUnidad.textContent = "Unidad: " + p.unidad;
   dMaster.textContent = "Master: " + p.master;
   dInner.textContent = "Inner: " + p.inner;
-  dPrecio.textContent = "Precio: $" + Number(precioMostrar).toFixed(2);
+  dPrecio.textContent = "Precio: $ " + Number(precioValor).toFixed(2);
 }
+
 document.getElementById("cerrar").onclick = () => {
   document.getElementById("modal").classList.add("oculto");
 };
@@ -89,14 +103,14 @@ document.getElementById("btnPrecio").onclick = () => {
   const pass = prompt("Ingresa la contraseña para ver precios LP1:");
 
   if (pass === CLAVE_LP1) {
-    listaPrecioActiva = "LP1";
-    localStorage.setItem("listaPrecio", "LP1");
-	actualizarIndicadorLista();
-	mostrarProductos(productos);
-    alert("✅ Lista LP1 activada");
+  listaPrecioActiva = "LP1";
+  localStorage.setItem("listaPrecio", "LP1");
+  actualizarIndicadorLista();
+  mostrarProductos(productos);
+  alert("✅ Lista LP1 activada");
+}
 
-    mostrarProductos(productos);
-  } else {
+   } else {
     alert("❌ Contraseña incorrecta");
   }
 };
