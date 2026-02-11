@@ -249,10 +249,11 @@ async function enviarWhatsApp() {
   }
 
   let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+
   if (cliente && cliente.trim() !== "") {
-  mensaje += "*Cliente:* " + cliente + " %0A%0A";
-}
+    mensaje += "*Cliente:* " + cliente + " %0A%0A";
   }
+
   let total = 0;
 
   carrito.forEach(p => {
@@ -267,22 +268,22 @@ async function enviarWhatsApp() {
 
   mensaje += `*TOTAL: $${total.toFixed(2)}*`;
 
-await addDoc(collection(db, "pedidos"), {
-  cliente: cliente,
-  productos: carrito,
-  total: total,
-  listaPrecio: listaPrecioActiva,
-  fecha: new Date()
-});
+  await addDoc(collection(db, "pedidos"), {
+    cliente: cliente,
+    productos: carrito,
+    total: total,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
 
-await addDoc(collection(db, "eventos"), {
-  tipo: "enviar_whatsapp",
-  cliente: cliente,
-  total: total,
-  fecha: new Date()
-});
+  await addDoc(collection(db, "eventos"), {
+    tipo: "enviar_whatsapp",
+    cliente: cliente,
+    total: total,
+    fecha: new Date()
+  });
 
-  const numero = "5216565292879"; // 👈 TU número con lada país
+  const numero = "5216565292879";
   const url = `https://wa.me/${numero}?text=${mensaje}`;
 
   window.open(url, "_blank");
