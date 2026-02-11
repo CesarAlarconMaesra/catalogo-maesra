@@ -149,7 +149,79 @@ function agregarAlCarrito(producto) {
   alert("Producto agregado al carrito 🛒");
 }
 
-function verCarrito() {
+function abrirCarrito() {
+  document.getElementById("modalCarrito").classList.remove("oculto");
+  renderizarCarrito();
+}
+
+function cerrarCarrito() {
+  document.getElementById("modalCarrito").classList.add("oculto");
+}
+
+function renderizarCarrito() {
+
+  const contenedor = document.getElementById("contenidoCarrito");
+  const totalElemento = document.getElementById("totalCarrito");
+
+  contenedor.innerHTML = "";
+
+  if (carrito.length === 0) {
+    contenedor.innerHTML = "<p>El carrito está vacío</p>";
+    totalElemento.textContent = "";
+    return;
+  }
+
+  let total = 0;
+
+  carrito.forEach((p, index) => {
+
+    const subtotal = p.precio * p.cantidad;
+    total += subtotal;
+
+    contenedor.innerHTML += `
+      <div class="item-carrito">
+        <strong>${p.producto}</strong><br>
+        Código: ${p.codigo}<br>
+        Precio: $${p.precio.toFixed(2)}<br>
+        Cantidad: 
+          <button onclick="cambiarCantidad(${index}, -1)">➖</button>
+          ${p.cantidad}
+          <button onclick="cambiarCantidad(${index}, 1)">➕</button>
+        <br>
+        Subtotal: $${subtotal.toFixed(2)}<br>
+        <button onclick="eliminarProducto(${index})">🗑 Eliminar</button>
+      </div>
+    `;
+  });
+
+  totalElemento.textContent = "TOTAL: $" + total.toFixed(2);
+}
+
+function cambiarCantidad(index, cambio) {
+
+  carrito[index].cantidad += cambio;
+
+  if (carrito[index].cantidad <= 0) {
+    carrito.splice(index, 1);
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  renderizarCarrito();
+}
+
+function eliminarProducto(index) {
+  carrito.splice(index, 1);
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  renderizarCarrito();
+}
+
+function vaciarCarrito() {
+  carrito = [];
+  localStorage.removeItem("carrito");
+  renderizarCarrito();
+}
+
+function enviarWhatsApp() {
 
   if (carrito.length === 0) {
     alert("El carrito está vacío");

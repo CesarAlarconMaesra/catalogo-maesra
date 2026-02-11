@@ -53,5 +53,32 @@
   }
 </script>
 <script src="app.js"></script>
+function verCarrito() {
+
+  if (carrito.length === 0) {
+    alert("El carrito está vacío");
+    return;
+  }
+
+  let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+  let total = 0;
+
+  carrito.forEach(p => {
+    let subtotal = p.precio * p.cantidad;
+    total += subtotal;
+
+    mensaje += `${p.producto} %0A`;
+    mensaje += `Código: ${p.codigo} %0A`;
+    mensaje += `Cantidad: ${p.cantidad} %0A`;
+    mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
+  });
+
+  mensaje += `*TOTAL: $${total.toFixed(2)}*`;
+
+  const numero = "5216565292879"; // 👈 TU número con lada país
+  const url = `https://wa.me/${numero}?text=${mensaje}`;
+
+  window.open(url, "_blank");
+}
 </body>
 </html>
