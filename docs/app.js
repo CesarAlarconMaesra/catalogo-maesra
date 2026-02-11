@@ -130,25 +130,6 @@ function ocultarPrecios() {
   mostrarProductos(productos);
 }
 
-function agregarAlCarrito(producto) {
-
-  const existe = carrito.find(p => p.codigo === producto.codigo);
-
-  if (existe) {
-    existe.cantidad += 1;
-  } else {
-    carrito.push({
-      codigo: producto.codigo,
-      producto: producto.producto,
-      precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
-      cantidad: 1
-    });
-  }
-
-  localStorage.setItem("carrito", JSON.stringify(carrito));
-  alert("Producto agregado al carrito 🛒");
-}
-
 function abrirCarrito() {
   document.getElementById("modalCarrito").classList.remove("oculto");
   renderizarCarrito();
@@ -219,6 +200,25 @@ function vaciarCarrito() {
   carrito = [];
   localStorage.removeItem("carrito");
   renderizarCarrito();
+}
+
+function agregarAlCarrito(producto) {
+
+  const existe = carrito.find(p => p.codigo === producto.codigo);
+
+  if (existe) {
+    existe.cantidad += 1;
+  } else {
+    carrito.push({
+      codigo: producto.codigo,
+      producto: producto.producto,
+      precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
+      cantidad: 1
+    });
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  alert("Producto agregado al carrito 🛒");
 }
 
 function enviarWhatsApp() {
