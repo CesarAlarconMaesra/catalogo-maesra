@@ -1,5 +1,6 @@
 let productos = [];
 let listaPrecioActiva = "LP4"; // default
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
 // 🔹 Revisar lista guardada
 if (localStorage.getItem("listaPrecio") === "LP1") {
@@ -95,6 +96,9 @@ function abrirDetalle(p) {
   document.getElementById("dInner").textContent = "Inner: " + p.inner;
   document.getElementById("dPrecio").textContent =
     "Precio: $" + Number(precioMostrar).toFixed(2);
+  document.getElementById("btnAgregarCarrito").onclick = () => {
+  agregarAlCarrito(p);
+};
 }
 
 document.getElementById("cerrar").onclick = () => {
@@ -124,4 +128,51 @@ function ocultarPrecios() {
   localStorage.setItem("listaPrecio", "LP4");
   actualizarIndicadorLista();
   mostrarProductos(productos);
+}
+
+function agregarAlCarrito(producto) {
+
+  const existe = carrito.find(p => p.codigo === producto.codigo);
+
+  if (existe) {
+    existe.cantidad += 1;
+  } else {
+    carrito.push({
+      codigo: producto.codigo,
+      producto: producto.producto,
+      precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
+      cantidad: 1
+    });
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+  alert("Producto agregado al carrito 🛒");
+}
+
+function verCarrito() {
+
+  if (carrito.length === 0) {
+    alert("El carrito está vacío");
+    return;
+  }
+
+  let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+  let total = 0;
+
+  carrito.forEach(p => {
+    let subtotal = p.precio * p.cantidad;
+    total += subtotal;
+
+    mensaje += `${p.producto} %0A`;
+    mensaje += `Código: ${p.codigo} %0A`;
+    mensaje += `Cantidad: ${p.cantidad} %0A`;
+    mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
+  });
+
+  mensaje += `*TOTAL: $${total.toFixed(2)}*`;
+
+  const numero = "5216562226459"; // 👈 TU número con lada país
+  const url = `https://wa.me/${numero}?text=${mensaje}`;
+
+  window.open(url, "_blank");
 }
