@@ -113,8 +113,8 @@ document.getElementById("cerrar").onclick = () => {
 // 🔐 Activar LP1
 const CLAVE_LP1 = "MaesraFebrero2026";
 
-document.getElementById("btnPrecio").onclick = () => {
-  const pass = prompt("Ingresa la contraseña para ver precios LP1:");
+document.getElementById("btnPrecio").onclick = async () => {
+const pass = prompt("Ingresa la contraseña para ver precios LP1:");
 
   if (pass === CLAVE_LP1) {
     listaPrecioActiva = "LP1";
@@ -241,7 +241,7 @@ async function agregarAlCarrito(producto) {
 
   alert("Producto agregado al carrito 🛒");
 }
-function enviarWhatsApp() {
+async function enviarWhatsApp() {
 
   if (carrito.length === 0) {
     alert("El carrito está vacío");
@@ -249,8 +249,9 @@ function enviarWhatsApp() {
   }
 
   let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
-  if (nombreCliente.trim() !== "") {
-  mensaje += "*Cliente:* " + nombreCliente + " %0A%0A";
+  if (cliente && cliente.trim() !== "") {
+  mensaje += "*Cliente:* " + cliente + " %0A%0A";
+}
   }
   let total = 0;
 
