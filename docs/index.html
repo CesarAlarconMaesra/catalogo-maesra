@@ -7,34 +7,31 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1f2937">
-
-<button id="btnPrecio" style="margin-top:5px;">
-  🔐 Ver precios
-</button>
-<button onclick="ocultarPrecios()">
-  🙈 Ocultar precios
-</button>
-<button onclick="abrirCarrito()">🛒 Ver carrito</button>
 </head>
+
+<body>
+
 <div id="infoLista" style="padding:8px; font-weight:bold;">
   📊 Lista activa: LP4
 </div>
-<body>
 
 <header>
-  <h1>Catálogo MAESRA  Febrero 2026</h1>
+  <h1>Catálogo MAESRA Febrero 2026</h1>
+
+  <button id="btnPrecio">🔐 Ver precios</button>
+  <button onclick="ocultarPrecios()">🙈 Ocultar precios</button>
+  <button onclick="abrirCarrito()">🛒 Ver carrito</button>
+
   <input type="text" id="buscador" placeholder="Buscar producto..." />
 </header>
 
 <main id="listaProductos"></main>
 
-<div id="modalCarrito" class="modal oculto">
-<!-- Modal detalle -->
+<!-- Modal DETALLE -->
 <div id="modal" class="modal oculto">
   <div class="modal-content">
-<p id="dPrecio" class="precio"></p>
     <span id="cerrar">&times;</span>
-   <img id="dImagen" class="detalle-img" />
+    <img id="dImagen" class="detalle-img" />
     <h2 id="dNombre"></h2>
     <p id="dCodigo"></p>
     <p id="dMarca"></p>
@@ -43,9 +40,20 @@
     <p id="dInner"></p>
     <p id="dPrecio"></p>
     <button id="btnAgregarCarrito">🛒 Agregar al carrito</button>
-
   </div>
 </div>
+
+<!-- Modal CARRITO -->
+<div id="modalCarrito" class="modal oculto">
+  <div class="modal-content">
+    <span onclick="cerrarCarrito()">&times;</span>
+    <h2>🛒 Carrito</h2>
+    <div id="contenidoCarrito"></div>
+    <button onclick="vaciarCarrito()">🗑 Vaciar carrito</button>
+    <button onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
+  </div>
+</div>
+
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js")
@@ -53,6 +61,8 @@
       .catch(err => console.log("Error SW:", err));
   }
 </script>
+
 <script src="app.js"></script>
+
 </body>
 </html>
