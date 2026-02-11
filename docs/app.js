@@ -131,6 +131,7 @@ function ocultarPrecios() {
 }
 
 function abrirCarrito() {
+  console.log("Se abrió carrito");
   document.getElementById("modalCarrito").classList.remove("oculto");
   renderizarCarrito();
 }
