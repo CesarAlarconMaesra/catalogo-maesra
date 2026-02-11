@@ -17,6 +17,7 @@
 
 <header>
   <h1>Catálogo MAESRA Febrero 2026</h1>
+<h3>"Al usar esta aplicación aceptas el registro de actividad con fines comerciales."</h3>
 
   <button id="btnPrecio">🔐 Ver precios</button>
   <button onclick="ocultarPrecios()">🙈 Ocultar precios</button>
@@ -45,6 +46,10 @@
 
 <!-- Modal CARRITO -->
 <div id="modalCarrito" class="modal oculto">
+<div style="margin-bottom:10px;">
+  <label>Nombre del cliente:</label><br>
+  <input type="text" id="nombreCliente" placeholder="Escribe el nombre del cliente">
+</div>
   <div class="modal-content">
     <span onclick="cerrarCarrito()">&times;</span>
     <h2>🛒 Carrito</h2>
@@ -64,5 +69,25 @@
 
 <script src="app.js"></script>
 
+<script type="module">
+  import { initializeApp } from 
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+  import { getFirestore, collection, addDoc } from 
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBN2oKqeUBcaXKZ9PmNzcMlymJZbkBn0vs",
+    authDomain: "catalogo-maesra.firebaseapp.com",
+    projectId: "catalogo-maesra",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.addDoc = addDoc;
+  window.collection = collection;
+</script>
 </body>
 </html>

@@ -1,7 +1,12 @@
 let productos = [];
 let listaPrecioActiva = "LP4"; // default
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+let cliente = localStorage.getItem("cliente");
 
+if (!cliente) {
+  cliente = prompt("Ingresa el nombre del cliente:");
+  localStorage.setItem("cliente", cliente);
+}
 // 🔹 Revisar lista guardada
 if (localStorage.getItem("listaPrecio") === "LP1") {
   listaPrecioActiva = "LP1";
@@ -116,6 +121,11 @@ document.getElementById("btnPrecio").onclick = () => {
     localStorage.setItem("listaPrecio", "LP1");
     actualizarIndicadorLista();
     mostrarProductos(productos);
+    await addDoc(collection(db, "eventos"), {
+    tipo: "activar_LP1",
+    cliente: cliente,
+    fecha: new Date()
+});
     alert("✅ Lista LP1 activada");
   } else {
     alert("❌ Contraseña incorrecta");
@@ -203,7 +213,7 @@ function vaciarCarrito() {
   renderizarCarrito();
 }
 
-function agregarAlCarrito(producto) {
+async function agregarAlCarrito(producto) {
 
   const existe = carrito.find(p => p.codigo === producto.codigo);
 
@@ -219,9 +229,18 @@ function agregarAlCarrito(producto) {
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  // 🔥 Registrar en Firebase
+  await addDoc(collection(db, "eventos"), {
+    tipo: "agregar_carrito",
+    cliente: cliente,
+    codigo: producto.codigo,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
+
   alert("Producto agregado al carrito 🛒");
 }
-
 function enviarWhatsApp() {
 
   if (carrito.length === 0) {
@@ -230,6 +249,9 @@ function enviarWhatsApp() {
   }
 
   let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+  if (nombreCliente.trim() !== "") {
+  mensaje += "*Cliente:* " + nombreCliente + " %0A%0A";
+  }
   let total = 0;
 
   carrito.forEach(p => {
@@ -244,7 +266,22 @@ function enviarWhatsApp() {
 
   mensaje += `*TOTAL: $${total.toFixed(2)}*`;
 
-  const numero = "5216562226459"; // 👈 TU número con lada país
+await addDoc(collection(db, "pedidos"), {
+  cliente: cliente,
+  productos: carrito,
+  total: total,
+  listaPrecio: listaPrecioActiva,
+  fecha: new Date()
+});
+
+await addDoc(collection(db, "eventos"), {
+  tipo: "enviar_whatsapp",
+  cliente: cliente,
+  total: total,
+  fecha: new Date()
+});
+
+  const numero = "5216565292879"; // 👈 TU número con lada país
   const url = `https://wa.me/${numero}?text=${mensaje}`;
 
   window.open(url, "_blank");
