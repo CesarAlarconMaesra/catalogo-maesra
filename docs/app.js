@@ -252,10 +252,10 @@ async function enviarWhatsApp() {
     return;
   }
 
-  let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+  let mensaje = "🛒 *Pedido MAESRA* \n\n";
 
   if (cliente && cliente.trim() !== "") {
-    mensaje += "*Cliente:* " + cliente + " %0A%0A";
+    mensaje += "*Cliente:* " + cliente + "\n\n";
   }
 
   let total = 0;
@@ -264,31 +264,42 @@ async function enviarWhatsApp() {
     let subtotal = p.precio * p.cantidad;
     total += subtotal;
 
-    mensaje += `${p.producto} %0A`;
-    mensaje += `Código: ${p.codigo} %0A`;
-    mensaje += `Cantidad: ${p.cantidad} %0A`;
-    mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
+    mensaje += `${p.producto}\n`;
+    mensaje += `Código: ${p.codigo}\n`;
+    mensaje += `Cantidad: ${p.cantidad}\n`;
+    mensaje += `Subtotal: $${subtotal.toFixed(2)}\n\n`;
   });
 
   mensaje += `*TOTAL: $${total.toFixed(2)}*`;
 
-  await addDoc(collection(db, "pedidos"), {
-    cliente: cliente,
-    productos: carrito,
-    total: total,
-    listaPrecio: listaPrecioActiva,
-    fecha: new Date()
-  });
-
-  await addDoc(collection(db, "eventos"), {
-    tipo: "enviar_whatsapp",
-    cliente: cliente,
-    total: total,
-    fecha: new Date()
-  });
-
   const numero = "5216565292879";
-  const url = `https://wa.me/${numero}?text=${mensaje}`;
 
+  const mensajeCodificado = encodeURIComponent(mensaje);
+  const url = `https://wa.me/${numero}?text=${mensajeCodificado}`;
+
+  // 🔥 ABRIR PRIMERO
   window.open(url, "_blank");
+
+  // 🔥 GUARDAR DESPUÉS (sin bloquear WhatsApp)
+  try {
+    await addDoc(collection(db, "pedidos"), {
+      cliente: cliente,
+      productos: carrito,
+      total: total,
+      listaPrecio: listaPrecioActiva,
+      fecha: new Date()
+    });
+
+    await addDoc(collection(db, "eventos"), {
+      tipo: "enviar_whatsapp",
+      cliente: cliente,
+      total: total,
+      fecha: new Date()
+    });
+
+  } catch (error) {
+    console.error("Error guardando en Firebase:", error);
+  }
+carrito = [];
+localStorage.removeItem("carrito");
 }
