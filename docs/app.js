@@ -125,9 +125,9 @@ const pass = prompt("Ingresa la contraseña para ver precios LP1:");
     tipo: "activar_LP1",
     cliente: cliente,
     fecha: new Date()
-    gtag('event', 'LP1_activada');
-});
-    alert("✅ Lista LP1 activada");
+    });
+  gtag('event', 'LP1_activada');  
+  alert("✅ Lista LP1 activada");
   } else {
     alert("❌ Contraseña incorrecta");
   }
