@@ -144,6 +144,7 @@ function abrirCarrito() {
   console.log("Se abrió carrito");
   document.getElementById("modalCarrito").classList.remove("oculto");
   renderizarCarrito();
+  gtag('event', 'abrir_carrito');
 }
 
 function cerrarCarrito() {
@@ -247,6 +248,9 @@ async function agregarAlCarrito(producto) {
 }
 async function enviarWhatsApp() {
 
+  gtag('event', 'enviar_whatsapp', {
+  value: total
+  });
   if (carrito.length === 0) {
     alert("El carrito está vacío");
     return;
