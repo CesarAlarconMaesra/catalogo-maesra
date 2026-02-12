@@ -125,6 +125,7 @@ const pass = prompt("Ingresa la contraseña para ver precios LP1:");
     tipo: "activar_LP1",
     cliente: cliente,
     fecha: new Date()
+    gtag('event', 'LP1_activada');
 });
     alert("✅ Lista LP1 activada");
   } else {
@@ -230,6 +231,7 @@ async function agregarAlCarrito(producto) {
       producto: producto.producto,
       precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
       cantidad: 1
+ 	gtag('event', 'agregar_carrito');
     });
   }
 
