@@ -276,7 +276,7 @@ async function enviarWhatsApp() {
     mensaje += `Subtotal: $${subtotal.toFixed(2)}\n\n`;
   });
 
-  mensaje += `*TOTAL (+IVA): $${total.toFixed(2)}*`;
+  mensaje += `*TOTAL: $${total.toFixed(2)}*`;
 
   const numero = "5216565292879";
 
