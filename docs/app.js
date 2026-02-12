@@ -155,11 +155,13 @@ function renderizarCarrito() {
   const contenedor = document.getElementById("contenidoCarrito");
   const totalElemento = document.getElementById("totalCarrito");
 
+  if (!contenedor) return;
+
   contenedor.innerHTML = "";
 
   if (carrito.length === 0) {
     contenedor.innerHTML = "<p>El carrito está vacío</p>";
-    totalElemento.textContent = "";
+    if (totalElemento) totalElemento.textContent = "";
     return;
   }
 
@@ -186,7 +188,9 @@ function renderizarCarrito() {
     `;
   });
 
-  totalElemento.textContent = "TOTAL: $" + total.toFixed(2);
+  if (totalElemento) {
+    totalElemento.textContent = "TOTAL: $" + total.toFixed(2);
+  }
 }
 
 function cambiarCantidad(index, cambio) {
