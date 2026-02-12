@@ -231,8 +231,8 @@ async function agregarAlCarrito(producto) {
       producto: producto.producto,
       precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
       cantidad: 1
- 	gtag('event', 'agregar_carrito');
-    });
+      });
+   gtag('event', 'agregar_carrito');
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
