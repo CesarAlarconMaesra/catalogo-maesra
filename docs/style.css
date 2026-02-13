@@ -101,17 +101,73 @@ body:not(.mostrar-precios) .precio {
   overflow-y: auto;
 }
 
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #25D366;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: all 0.4s ease;
+  z-index: 9999;
+}
+
+.toast.mostrar {
+  opacity: 1;
+  bottom: 50px;
+}
+
 .oculto {
   display: none;
 }
 
 .item-carrito {
-  border-bottom: 1px solid #ddd;
-  padding: 10px 0;
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  font-size: 14px;
+}
+
+.item-carrito strong {
+  font-size: 16px;
+  color: #1a1a1a;
 }
 
 .item-carrito button {
-  margin: 3px;
+  background: #1f3c88;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.item-carrito button:hover {
+  opacity: 0.8;
+}
+
+.btn-enviar {
+  background: #25D366;
+  color: white;
+  font-size: 16px;
+  padding: 12px;
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.btn-enviar:hover {
+  background: #1ebd5a;
 }
 
 .oculto { display: none; }

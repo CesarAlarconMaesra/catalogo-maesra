@@ -265,6 +265,15 @@ async function agregarAlCarrito(producto) {
 
   alert("Producto agregado al carrito 🛒");
 }
+
+function mostrarToast() {
+  const toast = document.getElementById("toastExito");
+  toast.classList.add("mostrar");
+
+  setTimeout(() => {
+    toast.classList.remove("mostrar");
+  }, 3000);
+}
 async function enviarWhatsApp() {
 
   if (carrito.length === 0) {
@@ -321,4 +330,6 @@ async function enviarWhatsApp() {
   carrito = [];
   localStorage.removeItem("carrito");
   renderizarCarrito(); // actualiza vista
+
+  mostrarToast();
 }
