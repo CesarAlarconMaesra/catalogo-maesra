@@ -179,10 +179,14 @@ function renderizarCarrito() {
         <strong>${p.producto}</strong><br>
         Código: ${p.codigo}<br>
         Precio: $${p.precio.toFixed(2)}<br>
-        Cantidad: 
-          <button onclick="cambiarCantidad(${index}, -1)">➖</button>
-          ${p.cantidad}
-          <button onclick="cambiarCantidad(${index}, 1)">➕</button>
+       Cantidad:
+       <button onclick="cambiarCantidad(${index}, -1)">➖</button>
+       <input type="number"
+         min="1"
+         value="${p.cantidad}"
+         onchange="actualizarCantidad(${index}, this.value)"
+         style="width:60px; text-align:center;">
+        <button onclick="cambiarCantidad(${index}, 1)">➕</button>
         <br>
         Subtotal: $${subtotal.toFixed(2)}<br>
         <button onclick="eliminarProducto(${index})">🗑 Eliminar</button>
@@ -204,6 +208,19 @@ function cambiarCantidad(index, cambio) {
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
+  renderizarCarrito();
+}
+
+function actualizarCantidad(index, nuevaCantidad) {
+
+  nuevaCantidad = parseInt(nuevaCantidad);
+
+  if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+    carrito.splice(index, 1);
+  } else {
+    carrito[index].cantidad = nuevaCantidad;
+  }
+localStorage.setItem("carrito", JSON.stringify(carrito));
   renderizarCarrito();
 }
 
@@ -255,8 +272,7 @@ async function enviarWhatsApp() {
     return;
   }
 
-  let total = 0; // ✅ declarar primero
-
+  let total = 0;
   let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
 
   if (cliente && cliente.trim() !== "") {
@@ -284,7 +300,7 @@ async function enviarWhatsApp() {
     fecha: new Date()
   });
 
-  // 🔹 Registrar evento manual en Firestore
+  // 🔹 Registrar evento
   await addDoc(collection(db, "eventos"), {
     tipo: "enviar_whatsapp",
     cliente: cliente || "",
@@ -292,7 +308,6 @@ async function enviarWhatsApp() {
     fecha: new Date()
   });
 
-  // 🔹 Evento en Google Analytics
   gtag('event', 'enviar_whatsapp', {
     value: total
   });
@@ -301,6 +316,9 @@ async function enviarWhatsApp() {
   const url = `https://wa.me/${numero}?text=${mensaje}`;
 
   window.open(url, "_blank");
+
+  // ✅ AQUÍ se limpia correctamente
+  carrito = [];
+  localStorage.removeItem("carrito");
+  renderizarCarrito(); // actualiza vista
 }
-carrito = [];
-localStorage.removeItem("carrito");
