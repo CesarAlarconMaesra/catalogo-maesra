@@ -250,62 +250,58 @@ async function agregarAlCarrito(producto) {
 }
 async function enviarWhatsApp() {
 
-  gtag('event', 'enviar_whatsapp', {
-  value: total
-  });
   if (carrito.length === 0) {
     alert("El carrito está vacío");
     return;
   }
 
-  let mensaje = "🛒 *Pedido MAESRA* \n\n";
+  let total = 0; // ✅ declarar primero
+
+  let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
 
   if (cliente && cliente.trim() !== "") {
-    mensaje += "*Cliente:* " + cliente + "\n\n";
+    mensaje += "*Cliente:* " + cliente + " %0A%0A";
   }
-
-  let total = 0;
 
   carrito.forEach(p => {
     let subtotal = p.precio * p.cantidad;
     total += subtotal;
 
-    mensaje += `${p.producto}\n`;
-    mensaje += `Código: ${p.codigo}\n`;
-    mensaje += `Cantidad: ${p.cantidad}\n`;
-    mensaje += `Subtotal: $${subtotal.toFixed(2)}\n\n`;
+    mensaje += `${p.producto} %0A`;
+    mensaje += `Código: ${p.codigo} %0A`;
+    mensaje += `Cantidad: ${p.cantidad} %0A`;
+    mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
   });
 
   mensaje += `*TOTAL: $${total.toFixed(2)}*`;
 
+  // 🔹 Guardar pedido en Firestore
+  await addDoc(collection(db, "pedidos"), {
+    cliente: cliente || "",
+    productos: carrito,
+    total: total,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
+
+  // 🔹 Registrar evento manual en Firestore
+  await addDoc(collection(db, "eventos"), {
+    tipo: "enviar_whatsapp",
+    cliente: cliente || "",
+    total: total,
+    fecha: new Date()
+  });
+
+  // 🔹 Evento en Google Analytics
+  gtag('event', 'enviar_whatsapp', {
+    value: total
+  });
+
   const numero = "5216565292879";
+  const url = `https://wa.me/${numero}?text=${mensaje}`;
 
-  const mensajeCodificado = encodeURIComponent(mensaje);
-  const url = `https://wa.me/${numero}?text=${mensajeCodificado}`;
-
-  // 🔥 ABRIR PRIMERO
   window.open(url, "_blank");
-
-  // 🔥 GUARDAR DESPUÉS (sin bloquear WhatsApp)
-  try {
-    await addDoc(collection(db, "pedidos"), {
-      cliente: cliente,
-      productos: carrito,
-      total: total,
-      listaPrecio: listaPrecioActiva,
-      fecha: new Date()
-    });
-
-    await addDoc(collection(db, "eventos"), {
-      tipo: "enviar_whatsapp",
-      cliente: cliente,
-      total: total,
-      fecha: new Date()
-    });
-
-  } catch (error) {
-    console.error("Error guardando en Firebase:", error);
-  }
+}
 carrito = [];
 localStorage.removeItem("carrito");
 }
