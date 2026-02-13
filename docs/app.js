@@ -304,4 +304,3 @@ async function enviarWhatsApp() {
 }
 carrito = [];
 localStorage.removeItem("carrito");
-}
