@@ -279,27 +279,41 @@ async function agregarAlCarrito(producto) {
 
   const existe = carrito.find(p => p.codigo === producto.codigo);
 
+  // 🔥 Determinar precio final (promo o normal)
+  let precioFinal = producto.precioLP4;
+
+  if (producto.precioPromocion &&
+      Number(producto.precioPromocion) < Number(producto.precioLP4)) {
+    precioFinal = producto.precioPromocion;
+  }
+
   if (existe) {
     existe.cantidad += 1;
   } else {
     carrito.push({
       codigo: producto.codigo,
       producto: producto.producto,
-     let precioFinal = producto.precioLP4;
-
-if (producto.precioPromocion &&
-    Number(producto.precioPromocion) < Number(producto.precioLP4)) {
-  precioFinal = producto.precioPromocion;
-}
-
-precio: listaPrecioActiva === "LP1"
-  ? producto.precioLP1
-  : precioFinal,
+      precio: listaPrecioActiva === "LP1"
+        ? producto.precioLP1
+        : precioFinal,
       cantidad: 1
-      });
-   gtag('event', 'agregar_carrito');
+    });
+
+    gtag('event', 'agregar_carrito');
   }
 
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  await addDoc(collection(db, "eventos"), {
+    tipo: "agregar_carrito",
+    cliente: cliente,
+    codigo: producto.codigo,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
+
+  alert("Producto agregado al carrito 🛒");
+}
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
   // 🔥 Registrar en Firebase
