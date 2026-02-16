@@ -28,24 +28,15 @@ actualizarIndicadorLista();
 fetch("productos.json")
   .then(res => res.json())
   .then(data => {
-    productos = data;
-    mostrarProductos(productos);
-  })
-  .catch(err => {
-    console.error("Error cargando productos:", err);
-  });
-fetch("productos.json")
-  .then(res => res.json())
-  .then(data => {
 
     productos = data;
 
     // 🔥 Ordenar promociones primero
     productos.sort((a, b) => {
-      const aPromo = a.precioPromocion && a.precioPromocion < a.precioLP4;
-      const bPromo = b.precioPromocion && b.precioPromocion < b.precioLP4;
-      return bPromo - aPromo;
-    });
+  const aPromo = Number(a.precioPromocion) < Number(a.precioLP4);
+  const bPromo = Number(b.precioPromocion) < Number(b.precioLP4);
+  return bPromo - aPromo;
+});
 
     mostrarProductos(productos);
   });
@@ -275,38 +266,28 @@ function vaciarCarrito() {
   renderizarCarrito();
 }
 
-async function agregarAlCarrito(producto) {
+async function agregarAlCarrito(codigo) {
 
-  const existe = carrito.find(p => p.codigo === producto.codigo);
+  const producto = productos.find(p => p.codigo === codigo);
+  if (!producto) return;
 
-  // 🔥 Determinar precio final (promo o normal)
-  let precioFinal = producto.precioLP4;
+  const existente = carrito.find(p => p.codigo === codigo);
 
-  if (producto.precioPromocion &&
-      Number(producto.precioPromocion) < Number(producto.precioLP4)) {
-    precioFinal = producto.precioPromocion;
-  }
-
-  if (existe) {
-    existe.cantidad += 1;
+  if (existente) {
+    existente.cantidad++;
   } else {
     carrito.push({
-      codigo: producto.codigo,
-      producto: producto.producto,
-      precio: listaPrecioActiva === "LP1"
-        ? producto.precioLP1
-        : precioFinal,
+      ...producto,
       cantidad: 1
     });
-
-    gtag('event', 'agregar_carrito');
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
+  // 🔥 Registrar evento en Firestore
   await addDoc(collection(db, "eventos"), {
     tipo: "agregar_carrito",
-    cliente: cliente,
+    cliente: cliente || "",
     codigo: producto.codigo,
     listaPrecio: listaPrecioActiva,
     fecha: new Date()
@@ -314,20 +295,6 @@ async function agregarAlCarrito(producto) {
 
   alert("Producto agregado al carrito 🛒");
 }
-  localStorage.setItem("carrito", JSON.stringify(carrito));
-
-  // 🔥 Registrar en Firebase
-  await addDoc(collection(db, "eventos"), {
-    tipo: "agregar_carrito",
-    cliente: cliente,
-    codigo: producto.codigo,
-    listaPrecio: listaPrecioActiva,
-    fecha: new Date()
-  });
-
-  alert("Producto agregado al carrito 🛒");
-}
-
 function mostrarToast() {
   const toast = document.getElementById("toastExito");
   toast.classList.add("mostrar");
