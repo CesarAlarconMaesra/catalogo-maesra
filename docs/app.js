@@ -34,6 +34,21 @@ fetch("productos.json")
   .catch(err => {
     console.error("Error cargando productos:", err);
   });
+fetch("productos.json")
+  .then(res => res.json())
+  .then(data => {
+
+    productos = data;
+
+    // 🔥 Ordenar promociones primero
+    productos.sort((a, b) => {
+      const aPromo = a.precioPromocion && a.precioPromocion < a.precioLP4;
+      const bPromo = b.precioPromocion && b.precioPromocion < b.precioLP4;
+      return bPromo - aPromo;
+    });
+
+    mostrarProductos(productos);
+  });
 
 // 🔹 Mostrar productos
 function mostrarProductos(lista) {
@@ -44,10 +59,34 @@ function mostrarProductos(lista) {
   contenedor.innerHTML = "";
 
   lista.forEach(p => {
+  const enPromo =
+  p.precioPromocion &&
+  Number(p.precioPromocion) < Number(p.precioLP4);
+   let bloquePrecio = "";
 
-    let precio = listaPrecioActiva === "LP1"
-      ? Number(p.precioLP1).toFixed(2)
-      : Number(p.precioLP4).toFixed(2);
+if (enPromo) {
+
+  bloquePrecio = `
+    <div class="badge-promo">🔥 PROMOCIÓN</div>
+    <div class="precio-anterior">
+      $ ${Number(p.precioLP4).toFixed(2)}
+    </div>
+    <div class="precio-promo">
+      $ ${Number(p.precioPromocion).toFixed(2)}
+    </div>
+    <div class="restricciones">
+      ${p.restricciones || ""}
+    </div>
+  `;
+
+} else {
+
+  bloquePrecio = `
+    <div class="precio-normal">
+      $ ${Number(p.precioLP4).toFixed(2)}
+    </div>
+  `;
+}
 
     const card = document.createElement("div");
     card.className = "card";
@@ -57,7 +96,7 @@ function mostrarProductos(lista) {
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
       <p style="font-weight:bold; color:#1E88E5;">
-        $ ${precio}
+        ${bloquePrecio}
       </p>
     `;
 
@@ -246,7 +285,16 @@ async function agregarAlCarrito(producto) {
     carrito.push({
       codigo: producto.codigo,
       producto: producto.producto,
-      precio: listaPrecioActiva === "LP1" ? producto.precioLP1 : producto.precioLP4,
+     let precioFinal = producto.precioLP4;
+
+if (producto.precioPromocion &&
+    Number(producto.precioPromocion) < Number(producto.precioLP4)) {
+  precioFinal = producto.precioPromocion;
+}
+
+precio: listaPrecioActiva === "LP1"
+  ? producto.precioLP1
+  : precioFinal,
       cantidad: 1
       });
    gtag('event', 'agregar_carrito');
