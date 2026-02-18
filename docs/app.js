@@ -266,25 +266,36 @@ function vaciarCarrito() {
   renderizarCarrito();
 }
 
-async function agregarAlCarrito(codigo) {
+async function agregarAlCarrito(producto) {
 
-  const producto = productos.find(p => p.codigo === codigo);
   if (!producto) return;
 
-  const existente = carrito.find(p => p.codigo === codigo);
+  const existente = carrito.find(p => p.codigo === producto.codigo);
 
   if (existente) {
     existente.cantidad++;
   } else {
+
+    // 🔥 Determinar precio correcto según lista activa
+    let precioFinal = listaPrecioActiva === "LP1"
+      ? Number(producto.precioLP1)
+      : (
+          Number(producto.precioPromocion) > 0 &&
+          Number(producto.precioPromocion) < Number(producto.precioLP4)
+        )
+          ? Number(producto.precioPromocion)
+          : Number(producto.precioLP4);
+
     carrito.push({
-      ...producto,
+      codigo: producto.codigo,
+      producto: producto.producto,
+      precio: precioFinal,
       cantidad: 1
     });
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
-  // 🔥 Registrar evento en Firestore
   await addDoc(collection(db, "eventos"), {
     tipo: "agregar_carrito",
     cliente: cliente || "",
