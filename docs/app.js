@@ -2,6 +2,18 @@ let productos = [];
 let listaPrecioActiva = "LP4"; // default
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
+document.addEventListener("DOMContentLoaded", () => {
+
+  const carritoGuardado = localStorage.getItem("carrito");
+
+  if (carritoGuardado) {
+    carrito = JSON.parse(carritoGuardado);
+  }
+
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+});
 
 if (!cliente) {
   cliente = prompt("Ingresa el nombre del cliente:");
@@ -171,6 +183,25 @@ function ocultarPrecios() {
   mostrarProductos(productos);
 }
 
+function actualizarContadorCarrito() {
+  const contador = document.getElementById("contadorCarrito");
+
+  const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+
+  contador.textContent = totalItems;
+
+  contador.style.display = totalItems > 0 ? "inline-block" : "none";
+}
+
+function calcularTotalCarrito() {
+  const total = carrito.reduce((acc, item) => {
+    return acc + (item.precio * item.cantidad);
+  }, 0);
+
+  document.getElementById("totalCarrito").textContent = total.toFixed(2);
+  document.getElementById("totalHeader").textContent = total.toFixed(2);
+}
+
 function abrirCarrito() {
   console.log("Se abrió carrito");
   document.getElementById("modalCarrito").classList.remove("oculto");
@@ -239,6 +270,8 @@ function cambiarCantidad(index, cambio) {
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
   renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
 }
 
 function actualizarCantidad(index, nuevaCantidad) {
@@ -252,18 +285,23 @@ function actualizarCantidad(index, nuevaCantidad) {
   }
 localStorage.setItem("carrito", JSON.stringify(carrito));
   renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
 }
 
 function eliminarProducto(index) {
   carrito.splice(index, 1);
   localStorage.setItem("carrito", JSON.stringify(carrito));
   renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
 }
 
 function vaciarCarrito() {
   carrito = [];
   localStorage.removeItem("carrito");
   renderizarCarrito();
+  actualizarContadorCarrito();
 }
 
 async function agregarAlCarrito(producto) {
@@ -303,7 +341,8 @@ async function agregarAlCarrito(producto) {
     listaPrecio: listaPrecioActiva,
     fecha: new Date()
   });
-
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
   alert("Producto agregado al carrito 🛒");
 }
 function mostrarToast() {

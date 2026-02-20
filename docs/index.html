@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<img src="sin_imagen.jpg">
   <title>Catálogo MAESRA Febrero 2026</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json">
@@ -36,8 +35,14 @@
   <button id="btnPrecio">🔐 Ver precios</button>
   <button onclick="ocultarPrecios()">🙈 Cambiar precios</button>
   <button onclick="abrirCarrito()">🛒 Ver carrito</button>
-
-  <input type="text" id="buscador" placeholder="Buscar producto..." />
+<div class="carrito-icono" onclick="abrirCarrito()">
+  🛒
+  <span id="contadorCarrito" class="contador">0</span>
+</div>
+<div class="resumen-header">
+  Total: $<span id="totalHeader">0.00</span>
+</div>
+<input type="text" id="buscador" placeholder="Buscar producto..." />
 </header>
 
 <main id="listaProductos"></main>
@@ -59,6 +64,9 @@
 </div>
 
 <!-- Modal CARRITO -->
+<div class="total-carrito">
+  Total: $<span id="totalCarrito">0.00</span>
+</div>
 <div id="modalCarrito" class="modal oculto">
 <div style="margin-bottom:10px;">
   <label>Nombre del cliente:</label><br>
