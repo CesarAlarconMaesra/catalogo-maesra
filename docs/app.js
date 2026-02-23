@@ -195,60 +195,15 @@ function mostrarTopProductos(lista){
 
 }
 
-/* ===============================
-PROMOCIONES
-=============================== */
+<section class="seccion">
+  <h2>🔥 Promociones</h2>
 
-function mostrarPromociones(lista){
+  <div class="carrusel">
+    <div class="carrusel-track" id="promoTrack">
+    </div>
+  </div>
 
-  const contenedor = document.getElementById("promociones");
-  if(!contenedor) return;
-
-  contenedor.innerHTML="";
-
-  const promos = lista.filter(p =>
-    Number(p.precioPromocion) > 0 &&
-    Number(p.precioPromocion) < Number(p.precioLP4)
-  );
-
-  if(promos.length === 0) return;
-
-  const duplicado = [...promos, ...promos];
-
-  duplicado.forEach(p=>{
-
-    const card = document.createElement("div");
-    card.className="card-promo";
-
-    card.innerHTML=`
-      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
-      <h4>${p.producto}</h4>
-      <p>${p.codigo}</p>
-
-      <div class="precio-anterior">
-        $${Number(p.precioLP4).toFixed(2)}
-      </div>
-
-      <div class="precio-promo">
-        $${Number(p.precioPromocion).toFixed(2)}
-      </div>
-
-      ${p.restricciones ? `
-        <div class="restricciones">
-          ${p.restricciones}
-        </div>` : ""}
-
-    `;
-
-    card.onclick = ()=> abrirDetalle(p);
-
-    contenedor.appendChild(card);
-
-  });
-
-  iniciarCarrusel("promociones");
-
-}
+</section>
 
 /* ===============================
 BUSCADOR
