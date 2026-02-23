@@ -1,355 +1,530 @@
 let productos = [];
-
-let listaPrecioActiva = localStorage.getItem("listaPrecio") || "LP4";
-
+let listaPrecioActiva = "LP4";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
 let cliente = localStorage.getItem("cliente");
-
-const CLAVE_LP1 = "MaesraFebrero2026";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-actualizarIndicadorLista();
-actualizarBotonLista();
-actualizarContadorCarrito();
-calcularTotalCarrito();
+  const carritoGuardado = localStorage.getItem("carrito");
 
-cargarProductos();
+  if (carritoGuardado) {
+    carrito = JSON.parse(carritoGuardado);
+  }
+
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+  actualizarIndicadorLista();
 
 });
 
 if (!cliente) {
-cliente = prompt("Ingresa el nombre del cliente:");
-localStorage.setItem("cliente", cliente);
+  cliente = prompt("Ingresa el nombre del cliente:");
+  localStorage.setItem("cliente", cliente);
+}
+
+if (localStorage.getItem("listaPrecio") === "LP1") {
+  listaPrecioActiva = "LP1";
+} else {
+  listaPrecioActiva = "LP4";
 }
 
 function actualizarIndicadorLista() {
-
-const info = document.getElementById("infoLista");
-
-info.textContent = "📊 Lista activa: " + listaPrecioActiva;
-
+  const info = document.getElementById("infoLista");
+  if (info) {
+    info.textContent = "📊 Lista activa: " + listaPrecioActiva;
+  }
 }
 
-function actualizarBotonLista(){
-
-const btn = document.getElementById("btnTogglePrecio");
-
-if(listaPrecioActiva === "LP1"){
-
-btn.textContent = "🙈 Ocultar precios (LP4)";
-
-}else{
-
-btn.textContent = "🔐 Ver precios LP1";
-
-}
-
-}
-
-document.getElementById("btnTogglePrecio").onclick = async () => {
-
-if(listaPrecioActiva === "LP1"){
-
-listaPrecioActiva = "LP4";
-localStorage.setItem("listaPrecio","LP4");
-
-actualizarIndicadorLista();
-actualizarBotonLista();
-mostrarProductos(productos);
-
-return;
-
-}
-
-const pass = prompt("Contraseña lista LP1");
-
-if(pass !== CLAVE_LP1){
-
-alert("Contraseña incorrecta");
-return;
-
-}
-
-listaPrecioActiva = "LP1";
-localStorage.setItem("listaPrecio","LP1");
-
-actualizarIndicadorLista();
-actualizarBotonLista();
-mostrarProductos(productos);
-
-await addDoc(collection(db,"eventos"),{
-tipo:"activar_LP1",
-cliente:cliente,
-fecha:new Date()
-});
-
-};
-
-function cargarProductos(){
+/* ===============================
+CARGAR PRODUCTOS
+=============================== */
 
 fetch("productos.json")
-.then(r=>r.json())
-.then(data=>{
+  .then(res => res.json())
+  .then(data => {
 
-productos = data;
+    productos = data;
 
-productos.sort((a,b)=>{
+    productos.sort((a, b) => {
+      const aPromo = Number(a.precioPromocion) > 0 &&
+        Number(a.precioPromocion) < Number(a.precioLP4);
 
-const aPromo = Number(a.precioPromocion) < Number(a.precioLP4);
-const bPromo = Number(b.precioPromocion) < Number(b.precioLP4);
+      const bPromo = Number(b.precioPromocion) > 0 &&
+        Number(b.precioPromocion) < Number(b.precioLP4);
 
-return bPromo - aPromo;
+      return bPromo - aPromo;
+    });
 
-});
+    mostrarTopProductos(productos);
+    mostrarProductos(productos);
 
-mostrarProductos(productos);
+  });
 
-});
+/* ===============================
+MOSTRAR PRODUCTOS
+=============================== */
+
+function mostrarProductos(lista) {
+
+  const contenedor = document.getElementById("listaProductos");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  lista.forEach(p => {
+
+    const enPromo =
+      Number(p.precioPromocion) > 0 &&
+      Number(p.precioPromocion) < Number(p.precioLP4);
+
+    let bloquePrecio = "";
+
+    if (enPromo) {
+
+      bloquePrecio = `
+        <div class="badge-promo">🔥 PROMOCIÓN</div>
+        <div class="precio-anterior">
+          $ ${Number(p.precioLP4).toFixed(2)}
+        </div>
+        <div class="precio-promo">
+          $ ${Number(p.precioPromocion).toFixed(2)}
+        </div>
+        ${p.restricciones ? `
+        <div class="restricciones">
+          ${p.restricciones}
+        </div>` : ""}
+      `;
+
+    } else {
+
+      bloquePrecio = `
+        <div class="precio-normal">
+          $ ${Number(p.precioLP4).toFixed(2)}
+        </div>
+      `;
+
+    }
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
+      <h4>${p.producto}</h4>
+      <p>${p.codigo}</p>
+      <div style="font-weight:bold;color:#1E88E5;">
+        ${bloquePrecio}
+      </div>
+    `;
+
+    card.onclick = () => abrirDetalle(p);
+
+    contenedor.appendChild(card);
+
+  });
 
 }
 
-function mostrarProductos(lista){
+/* ===============================
+PRODUCTOS TOP
+=============================== */
 
-const contenedor = document.getElementById("listaProductos");
+function mostrarTopProductos(lista){
 
-contenedor.innerHTML="";
+  const contenedor = document.getElementById("topProductos");
+  if(!contenedor) return;
 
-lista.forEach(p=>{
+  contenedor.innerHTML="";
 
-const enPromo =
-p.precioPromocion &&
-Number(p.precioPromocion) < Number(p.precioLP4);
+  const top = lista.filter(p => p.top === true);
 
-let bloquePrecio="";
+  top.forEach(p=>{
 
-if(listaPrecioActiva==="LP1"){
+    const card = document.createElement("div");
+    card.className="card-top";
 
-bloquePrecio=`<div class="precio-normal">$ ${Number(p.precioLP1).toFixed(2)}</div>`;
+    card.innerHTML=`
+      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
+      <h4>${p.producto}</h4>
+      <p>${p.codigo}</p>
+    `;
 
-}else{
+    card.onclick = ()=> abrirDetalle(p);
 
-if(enPromo){
+    contenedor.appendChild(card);
 
-bloquePrecio=`
-<div class="badge-promo">🔥 PROMOCIÓN</div>
-<div class="precio-anterior">$ ${Number(p.precioLP4).toFixed(2)}</div>
-<div class="precio-promo">$ ${Number(p.precioPromocion).toFixed(2)}</div>
-`;
-
-}else{
-
-bloquePrecio=`<div class="precio-normal">$ ${Number(p.precioLP4).toFixed(2)}</div>`;
+  });
 
 }
 
-}
-
-const card=document.createElement("div");
-card.className="card";
-
-card.innerHTML=`
-<img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
-<h4>${p.producto}</h4>
-<p>${p.codigo}</p>
-${bloquePrecio}
-`;
-
-card.onclick=()=>abrirDetalle(p);
-
-contenedor.appendChild(card);
-
-});
-
-}
+/* ===============================
+BUSCADOR
+=============================== */
 
 const buscador = document.getElementById("buscador");
 
-if(buscador){
+if (buscador) {
 
-buscador.addEventListener("input",e=>{
+  buscador.addEventListener("input", e => {
 
-const t=e.target.value.toLowerCase();
+    const t = e.target.value.toLowerCase();
 
-mostrarProductos(
-productos.filter(p=>
-p.producto.toLowerCase().includes(t)||
-p.codigo.toLowerCase().includes(t)||
-p.marca.toLowerCase().includes(t)
-)
-);
+    mostrarProductos(
+      productos.filter(p =>
+        p.producto.toLowerCase().includes(t) ||
+        p.codigo.toLowerCase().includes(t) ||
+        p.marca.toLowerCase().includes(t)
+      )
+    );
 
-});
+  });
 
 }
 
-function abrirDetalle(p){
+/* ===============================
+MODAL DETALLE
+=============================== */
 
-const precioMostrar =
-listaPrecioActiva==="LP1"
-? p.precioLP1
-: (
-Number(p.precioPromocion)>0 &&
-Number(p.precioPromocion)<Number(p.precioLP4)
-)
-? p.precioPromocion
-: p.precioLP4;
+function abrirDetalle(p) {
 
-document.getElementById("modal").classList.remove("oculto");
+  const precioMostrar =
+    listaPrecioActiva === "LP1"
+      ? p.precioLP1
+      : (
+          Number(p.precioPromocion) > 0 &&
+          Number(p.precioPromocion) < Number(p.precioLP4)
+        )
+          ? p.precioPromocion
+          : p.precioLP4;
 
-document.getElementById("dImagen").src=p.imagen;
-document.getElementById("dNombre").textContent=p.producto;
-document.getElementById("dCodigo").textContent="Código: "+p.codigo;
-document.getElementById("dMarca").textContent="Marca: "+p.marca;
-document.getElementById("dUnidad").textContent="Unidad: "+p.unidad;
-document.getElementById("dMaster").textContent="Master: "+p.master;
-document.getElementById("dInner").textContent="Inner: "+p.inner;
+  document.getElementById("modal").classList.remove("oculto");
 
-document.getElementById("dPrecio").textContent=
-"Precio: $"+Number(precioMostrar).toFixed(2);
+  document.getElementById("dImagen").src = p.imagen;
+  document.getElementById("dNombre").textContent = p.producto;
+  document.getElementById("dCodigo").textContent = "Código: " + p.codigo;
+  document.getElementById("dMarca").textContent = "Marca: " + p.marca;
+  document.getElementById("dUnidad").textContent = "Unidad: " + p.unidad;
+  document.getElementById("dMaster").textContent = "Master: " + p.master;
+  document.getElementById("dInner").textContent = "Inner: " + p.inner;
+  document.getElementById("dPrecio").textContent =
+    "Precio: $" + Number(precioMostrar).toFixed(2);
 
-document.getElementById("btnAgregarCarrito").onclick=()=>{
-agregarAlCarrito(p);
+  document.getElementById("btnAgregarCarrito").onclick = () => {
+    agregarAlCarrito(p);
+  };
+
+}
+
+document.getElementById("cerrar").onclick = () => {
+  document.getElementById("modal").classList.add("oculto");
 };
 
-}
+/* ===============================
+TOGGLE LISTA PRECIOS
+=============================== */
 
-document.getElementById("cerrar").onclick=()=>{
-document.getElementById("modal").classList.add("oculto");
+const CLAVE_LP1 = "MaesraFebrero2026";
+
+document.getElementById("btnPrecio").onclick = async () => {
+
+  if (listaPrecioActiva === "LP1") {
+
+    listaPrecioActiva = "LP4";
+    localStorage.setItem("listaPrecio", "LP4");
+
+    actualizarIndicadorLista();
+    mostrarProductos(productos);
+
+    alert("Lista cambiada a LP4");
+
+    return;
+
+  }
+
+  const pass = prompt("Ingresa la contraseña para ver precios LP1:");
+
+  if (pass === CLAVE_LP1) {
+
+    listaPrecioActiva = "LP1";
+    localStorage.setItem("listaPrecio", "LP1");
+
+    actualizarIndicadorLista();
+    mostrarProductos(productos);
+
+    await addDoc(collection(db, "eventos"), {
+      tipo: "activar_LP1",
+      cliente: cliente,
+      fecha: new Date()
+    });
+
+    gtag('event', 'LP1_activada');
+
+    alert("Lista LP1 activada");
+
+  } else {
+
+    alert("Contraseña incorrecta");
+
+  }
+
 };
 
-function actualizarContadorCarrito(){
+/* ===============================
+CARRITO
+=============================== */
 
-const contador=document.getElementById("contadorCarrito");
+function actualizarContadorCarrito() {
 
-const totalItems=carrito.reduce((acc,i)=>acc+i.cantidad,0);
+  const contador = document.getElementById("contadorCarrito");
 
-contador.textContent=totalItems;
+  const totalItems = carrito.reduce((acc, item) =>
+    acc + item.cantidad, 0);
 
-contador.style.display = totalItems>0 ? "inline-block":"none";
+  contador.textContent = totalItems;
 
-}
-
-function calcularTotalCarrito(){
-
-const total=carrito.reduce((acc,i)=>acc+(i.precio*i.cantidad),0);
-
-document.getElementById("totalHeader").textContent=total.toFixed(2);
-document.getElementById("totalCarrito").textContent="TOTAL: $"+total.toFixed(2);
+  contador.style.display =
+    totalItems > 0 ? "inline-block" : "none";
 
 }
 
-function abrirCarrito(){
+function calcularTotalCarrito() {
 
-document.getElementById("modalCarrito").classList.remove("oculto");
+  const total = carrito.reduce((acc, item) => {
+    return acc + (item.precio * item.cantidad);
+  }, 0);
 
-renderizarCarrito();
-
-}
-
-function cerrarCarrito(){
-
-document.getElementById("modalCarrito").classList.add("oculto");
+  document.getElementById("totalCarrito").textContent = total.toFixed(2);
+  document.getElementById("totalHeader").textContent = total.toFixed(2);
 
 }
 
-function renderizarCarrito(){
+function abrirCarrito() {
 
-const contenedor=document.getElementById("contenidoCarrito");
+  document.getElementById("modalCarrito")
+    .classList.remove("oculto");
 
-contenedor.innerHTML="";
-
-if(carrito.length===0){
-
-contenedor.innerHTML="<p>El carrito está vacío</p>";
-return;
+  renderizarCarrito();
 
 }
 
-carrito.forEach((p,index)=>{
+function cerrarCarrito() {
 
-const subtotal=p.precio*p.cantidad;
-
-contenedor.innerHTML+=`
-<div class="item-carrito">
-<strong>${p.producto}</strong><br>
-${p.codigo}<br>
-$${p.precio}<br>
-Cantidad ${p.cantidad}<br>
-Subtotal $${subtotal.toFixed(2)}<br>
-<button onclick="eliminarProducto(${index})">Eliminar</button>
-</div>
-`;
-
-});
+  document.getElementById("modalCarrito")
+    .classList.add("oculto");
 
 }
 
-function eliminarProducto(index){
+function renderizarCarrito() {
 
-carrito.splice(index,1);
+  const contenedor =
+    document.getElementById("contenidoCarrito");
 
-localStorage.setItem("carrito",JSON.stringify(carrito));
+  contenedor.innerHTML = "";
 
-renderizarCarrito();
-actualizarContadorCarrito();
-calcularTotalCarrito();
+  if (carrito.length === 0) {
 
-}
+    contenedor.innerHTML = "<p>El carrito está vacío</p>";
+    return;
 
-function vaciarCarrito(){
+  }
 
-carrito=[];
+  carrito.forEach((p, index) => {
 
-localStorage.removeItem("carrito");
+    const subtotal = p.precio * p.cantidad;
 
-renderizarCarrito();
-actualizarContadorCarrito();
-calcularTotalCarrito();
+    contenedor.innerHTML += `
+      <div class="item-carrito">
+        <strong>${p.producto}</strong><br>
+        Código: ${p.codigo}<br>
+        Precio: $${p.precio.toFixed(2)}<br>
 
-}
+        Cantidad:
+        <button onclick="cambiarCantidad(${index}, -1)">➖</button>
 
-async function agregarAlCarrito(producto){
+        <input type="number"
+        value="${p.cantidad}"
+        min="1"
+        onchange="actualizarCantidad(${index}, this.value)"
+        style="width:60px;text-align:center;">
 
-let precioFinal;
+        <button onclick="cambiarCantidad(${index}, 1)">➕</button>
 
-if(listaPrecioActiva==="LP1"){
+        <br>
+        Subtotal: $${subtotal.toFixed(2)}<br>
 
-precioFinal=Number(producto.precioLP1);
+        <button onclick="eliminarProducto(${index})">
+        🗑 Eliminar
+        </button>
 
-}else{
+      </div>
+    `;
 
-precioFinal =
-Number(producto.precioPromocion)>0 &&
-Number(producto.precioPromocion)<Number(producto.precioLP4)
-? Number(producto.precioPromocion)
-: Number(producto.precioLP4);
-
-}
-
-const existente=carrito.find(p=>p.codigo===producto.codigo);
-
-if(existente){
-
-existente.cantidad++;
-
-}else{
-
-carrito.push({
-codigo:producto.codigo,
-producto:producto.producto,
-precio:precioFinal,
-cantidad:1
-});
+  });
 
 }
 
-localStorage.setItem("carrito",JSON.stringify(carrito));
+function cambiarCantidad(index, cambio) {
 
-actualizarContadorCarrito();
-calcularTotalCarrito();
+  carrito[index].cantidad += cambio;
 
-alert("Producto agregado al carrito");
+  if (carrito[index].cantidad <= 0) {
+    carrito.splice(index, 1);
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+}
+
+function actualizarCantidad(index, nuevaCantidad) {
+
+  nuevaCantidad = parseInt(nuevaCantidad);
+
+  if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+    carrito.splice(index, 1);
+  } else {
+    carrito[index].cantidad = nuevaCantidad;
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+}
+
+function eliminarProducto(index) {
+
+  carrito.splice(index, 1);
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+}
+
+function vaciarCarrito() {
+
+  carrito = [];
+
+  localStorage.removeItem("carrito");
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+}
+
+/* ===============================
+AGREGAR AL CARRITO
+=============================== */
+
+async function agregarAlCarrito(producto) {
+
+  if (!producto) return;
+
+  const existente =
+    carrito.find(p => p.codigo === producto.codigo);
+
+  if (existente) {
+
+    existente.cantidad++;
+
+  } else {
+
+    let precioFinal =
+      listaPrecioActiva === "LP1"
+        ? Number(producto.precioLP1)
+        : (
+            Number(producto.precioPromocion) > 0 &&
+            Number(producto.precioPromocion) < Number(producto.precioLP4)
+          )
+            ? Number(producto.precioPromocion)
+            : Number(producto.precioLP4);
+
+    carrito.push({
+      codigo: producto.codigo,
+      producto: producto.producto,
+      precio: precioFinal,
+      cantidad: 1
+    });
+
+  }
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+  await addDoc(collection(db, "eventos"), {
+    tipo: "agregar_carrito",
+    cliente: cliente || "",
+    codigo: producto.codigo,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
+
+  alert("Producto agregado al carrito 🛒");
+
+}
+
+/* ===============================
+ENVIAR PEDIDO
+=============================== */
+
+async function enviarWhatsApp() {
+
+  if (carrito.length === 0) {
+    alert("El carrito está vacío");
+    return;
+  }
+
+  let total = 0;
+  let mensaje = "🛒 *Pedido MAESRA* %0A%0A";
+
+  if (cliente) {
+    mensaje += "*Cliente:* " + cliente + " %0A%0A";
+  }
+
+  carrito.forEach(p => {
+
+    let subtotal = p.precio * p.cantidad;
+
+    total += subtotal;
+
+    mensaje += `${p.producto} %0A`;
+    mensaje += `Código: ${p.codigo} %0A`;
+    mensaje += `Cantidad: ${p.cantidad} %0A`;
+    mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
+
+  });
+
+  mensaje += `*TOTAL: $${total.toFixed(2)}*`;
+
+  await addDoc(collection(db, "pedidos"), {
+    cliente: cliente || "",
+    productos: carrito,
+    total: total,
+    listaPrecio: listaPrecioActiva,
+    fecha: new Date()
+  });
+
+  const numero = "5216565292879";
+  const url = `https://wa.me/${numero}?text=${mensaje}`;
+
+  window.open(url, "_blank");
+
+  carrito = [];
+  localStorage.removeItem("carrito");
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
 
 }
