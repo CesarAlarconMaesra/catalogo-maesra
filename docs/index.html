@@ -1,118 +1,178 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catálogo MAESRA Febrero 2026</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="img/icon-192.png">
-  <meta name="theme-color" content="#1f2937">
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FMS994TZZN"></script>
-  <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FMS994TZZN');
-  </script>
-</head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<div id="toastExito" class="toast">
-  ✅ Pedido enviado correctamente
-</div>
+<title>Catálogo MAESRA Febrero 2026</title>
+
+<link rel="stylesheet" href="style.css" />
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/icon-192.png">
+<meta name="theme-color" content="#1f2937">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FMS994TZZN"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-FMS994TZZN');
+</script>
+
+</head>
 
 <body>
 
-<div id="infoLista" style="padding:8px; font-weight:bold;">
-  📊 Lista activa: LP4
+<!-- TOAST -->
+<div id="toastExito" class="toast">
+✅ Pedido enviado correctamente
 </div>
 
-<header>
-  <h1>Catálogo MAESRA Febrero 2026</h1>
-<h3>"Al usar esta aplicación aceptas el registro de actividad con fines estadísticos."</h3>
+<!-- HEADER NUEVO -->
+<header class="header">
 
-  <button id="btnPrecio">🔐 Ver precios</button>
-  <button onclick="ocultarPrecios()">🙈 Cambiar precios</button>
-  <button onclick="abrirCarrito()">🛒 Ver carrito</button>
+<div class="header-top">
+
+<div class="logo-area">
+<img src="img/MAESRA.jpg" class="logo">
+<div class="titulo">
+<h1>Catálogo MAESRA</h1>
+<span class="subtitulo">Febrero 2026</span>
+<div id="infoLista">📊 Lista activa: LP4</div>
+</div>
+</div>
+
+<div class="acciones">
+
+<button id="btnPrecio" class="btn-precio">
+🔐 Ver precios LP1
+</button>
+
+<button onclick="ocultarPrecios()" class="btn-secundario">
+🙈 LP4
+</button>
+
 <div class="carrito-icono" onclick="abrirCarrito()">
-  🛒
-  <span id="contadorCarrito" class="contador">0</span>
+🛒
+<span id="contadorCarrito" class="contador">0</span>
 </div>
+
 <div class="resumen-header">
-  Total: $<span id="totalHeader">0.00</span>
+Total: $<span id="totalHeader">0.00</span>
 </div>
-<input type="text" id="buscador" placeholder="Buscar producto..." />
+
+</div>
+
+</div>
+
+<div class="busqueda">
+<input type="text" id="buscador" placeholder="Buscar producto o código...">
+</div>
+
 </header>
 
+<!-- PRODUCTOS -->
 <main id="listaProductos"></main>
 
-<!-- Modal DETALLE -->
+<!-- MODAL DETALLE -->
 <div id="modal" class="modal oculto">
-  <div class="modal-content">
-    <span id="cerrar">&times;</span>
-    <img id="dImagen" class="detalle-img" />
-    <h2 id="dNombre"></h2>
-    <p id="dCodigo"></p>
-    <p id="dMarca"></p>
-    <p id="dUnidad"></p>
-    <p id="dMaster"></p>
-    <p id="dInner"></p>
-    <p id="dPrecio"></p>
-    <button id="btnAgregarCarrito">🛒 Agregar al carrito</button>
-  </div>
-</div>
+<div class="modal-content">
 
-<!-- Modal CARRITO -->
-<div class="total-carrito">
-  Total: $<span id="totalCarrito">0.00</span>
-</div>
-<div id="modalCarrito" class="modal oculto">
-<div style="margin-bottom:10px;">
-  <label>Nombre del cliente:</label><br>
-  <input type="text" id="nombreCliente" placeholder="Escribe el nombre del cliente">
-</div>
-  <div class="modal-content">
-    <span onclick="cerrarCarrito()">&times;</span>
-    <h2>🛒 Carrito</h2>
-    <div id="contenidoCarrito"></div>
-    <h3 id="totalCarrito"></h3>
-    <button onclick="vaciarCarrito()">🗑 Vaciar carrito</button>
-    <button class="btn-enviar" onclick="enviarWhatsApp()">
-  📲 Enviar Pedido por WhatsApp
+<span id="cerrar">&times;</span>
+
+<img id="dImagen" class="detalle-img" />
+
+<h2 id="dNombre"></h2>
+
+<p id="dCodigo"></p>
+<p id="dMarca"></p>
+<p id="dUnidad"></p>
+<p id="dMaster"></p>
+<p id="dInner"></p>
+
+<p id="dPrecio"></p>
+
+<button id="btnAgregarCarrito">
+🛒 Agregar al carrito
 </button>
-    <button onclick="cerrarCarrito()">Cerrar</button>
-  </div>
+
+</div>
 </div>
 
+<!-- MODAL CARRITO -->
+<div id="modalCarrito" class="modal oculto">
+
+<div class="modal-content">
+
+<span onclick="cerrarCarrito()">&times;</span>
+
+<h2>🛒 Carrito</h2>
+
+<div class="cliente-input">
+<label>Nombre del cliente</label>
+<input type="text" id="nombreCliente" placeholder="Escribe el nombre del cliente">
+</div>
+
+<div id="contenidoCarrito"></div>
+
+<div class="total-carrito">
+Total: $<span id="totalCarrito">0.00</span>
+</div>
+
+<div class="acciones-carrito">
+
+<button onclick="vaciarCarrito()" class="btn-eliminar">
+🗑 Vaciar carrito
+</button>
+
+<button class="btn-enviar" onclick="enviarWhatsApp()">
+📲 Enviar Pedido por WhatsApp
+</button>
+
+<button onclick="cerrarCarrito()" class="btn-secundario">
+Cerrar
+</button>
+
+</div>
+
+</div>
+</div>
+
+<!-- SERVICE WORKER -->
 <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registrado"))
-      .catch(err => console.log("Error SW:", err));
-  }
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("service-worker.js")
+.then(() => console.log("Service Worker registrado"))
+.catch(err => console.log("Error SW:", err));
+}
 </script>
 
+<!-- FIREBASE -->
 <script type="module">
-  import { initializeApp } from 
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-  import { getFirestore, collection, addDoc } from 
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBN2oKqeUBcaXKZ9PmNzcMlymJZbkBn0vs",
-    authDomain: "catalogo-maesra.firebaseapp.com",
-    projectId: "catalogo-maesra",
-  };
+import { getFirestore, collection, addDoc } from 
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const firebaseConfig = {
+apiKey: "AIzaSyBN2oKqeUBcaXKZ9PmNzcMlymJZbkBn0vs",
+authDomain: "catalogo-maesra.firebaseapp.com",
+projectId: "catalogo-maesra",
+};
 
-  window.db = db;
-  window.addDoc = addDoc;
-  window.collection = collection;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db = db;
+window.addDoc = addDoc;
+window.collection = collection;
+
 </script>
 
-<script src="app.js"></script></body>
+<script src="app.js"></script>
+
+</body>
 </html>

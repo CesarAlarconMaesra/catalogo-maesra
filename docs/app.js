@@ -300,8 +300,10 @@ function eliminarProducto(index) {
 function vaciarCarrito() {
   carrito = [];
   localStorage.removeItem("carrito");
+
   renderizarCarrito();
   actualizarContadorCarrito();
+  calcularTotalCarrito();
 }
 
 async function agregarAlCarrito(producto) {
