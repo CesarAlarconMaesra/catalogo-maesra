@@ -3,6 +3,39 @@ let listaPrecioActiva = "LP4";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
 
+/* ===============================
+CARRUSEL INFINITO
+=============================== */
+
+function iniciarCarrusel(idContenedor) {
+
+  const contenedor = document.getElementById(idContenedor);
+  if (!contenedor) return;
+
+  let scroll = 0;
+
+  setInterval(() => {
+
+    const cardWidth =
+      contenedor.querySelector(".card-top, .card-promo")?.offsetWidth || 220;
+
+    scroll += cardWidth + 20;
+
+    if (scroll >= contenedor.scrollWidth / 2) {
+      scroll = 0;
+      contenedor.scrollTo({ left: 0 });
+      return;
+    }
+
+    contenedor.scrollTo({
+      left: scroll,
+      behavior: "smooth"
+    });
+
+  }, 2500);
+
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const carritoGuardado = localStorage.getItem("carrito");
@@ -56,6 +89,7 @@ fetch("productos.json")
     });
 
     mostrarTopProductos(productos);
+    mostrarPromociones(productos);
     mostrarProductos(productos);
 
   });
@@ -138,7 +172,9 @@ function mostrarTopProductos(lista){
 
   const top = lista.filter(p => p.top === true);
 
-  top.forEach(p=>{
+  const duplicado = [...top, ...top];
+
+  duplicado.forEach(p=>{
 
     const card = document.createElement("div");
     card.className="card-top";
@@ -154,6 +190,63 @@ function mostrarTopProductos(lista){
     contenedor.appendChild(card);
 
   });
+
+  iniciarCarrusel("topProductos");
+
+}
+
+/* ===============================
+PROMOCIONES
+=============================== */
+
+function mostrarPromociones(lista){
+
+  const contenedor = document.getElementById("promociones");
+  if(!contenedor) return;
+
+  contenedor.innerHTML="";
+
+  const promos = lista.filter(p =>
+    Number(p.precioPromocion) > 0 &&
+    Number(p.precioPromocion) < Number(p.precioLP4)
+  );
+
+  if(promos.length === 0) return;
+
+  const duplicado = [...promos, ...promos];
+
+  duplicado.forEach(p=>{
+
+    const card = document.createElement("div");
+    card.className="card-promo";
+
+    card.innerHTML=`
+      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
+      <h4>${p.producto}</h4>
+      <p>${p.codigo}</p>
+
+      <div class="precio-anterior">
+        $${Number(p.precioLP4).toFixed(2)}
+      </div>
+
+      <div class="precio-promo">
+        $${Number(p.precioPromocion).toFixed(2)}
+      </div>
+
+      ${p.restricciones ? `
+        <div class="restricciones">
+          ${p.restricciones}
+        </div>` : ""}
+
+    `;
+
+    card.onclick = ()=> abrirDetalle(p);
+
+    contenedor.appendChild(card);
+
+  });
+
+  iniciarCarrusel("promociones");
 
 }
 

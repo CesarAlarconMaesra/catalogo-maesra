@@ -133,6 +133,30 @@ header {
   display: none;
 }
 
+.carrusel{
+display:flex;
+overflow-x:auto;
+gap:20px;
+padding:10px;
+scroll-behavior:smooth;
+}
+
+.card-promo{
+min-width:200px;
+border:2px solid red;
+border-radius:10px;
+padding:10px;
+background:white;
+}
+
+.card-top{
+min-width:200px;
+border:2px solid #FFD700;
+border-radius:10px;
+padding:10px;
+background:white;
+}
+
 .seccion-top{
 padding:20px;
 background:#fff7ed;
