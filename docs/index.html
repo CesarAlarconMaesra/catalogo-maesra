@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="style.css" />
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="img/icon-192.png">
+
 <meta name="theme-color" content="#1f2937">
 
 <!-- Google Analytics -->
@@ -24,64 +25,57 @@ gtag('config', 'G-FMS994TZZN');
 
 <body>
 
-<!-- TOAST -->
 <div id="toastExito" class="toast">
 ✅ Pedido enviado correctamente
 </div>
 
-<!-- HEADER NUEVO -->
+<div id="infoLista"></div>
+
 <header class="header">
 
-<div class="header-top">
-
 <div class="logo-area">
-<img src="img/MAESRA.jpg" class="logo">
+
+<img src="img/maesra.jpg" class="logo">
+
 <div class="titulo">
 <h1>Catálogo MAESRA</h1>
-<span class="subtitulo">Febrero 2026</span>
-<div id="infoLista">📊 Lista activa: LP4</div>
-</div>
+<p>Promociones y catálogo digital</p>
 </div>
 
-<div class="acciones">
+</div>
 
-<button id="btnPrecio" class="btn-precio">
-🔐 Ver precios LP1
-</button>
+<div class="header-controles">
 
-<button onclick="ocultarPrecios()" class="btn-secundario">
-🙈 LP4
-</button>
+<button id="btnTogglePrecio" class="btn-precio"></button>
 
 <div class="carrito-icono" onclick="abrirCarrito()">
 🛒
 <span id="contadorCarrito" class="contador">0</span>
 </div>
 
-<div class="resumen-header">
-Total: $<span id="totalHeader">0.00</span>
+<div class="total-header">
+$<span id="totalHeader">0.00</span>
 </div>
 
-</div>
-
-</div>
-
-<div class="busqueda">
-<input type="text" id="buscador" placeholder="Buscar producto o código...">
 </div>
 
 </header>
 
-<!-- PRODUCTOS -->
+<div class="buscador-area">
+<input type="text" id="buscador" placeholder="Buscar producto, marca o código..." />
+</div>
+
 <main id="listaProductos"></main>
 
-<!-- MODAL DETALLE -->
+<!-- Modal detalle -->
+
 <div id="modal" class="modal oculto">
+
 <div class="modal-content">
 
 <span id="cerrar">&times;</span>
 
-<img id="dImagen" class="detalle-img" />
+<img id="dImagen" class="detalle-img"/>
 
 <h2 id="dNombre"></h2>
 
@@ -93,14 +87,15 @@ Total: $<span id="totalHeader">0.00</span>
 
 <p id="dPrecio"></p>
 
-<button id="btnAgregarCarrito">
+<button id="btnAgregarCarrito" class="btn-agregar">
 🛒 Agregar al carrito
 </button>
 
 </div>
 </div>
 
-<!-- MODAL CARRITO -->
+<!-- Modal carrito -->
+
 <div id="modalCarrito" class="modal oculto">
 
 <div class="modal-content">
@@ -109,53 +104,36 @@ Total: $<span id="totalHeader">0.00</span>
 
 <h2>🛒 Carrito</h2>
 
-<div class="cliente-input">
-<label>Nombre del cliente</label>
-<input type="text" id="nombreCliente" placeholder="Escribe el nombre del cliente">
-</div>
-
 <div id="contenidoCarrito"></div>
 
-<div class="total-carrito">
-Total: $<span id="totalCarrito">0.00</span>
-</div>
+<h3 id="totalCarrito"></h3>
 
-<div class="acciones-carrito">
-
-<button onclick="vaciarCarrito()" class="btn-eliminar">
+<button onclick="vaciarCarrito()" class="btn-vaciar">
 🗑 Vaciar carrito
 </button>
 
-<button class="btn-enviar" onclick="enviarWhatsApp()">
+<button onclick="enviarWhatsApp()" class="btn-enviar">
 📲 Enviar Pedido por WhatsApp
 </button>
 
-<button onclick="cerrarCarrito()" class="btn-secundario">
-Cerrar
-</button>
-
-</div>
+<button onclick="cerrarCarrito()">Cerrar</button>
 
 </div>
 </div>
 
-<!-- SERVICE WORKER -->
 <script>
 if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("service-worker.js")
-.then(() => console.log("Service Worker registrado"))
-.catch(err => console.log("Error SW:", err));
 }
 </script>
 
-<!-- FIREBASE -->
 <script type="module">
 
-import { initializeApp } from 
+import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
-import { getFirestore, collection, addDoc } from 
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBN2oKqeUBcaXKZ9PmNzcMlymJZbkBn0vs",
