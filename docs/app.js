@@ -1,7 +1,8 @@
 let productos = [];
-let listaPrecioActiva = "LP4"; // default
+let listaPrecioActiva = "LP4";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const carritoGuardado = localStorage.getItem("carrito");
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   actualizarContadorCarrito();
   calcularTotalCarrito();
+  actualizarIndicadorLista();
 
 });
 
@@ -19,14 +21,15 @@ if (!cliente) {
   cliente = prompt("Ingresa el nombre del cliente:");
   localStorage.setItem("cliente", cliente);
 }
-// 🔹 Revisar lista guardada
+
+// Revisar lista guardada
 if (localStorage.getItem("listaPrecio") === "LP1") {
   listaPrecioActiva = "LP1";
 } else {
   listaPrecioActiva = "LP4";
 }
 
-// 🔹 Actualizar indicador
+// Indicador de lista
 function actualizarIndicadorLista() {
   const info = document.getElementById("infoLista");
   if (info) {
@@ -34,26 +37,23 @@ function actualizarIndicadorLista() {
   }
 }
 
-actualizarIndicadorLista();
-
-// 🔹 Cargar productos
+// Cargar productos
 fetch("productos.json")
   .then(res => res.json())
   .then(data => {
 
     productos = data;
 
-    // 🔥 Ordenar promociones primero
     productos.sort((a, b) => {
-  const aPromo = Number(a.precioPromocion) < Number(a.precioLP4);
-  const bPromo = Number(b.precioPromocion) < Number(b.precioLP4);
-  return bPromo - aPromo;
-});
+      const aPromo = Number(a.precioPromocion) < Number(a.precioLP4);
+      const bPromo = Number(b.precioPromocion) < Number(b.precioLP4);
+      return bPromo - aPromo;
+    });
 
     mostrarProductos(productos);
   });
 
-// 🔹 Mostrar productos
+// Mostrar productos
 function mostrarProductos(lista) {
 
   const contenedor = document.getElementById("listaProductos");
@@ -62,34 +62,36 @@ function mostrarProductos(lista) {
   contenedor.innerHTML = "";
 
   lista.forEach(p => {
-  const enPromo =
-  p.precioPromocion &&
-  Number(p.precioPromocion) < Number(p.precioLP4);
-   let bloquePrecio = "";
 
-if (enPromo) {
+    const enPromo =
+      p.precioPromocion &&
+      Number(p.precioPromocion) < Number(p.precioLP4);
 
-  bloquePrecio = `
-    <div class="badge-promo">🔥 PROMOCIÓN</div>
-    <div class="precio-anterior">
-      $ ${Number(p.precioLP4).toFixed(2)}
-    </div>
-    <div class="precio-promo">
-      $ ${Number(p.precioPromocion).toFixed(2)}
-    </div>
-    <div class="restricciones">
-      ${p.restricciones || ""}
-    </div>
-  `;
+    let bloquePrecio = "";
 
-} else {
+    if (enPromo) {
 
-  bloquePrecio = `
-    <div class="precio-normal">
-      $ ${Number(p.precioLP4).toFixed(2)}
-    </div>
-  `;
-}
+      bloquePrecio = `
+        <div class="badge-promo">🔥 PROMOCIÓN</div>
+        <div class="precio-anterior">
+          $ ${Number(p.precioLP4).toFixed(2)}
+        </div>
+        <div class="precio-promo">
+          $ ${Number(p.precioPromocion).toFixed(2)}
+        </div>
+        <div class="restricciones">
+          ${p.restricciones || ""}
+        </div>
+      `;
+
+    } else {
+
+      bloquePrecio = `
+        <div class="precio-normal">
+          $ ${Number(p.precioLP4).toFixed(2)}
+        </div>
+      `;
+    }
 
     const card = document.createElement("div");
     card.className = "card";
@@ -109,10 +111,11 @@ if (enPromo) {
   });
 }
 
-// 🔹 Buscador
+// Buscador
 const buscador = document.getElementById("buscador");
 if (buscador) {
   buscador.addEventListener("input", e => {
+
     const t = e.target.value.toLowerCase();
 
     mostrarProductos(
@@ -125,7 +128,7 @@ if (buscador) {
   });
 }
 
-// 🔹 Modal detalle
+// Modal detalle
 function abrirDetalle(p) {
 
   const precioMostrar = listaPrecioActiva === "LP1"
@@ -143,76 +146,94 @@ function abrirDetalle(p) {
   document.getElementById("dInner").textContent = "Inner: " + p.inner;
   document.getElementById("dPrecio").textContent =
     "Precio: $" + Number(precioMostrar).toFixed(2);
+
   document.getElementById("btnAgregarCarrito").onclick = () => {
-  agregarAlCarrito(p);
-};
+    agregarAlCarrito(p);
+  };
 }
 
 document.getElementById("cerrar").onclick = () => {
   document.getElementById("modal").classList.add("oculto");
 };
 
-// 🔐 Activar LP1
+// Contraseña
 const CLAVE_LP1 = "MaesraFebrero2026";
 
+// Cambiar lista
 document.getElementById("btnPrecio").onclick = async () => {
-const pass = prompt("Ingresa la contraseña para ver precios LP1:");
 
-  if (pass === CLAVE_LP1) {
+  const opcion = prompt(
+    "Selecciona lista:\n1 - LP1\n2 - LP4"
+  );
+
+  if (!opcion) return;
+
+  if (opcion === "1") {
+
+    const pass = prompt("Ingresa contraseña LP1:");
+
+    if (pass !== CLAVE_LP1) {
+      alert("❌ Contraseña incorrecta");
+      return;
+    }
+
     listaPrecioActiva = "LP1";
     localStorage.setItem("listaPrecio", "LP1");
-    actualizarIndicadorLista();
-    mostrarProductos(productos);
-    await addDoc(collection(db, "eventos"), {
-    tipo: "activar_LP1",
-    cliente: cliente,
-    fecha: new Date()
-    });
-  gtag('event', 'LP1_activada');  
-  alert("✅ Lista LP1 activada");
-  } else {
-    alert("❌ Contraseña incorrecta");
-  }
-};
 
-// 🔹 Regresar a LP4
-function ocultarPrecios() {
-  listaPrecioActiva = "LP4";
-  localStorage.setItem("listaPrecio", "LP4");
+  }
+  else if (opcion === "2") {
+
+    listaPrecioActiva = "LP4";
+    localStorage.setItem("listaPrecio", "LP4");
+
+  } else {
+    return;
+  }
+
   actualizarIndicadorLista();
   mostrarProductos(productos);
-}
 
+  alert("Lista activa: " + listaPrecioActiva);
+};
+
+// Contador carrito
 function actualizarContadorCarrito() {
+
   const contador = document.getElementById("contadorCarrito");
+  if (!contador) return;
 
   const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
 
   contador.textContent = totalItems;
-
   contador.style.display = totalItems > 0 ? "inline-block" : "none";
 }
 
+// Total carrito
 function calcularTotalCarrito() {
+
   const total = carrito.reduce((acc, item) => {
     return acc + (item.precio * item.cantidad);
   }, 0);
 
-  document.getElementById("totalCarrito").textContent = total.toFixed(2);
-  document.getElementById("totalHeader").textContent = total.toFixed(2);
+  const totalCarrito = document.getElementById("totalCarrito");
+  const totalHeader = document.getElementById("totalHeader");
+
+  if (totalCarrito) totalCarrito.textContent = total.toFixed(2);
+  if (totalHeader) totalHeader.textContent = total.toFixed(2);
 }
 
+// Abrir carrito
 function abrirCarrito() {
-  console.log("Se abrió carrito");
   document.getElementById("modalCarrito").classList.remove("oculto");
   renderizarCarrito();
-  gtag('event', 'abrir_carrito');
 }
 
+// Cerrar carrito
 function cerrarCarrito() {
   document.getElementById("modalCarrito").classList.add("oculto");
 }
 
+// Render carrito
 function renderizarCarrito() {
 
   const contenedor = document.getElementById("contenidoCarrito");
@@ -224,7 +245,7 @@ function renderizarCarrito() {
 
   if (carrito.length === 0) {
     contenedor.innerHTML = "<p>El carrito está vacío</p>";
-    if (totalElemento) totalElemento.textContent = "";
+    if (totalElemento) totalElemento.textContent = "TOTAL: $0.00";
     return;
   }
 
@@ -240,17 +261,22 @@ function renderizarCarrito() {
         <strong>${p.producto}</strong><br>
         Código: ${p.codigo}<br>
         Precio: $${p.precio.toFixed(2)}<br>
-       Cantidad:
-       <button onclick="cambiarCantidad(${index}, -1)">➖</button>
-       <input type="number"
-         min="1"
-         value="${p.cantidad}"
-         onchange="actualizarCantidad(${index}, this.value)"
-         style="width:60px; text-align:center;">
+
+        Cantidad:
+        <button onclick="cambiarCantidad(${index}, -1)">➖</button>
+        <input type="number"
+          min="1"
+          value="${p.cantidad}"
+          onchange="actualizarCantidad(${index}, this.value)"
+          style="width:60px;text-align:center;">
         <button onclick="cambiarCantidad(${index}, 1)">➕</button>
+
         <br>
         Subtotal: $${subtotal.toFixed(2)}<br>
-        <button onclick="eliminarProducto(${index})">🗑 Eliminar</button>
+
+        <button onclick="eliminarProducto(${index})">
+        🗑 Eliminar
+        </button>
       </div>
     `;
   });
@@ -260,6 +286,7 @@ function renderizarCarrito() {
   }
 }
 
+// Cambiar cantidad
 function cambiarCantidad(index, cambio) {
 
   carrito[index].cantidad += cambio;
@@ -269,11 +296,13 @@ function cambiarCantidad(index, cambio) {
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
+
   renderizarCarrito();
   actualizarContadorCarrito();
   calcularTotalCarrito();
 }
 
+// Actualizar cantidad manual
 function actualizarCantidad(index, nuevaCantidad) {
 
   nuevaCantidad = parseInt(nuevaCantidad);
@@ -283,21 +312,28 @@ function actualizarCantidad(index, nuevaCantidad) {
   } else {
     carrito[index].cantidad = nuevaCantidad;
   }
-localStorage.setItem("carrito", JSON.stringify(carrito));
+
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+
   renderizarCarrito();
   actualizarContadorCarrito();
   calcularTotalCarrito();
 }
 
+// Eliminar producto
 function eliminarProducto(index) {
+
   carrito.splice(index, 1);
   localStorage.setItem("carrito", JSON.stringify(carrito));
+
   renderizarCarrito();
   actualizarContadorCarrito();
   calcularTotalCarrito();
 }
 
+// Vaciar carrito
 function vaciarCarrito() {
+
   carrito = [];
   localStorage.removeItem("carrito");
 
@@ -306,6 +342,7 @@ function vaciarCarrito() {
   calcularTotalCarrito();
 }
 
+// Agregar al carrito
 async function agregarAlCarrito(producto) {
 
   if (!producto) return;
@@ -316,15 +353,14 @@ async function agregarAlCarrito(producto) {
     existente.cantidad++;
   } else {
 
-    // 🔥 Determinar precio correcto según lista activa
     let precioFinal = listaPrecioActiva === "LP1"
       ? Number(producto.precioLP1)
       : (
-          Number(producto.precioPromocion) > 0 &&
-          Number(producto.precioPromocion) < Number(producto.precioLP4)
-        )
-          ? Number(producto.precioPromocion)
-          : Number(producto.precioLP4);
+        Number(producto.precioPromocion) > 0 &&
+        Number(producto.precioPromocion) < Number(producto.precioLP4)
+      )
+        ? Number(producto.precioPromocion)
+        : Number(producto.precioLP4);
 
     carrito.push({
       codigo: producto.codigo,
@@ -336,25 +372,26 @@ async function agregarAlCarrito(producto) {
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
 
-  await addDoc(collection(db, "eventos"), {
-    tipo: "agregar_carrito",
-    cliente: cliente || "",
-    codigo: producto.codigo,
-    listaPrecio: listaPrecioActiva,
-    fecha: new Date()
-  });
   actualizarContadorCarrito();
   calcularTotalCarrito();
+
   alert("Producto agregado al carrito 🛒");
 }
+
+// Toast
 function mostrarToast() {
+
   const toast = document.getElementById("toastExito");
+  if (!toast) return;
+
   toast.classList.add("mostrar");
 
   setTimeout(() => {
     toast.classList.remove("mostrar");
   }, 3000);
 }
+
+// Enviar WhatsApp
 async function enviarWhatsApp() {
 
   if (carrito.length === 0) {
@@ -370,6 +407,7 @@ async function enviarWhatsApp() {
   }
 
   carrito.forEach(p => {
+
     let subtotal = p.precio * p.cantidad;
     total += subtotal;
 
@@ -377,40 +415,22 @@ async function enviarWhatsApp() {
     mensaje += `Código: ${p.codigo} %0A`;
     mensaje += `Cantidad: ${p.cantidad} %0A`;
     mensaje += `Subtotal: $${subtotal.toFixed(2)} %0A%0A`;
+
   });
 
   mensaje += `*TOTAL: $${total.toFixed(2)}*`;
-
-  // 🔹 Guardar pedido en Firestore
-  await addDoc(collection(db, "pedidos"), {
-    cliente: cliente || "",
-    productos: carrito,
-    total: total,
-    listaPrecio: listaPrecioActiva,
-    fecha: new Date()
-  });
-
-  // 🔹 Registrar evento
-  await addDoc(collection(db, "eventos"), {
-    tipo: "enviar_whatsapp",
-    cliente: cliente || "",
-    total: total,
-    fecha: new Date()
-  });
-
-  gtag('event', 'enviar_whatsapp', {
-    value: total
-  });
 
   const numero = "5216565292879";
   const url = `https://wa.me/${numero}?text=${mensaje}`;
 
   window.open(url, "_blank");
 
-  // ✅ AQUÍ se limpia correctamente
   carrito = [];
   localStorage.removeItem("carrito");
-  renderizarCarrito(); // actualiza vista
+
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
 
   mostrarToast();
 }
