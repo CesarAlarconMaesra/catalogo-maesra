@@ -146,10 +146,6 @@ function mostrarPromociones(lista){
 
 }
 
-  iniciarCarrusel(track);
-
-}
-
 /* ===============================
 TOP PRODUCTOS
 =============================== */
