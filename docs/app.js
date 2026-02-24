@@ -4,7 +4,7 @@ let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
 
 /* ===============================
-CARRUSEL INFINITO
+CARRUSEL AUTOMÁTICO
 =============================== */
 
 function iniciarCarrusel(idContenedor) {
@@ -13,24 +13,16 @@ function iniciarCarrusel(idContenedor) {
   if (!contenedor) return;
 
   let scroll = 0;
-  let pausa = false;
-
-  contenedor.addEventListener("mouseenter", () => pausa = true);
-  contenedor.addEventListener("mouseleave", () => pausa = false);
 
   setInterval(() => {
 
-    if (pausa) return;
-
     const cardWidth =
-      contenedor.querySelector(".card-top, .card-promo")?.offsetWidth || 220;
+      contenedor.children[0]?.offsetWidth || 220;
 
     scroll += cardWidth + 20;
 
-    if (scroll >= contenedor.scrollWidth / 2) {
+    if (scroll >= contenedor.scrollWidth - contenedor.clientWidth) {
       scroll = 0;
-      contenedor.scrollTo({ left: 0 });
-      return;
     }
 
     contenedor.scrollTo({
@@ -41,6 +33,7 @@ function iniciarCarrusel(idContenedor) {
   }, 2500);
 
 }
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const carritoGuardado = localStorage.getItem("carrito");
@@ -93,8 +86,8 @@ fetch("productos.json")
       return bPromo - aPromo;
     });
 
-    mostrarTopProductos(productos);
     mostrarPromociones(productos);
+    mostrarTopProductos(productos);
     mostrarProductos(productos);
 
   });
@@ -177,7 +170,7 @@ function mostrarTopProductos(lista){
 
   const top = lista.filter(p => p.top === true);
 
-  const duplicado = [...top, ...top];
+  const duplicado = [...top, ...top]; // efecto infinito
 
   duplicado.forEach(p=>{
 
@@ -200,12 +193,16 @@ function mostrarTopProductos(lista){
 
 }
 
+/* ===============================
+PROMOCIONES
+=============================== */
+
 function mostrarPromociones(lista){
 
   const contenedor = document.getElementById("promoTrack");
   if(!contenedor) return;
 
-  contenedor.innerHTML = "";
+  contenedor.innerHTML="";
 
   const promos = lista.filter(p =>
     Number(p.precioPromocion) > 0 &&
@@ -214,26 +211,19 @@ function mostrarPromociones(lista){
 
   const duplicado = [...promos, ...promos];
 
-  duplicado.forEach(p => {
+  duplicado.forEach(p=>{
 
     const card = document.createElement("div");
-    card.className = "card-promo";
+    card.className="card-promo";
 
-    card.innerHTML = `
+    card.innerHTML=`
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
-
-      <div class="precio-anterior">
-        $${Number(p.precioLP4).toFixed(2)}
-      </div>
-
-      <div class="precio-promo">
-        $${Number(p.precioPromocion).toFixed(2)}
-      </div>
+      <div class="precio-promo">$${Number(p.precioPromocion).toFixed(2)}</div>
     `;
 
-    card.onclick = () => abrirDetalle(p);
+    card.onclick = ()=> abrirDetalle(p);
 
     contenedor.appendChild(card);
 
