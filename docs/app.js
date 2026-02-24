@@ -378,16 +378,6 @@ function abrirCarrito(){
   renderizarCarrito();
 
 }
-function abrirCarrito(){
-
-  const modal = document.getElementById("modalCarrito");
-  if(!modal) return;
-
-  modal.classList.remove("oculto");
-
-  renderizarCarrito();
-
-}
 
 function actualizarContadorCarrito(){
 
