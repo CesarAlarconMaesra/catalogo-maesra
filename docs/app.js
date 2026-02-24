@@ -46,8 +46,19 @@ document.addEventListener("DOMContentLoaded", () => {
   calcularTotalCarrito();
   actualizarIndicadorLista();
 
+  iniciarEventosUI();
+
 });
 
+function iniciarEventosUI(){
+
+  const btnPrecio = document.getElementById("btnPrecio");
+
+  if(btnPrecio){
+    btnPrecio.onclick = toggleListaPrecio;
+  }
+
+}
 if (!cliente) {
   cliente = prompt("Ingresa el nombre del cliente:");
   localStorage.setItem("cliente", cliente);
@@ -301,7 +312,7 @@ TOGGLE LISTA PRECIOS
 
 const CLAVE_LP1 = "MaesraFebrero2026";
 
-document.getElementById("btnPrecio").onclick = async () => {
+async function toggleListaPrecio(){
 
   if (listaPrecioActiva === "LP1") {
 
