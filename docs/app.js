@@ -101,42 +101,50 @@ PROMOCIONES
 
 function mostrarPromociones(lista){
 
-  const track = document.getElementById("promoTrack");
-  if(!track) return;
+  const contenedor = document.getElementById("promoTrack");
+  if(!contenedor) return;
 
-  track.innerHTML="";
+  contenedor.innerHTML="";
 
   const promos = lista.filter(p =>
     Number(p.precioPromocion) > 0 &&
     Number(p.precioPromocion) < Number(p.precioLP4)
   );
 
-  const duplicado = [...promos, ...promos];
-
-  duplicado.forEach(p=>{
+  promos.forEach(p => {
 
     const card = document.createElement("div");
-    card.className="card-promo";
+    card.className="card card-promo";
 
-    card.innerHTML=`
+    card.innerHTML = `
+      <div class="badge-promo">🔥 PROMOCIÓN</div>
+
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
+
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
 
       <div class="precio-anterior">
-        $${Number(p.precioLP4).toFixed(2)}
+      $${Number(p.precioLP4).toFixed(2)}
       </div>
 
       <div class="precio-promo">
-        $${Number(p.precioPromocion).toFixed(2)}
+      $${Number(p.precioPromocion).toFixed(2)}
       </div>
+
+      ${p.restricciones ? `
+      <div class="restricciones">
+      ${p.restricciones}
+      </div>` : ""}
     `;
 
-    card.onclick=()=>abrirDetalle(p);
+    card.onclick = () => abrirDetalle(p);
 
-    track.appendChild(card);
+    contenedor.appendChild(card);
 
   });
+
+}
 
   iniciarCarrusel(track);
 
@@ -461,3 +469,29 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 
 }
+
+/* ===============================
+CONECTAR BOTONES UI
+=============================== */
+
+window.addEventListener("load", () => {
+
+  const btnCarrito = document.getElementById("btnCarrito");
+  const btnPrecio = document.getElementById("btnPrecio");
+  const btnCerrar = document.getElementById("cerrarCarrito");
+
+  if (btnCarrito) {
+    btnCarrito.addEventListener("click", abrirCarrito);
+  }
+
+  if (btnCerrar) {
+    btnCerrar.addEventListener("click", cerrarCarrito);
+  }
+
+  if (btnPrecio) {
+    btnPrecio.addEventListener("click", () => {
+      document.getElementById("btnPrecio").onclick();
+    });
+  }
+
+});

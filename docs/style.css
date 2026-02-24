@@ -62,23 +62,21 @@ font-size:18px;
 font-weight:bold;
 }
 
-.carrito-icono{
-font-size:22px;
-cursor:pointer;
+.carrito-btn{
 position:relative;
 }
 
-.contador{
+.contador-carrito{
 position:absolute;
-top:-8px;
-right:-10px;
+top:-6px;
+right:-8px;
 background:red;
 color:white;
-border-radius:50%;
-padding:2px 6px;
 font-size:12px;
+border-radius:50%;
+padding:3px 6px;
+display:none;
 }
-
 .resumen-header{
 font-weight:bold;
 font-size:14px;
@@ -143,15 +141,44 @@ body {
 
 .card-top,
 .card-promo{
-  min-width:220px;
-  max-width:220px;
-  flex-shrink:0;
-  background:white;
-  border-radius:10px;
-  padding:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+
+min-width:220px;
+max-width:220px;
+
+border:2px solid #ff3b3b;
+border-radius:10px;
+
+padding:10px;
+background:white;
+position:relative;
+
 }
 
+.badge-promo{
+
+position:absolute;
+top:6px;
+left:6px;
+
+background:red;
+color:white;
+font-size:12px;
+padding:4px 6px;
+border-radius:5px;
+
+}
+
+.precio-anterior{
+text-decoration:line-through;
+color:#777;
+font-size:13px;
+}
+
+.precio-promo{
+color:red;
+font-weight:bold;
+font-size:18px;
+}
 header {
   position: sticky;
   top: 0;
