@@ -372,7 +372,7 @@ async function toggleListaPrecio(){
 CARRITO
 =============================== */
 
-function abrirCarrito(){
+function abrirCarrito() {
 
   const modal = document.getElementById("modalCarrito");
   if(!modal) return;
@@ -380,6 +380,60 @@ function abrirCarrito(){
   modal.classList.remove("oculto");
 
   renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+
+}
+
+function renderizarCarrito() {
+
+  const contenedor = document.getElementById("contenidoCarrito");
+  if(!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  if (carrito.length === 0) {
+    contenedor.innerHTML = "<p>El carrito está vacío</p>";
+    return;
+  }
+
+  carrito.forEach((p, index) => {
+
+    const subtotal = p.precio * p.cantidad;
+
+    const item = document.createElement("div");
+    item.className = "item-carrito";
+
+    item.innerHTML = `
+      <strong>${p.producto}</strong><br>
+      Código: ${p.codigo}<br>
+      Precio: $${p.precio.toFixed(2)}<br><br>
+
+      Cantidad:
+
+      <button class="menos">➖</button>
+
+      <input type="number" value="${p.cantidad}" min="1" class="cantidad">
+
+      <button class="mas">➕</button>
+
+      <br><br>
+
+      Subtotal: $${subtotal.toFixed(2)}<br><br>
+
+      <button class="eliminar">🗑 Eliminar</button>
+    `;
+
+    item.querySelector(".menos").onclick = () => cambiarCantidad(index, -1);
+    item.querySelector(".mas").onclick = () => cambiarCantidad(index, 1);
+    item.querySelector(".eliminar").onclick = () => eliminarProducto(index);
+
+    item.querySelector(".cantidad").onchange = (e) =>
+      actualizarCantidad(index, e.target.value);
+
+    contenedor.appendChild(item);
+
+  });
 
 }
 
@@ -489,5 +543,61 @@ window.addEventListener("load", () => {
       document.getElementById("btnPrecio").onclick();
     });
   }
+
+});
+
+function iniciarCarrusel(id){
+
+  const track = document.getElementById(id);
+  if(!track) return;
+
+  let scroll = 0;
+
+  setInterval(()=>{
+
+    scroll += 1;
+
+    track.scrollLeft = scroll;
+
+    if(scroll >= track.scrollWidth - track.clientWidth){
+      scroll = 0;
+    }
+
+  },20);
+
+}
+
+window.addEventListener("load",()=>{
+
+  iniciarCarrusel("promoTrack");
+  iniciarCarrusel("topProductos");
+
+});
+
+function iniciarCarrusel(id){
+
+  const track = document.getElementById(id);
+  if(!track) return;
+
+  let scroll = 0;
+
+  setInterval(()=>{
+
+    scroll += 1;
+
+    track.scrollLeft = scroll;
+
+    if(scroll >= track.scrollWidth - track.clientWidth){
+      scroll = 0;
+    }
+
+  },20);
+
+}
+
+window.addEventListener("load",()=>{
+
+  iniciarCarrusel("promoTrack");
+  iniciarCarrusel("topProductos");
 
 });
