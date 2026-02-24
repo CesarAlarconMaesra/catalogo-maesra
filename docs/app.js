@@ -14,15 +14,36 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("cliente", cliente);
   }
 
-  iniciarEventosUI();
-
   actualizarContadorCarrito();
   calcularTotalCarrito();
   actualizarIndicadorLista();
 
   cargarProductos();
 
+  /* NUEVO */
+  conectarBotones();
+
 });
+
+function conectarBotones(){
+
+  const btnCarrito = document.getElementById("btnCarrito");
+  const btnCerrarCarrito = document.getElementById("cerrarCarrito");
+  const btnPrecio = document.getElementById("btnPrecio");
+
+  if(btnCarrito){
+    btnCarrito.onclick = abrirCarrito;
+  }
+
+  if(btnCerrarCarrito){
+    btnCerrarCarrito.onclick = cerrarCarrito;
+  }
+
+  if(btnPrecio){
+    btnPrecio.onclick = toggleListaPrecio;
+  }
+
+}
 
 /* ===============================
 EVENTOS UI
@@ -346,6 +367,27 @@ async function toggleListaPrecio(){
 /* ===============================
 CARRITO
 =============================== */
+
+function abrirCarrito(){
+
+  const modal = document.getElementById("modalCarrito");
+  if(!modal) return;
+
+  modal.classList.remove("oculto");
+
+  renderizarCarrito();
+
+}
+function abrirCarrito(){
+
+  const modal = document.getElementById("modalCarrito");
+  if(!modal) return;
+
+  modal.classList.remove("oculto");
+
+  renderizarCarrito();
+
+}
 
 function actualizarContadorCarrito(){
 
