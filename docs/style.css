@@ -139,19 +139,19 @@ body {
   display:none;
 }
 
+.card,
 .card-top,
-.card-promo{
+.card-promo {
+  width: 65% !important;
+  max-width: 220px;
+  font-size: 0.85rem;
+}
 
-min-width:220px;
-max-width:220px;
-
-border:2px solid #ff3b3b;
-border-radius:10px;
-
-padding:10px;
-background:white;
-position:relative;
-
+.card img,
+.card-top img,
+.card-promo img {
+  height: 120px;
+  object-fit: contain;
 }
 
 .badge-promo{

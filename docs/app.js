@@ -14,47 +14,32 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("cliente", cliente);
   }
 
+  actualizarIndicadorLista();
   actualizarContadorCarrito();
   calcularTotalCarrito();
-  actualizarIndicadorLista();
 
   cargarProductos();
-
-  /* NUEVO */
   conectarBotones();
 
 });
+
+/* ===============================
+BOTONES
+=============================== */
 
 function conectarBotones(){
 
   const btnCarrito = document.getElementById("btnCarrito");
   const btnCerrarCarrito = document.getElementById("cerrarCarrito");
+  const btnVaciar = document.getElementById("btnVaciarCarrito");
   const btnPrecio = document.getElementById("btnPrecio");
+  const btnWhatsapp = document.getElementById("btnWhatsapp");
 
-  if(btnCarrito){
-    btnCarrito.onclick = abrirCarrito;
-  }
-
-  if(btnCerrarCarrito){
-    btnCerrarCarrito.onclick = cerrarCarrito;
-  }
-
-  if(btnPrecio){
-    btnPrecio.onclick = toggleListaPrecio;
-  }
-
-}
-
-/* ===============================
-EVENTOS UI
-=============================== */
-
-function iniciarEventosUI(){
-
-  const btnPrecio = document.getElementById("btnPrecio");
-  if(btnPrecio){
-    btnPrecio.onclick = toggleListaPrecio;
-  }
+  if(btnCarrito) btnCarrito.onclick = abrirCarrito;
+  if(btnCerrarCarrito) btnCerrarCarrito.onclick = cerrarCarrito;
+  if(btnVaciar) btnVaciar.onclick = vaciarCarrito;
+  if(btnPrecio) btnPrecio.onclick = toggleListaPrecio;
+  if(btnWhatsapp) btnWhatsapp.onclick = enviarWhatsApp;
 
 }
 
@@ -111,38 +96,28 @@ function mostrarPromociones(lista){
     Number(p.precioPromocion) < Number(p.precioLP4)
   );
 
-  promos.forEach(p => {
+  const duplicado = [...promos, ...promos];
+
+  duplicado.forEach(p => {
 
     const card = document.createElement("div");
     card.className="card card-promo";
 
     card.innerHTML = `
       <div class="badge-promo">🔥 PROMOCIÓN</div>
-
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
-
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
-
-      <div class="precio-anterior">
-      $${Number(p.precioLP4).toFixed(2)}
-      </div>
-
-      <div class="precio-promo">
-      $${Number(p.precioPromocion).toFixed(2)}
-      </div>
-
-      ${p.restricciones ? `
-      <div class="restricciones">
-      ${p.restricciones}
-      </div>` : ""}
+      <div class="precio-anterior">$${Number(p.precioLP4).toFixed(2)}</div>
+      <div class="precio-promo">$${Number(p.precioPromocion).toFixed(2)}</div>
     `;
 
     card.onclick = () => abrirDetalle(p);
-
     contenedor.appendChild(card);
 
   });
+
+  iniciarCarrusel("promoTrack");
 
 }
 
@@ -158,7 +133,7 @@ function mostrarTopProductos(lista){
   contenedor.innerHTML="";
 
   const top = lista.filter(p => p.top === true);
-  const duplicado = [...top,...top];
+  const duplicado = [...top, ...top];
 
   duplicado.forEach(p=>{
 
@@ -172,12 +147,11 @@ function mostrarTopProductos(lista){
     `;
 
     card.onclick=()=>abrirDetalle(p);
-
     contenedor.appendChild(card);
 
   });
 
-  iniciarCarrusel(contenedor);
+  iniciarCarrusel("topProductos");
 
 }
 
@@ -185,43 +159,28 @@ function mostrarTopProductos(lista){
 CARRUSEL
 =============================== */
 
-function iniciarCarrusel(contenedor){
+function iniciarCarrusel(id){
 
-  let scroll=0;
+  const track = document.getElementById(id);
+  if(!track) return;
 
-  let pausa=false;
-
-  contenedor.addEventListener("mouseenter",()=> pausa=true);
-  contenedor.addEventListener("mouseleave",()=> pausa=false);
+  let scroll = 0;
 
   setInterval(()=>{
 
-    if(pausa) return;
+    scroll += 1;
+    track.scrollLeft = scroll;
 
-    const card = contenedor.querySelector(".card-top, .card-promo");
-    if(!card) return;
-
-    const ancho = card.offsetWidth + 16;
-
-    scroll += ancho;
-
-    if(scroll >= contenedor.scrollWidth / 2){
+    if(scroll >= track.scrollWidth - track.clientWidth){
       scroll = 0;
-      contenedor.scrollTo({left:0});
-      return;
     }
 
-    contenedor.scrollTo({
-      left:scroll,
-      behavior:"smooth"
-    });
-
-  },2500);
+  },20);
 
 }
 
 /* ===============================
-MOSTRAR PRODUCTOS
+PRODUCTOS
 =============================== */
 
 function mostrarProductos(lista){
@@ -237,35 +196,25 @@ function mostrarProductos(lista){
       Number(p.precioPromocion) > 0 &&
       Number(p.precioPromocion) < Number(p.precioLP4);
 
-    let precioHTML="";
-
-    if(enPromo){
-
-      precioHTML=`
-        <div class="precio-anterior">$${Number(p.precioLP4).toFixed(2)}</div>
-        <div class="precio-promo">$${Number(p.precioPromocion).toFixed(2)}</div>
-      `;
-
-    }else{
-
-      precioHTML=`
-        <div class="precio-normal">$${Number(p.precioLP4).toFixed(2)}</div>
-      `;
-
-    }
+    let precio =
+      listaPrecioActiva==="LP1"
+      ? Number(p.precioLP1)
+      : enPromo
+        ? Number(p.precioPromocion)
+        : Number(p.precioLP4);
 
     const card=document.createElement("div");
     card.className="card";
 
     card.innerHTML=`
+      ${enPromo ? `<div class="badge-promo">🔥 PROMOCIÓN</div>`:""}
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
-      ${precioHTML}
+      <div class="precio-normal">$${precio.toFixed(2)}</div>
     `;
 
     card.onclick=()=>abrirDetalle(p);
-
     contenedor.appendChild(card);
 
   });
@@ -273,122 +222,30 @@ function mostrarProductos(lista){
 }
 
 /* ===============================
-BUSCADOR
-=============================== */
-
-const buscador=document.getElementById("buscador");
-
-if(buscador){
-
-  buscador.addEventListener("input",e=>{
-
-    const t=e.target.value.toLowerCase();
-
-    mostrarProductos(
-      productos.filter(p =>
-        p.producto.toLowerCase().includes(t) ||
-        p.codigo.toLowerCase().includes(t) ||
-        p.marca.toLowerCase().includes(t)
-      )
-    );
-
-  });
-
-}
-
-/* ===============================
-MODAL
-=============================== */
-
-function abrirDetalle(p){
-
-  const precio =
-    listaPrecioActiva==="LP1"
-    ? p.precioLP1
-    : (Number(p.precioPromocion)>0 &&
-       Number(p.precioPromocion)<Number(p.precioLP4))
-       ? p.precioPromocion
-       : p.precioLP4;
-
-  document.getElementById("modal").classList.remove("oculto");
-
-  dImagen.src=p.imagen;
-  dNombre.textContent=p.producto;
-  dCodigo.textContent="Código: "+p.codigo;
-  dMarca.textContent="Marca: "+p.marca;
-  dUnidad.textContent="Unidad: "+p.unidad;
-  dMaster.textContent="Master: "+p.master;
-  dInner.textContent="Inner: "+p.inner;
-  dPrecio.textContent="Precio: $"+Number(precio).toFixed(2);
-
-  btnAgregarCarrito.onclick=()=>agregarAlCarrito(p);
-
-}
-
-cerrar.onclick=()=>{
-  modal.classList.add("oculto");
-}
-
-/* ===============================
-TOGGLE LISTA
-=============================== */
-
-const CLAVE_LP1="MaesraFebrero2026";
-
-async function toggleListaPrecio(){
-
-  if(listaPrecioActiva==="LP1"){
-
-    listaPrecioActiva="LP4";
-    localStorage.setItem("listaPrecio","LP4");
-
-    actualizarIndicadorLista();
-    mostrarProductos(productos);
-
-    alert("Lista cambiada a LP4");
-
-    return;
-  }
-
-  const pass=prompt("Contraseña lista LP1:");
-
-  if(pass===CLAVE_LP1){
-
-    listaPrecioActiva="LP1";
-    localStorage.setItem("listaPrecio","LP1");
-
-    actualizarIndicadorLista();
-    mostrarProductos(productos);
-
-    alert("Lista LP1 activada");
-
-  }else{
-    alert("Contraseña incorrecta");
-  }
-
-}
-
-/* ===============================
 CARRITO
 =============================== */
 
-function abrirCarrito() {
+function abrirCarrito(){
+  document.getElementById("modalCarrito").classList.remove("oculto");
+  renderizarCarrito();
+}
 
-  const modal = document.getElementById("modalCarrito");
-  if(!modal) return;
+function cerrarCarrito(){
+  document.getElementById("modalCarrito").classList.add("oculto");
+}
 
-  modal.classList.remove("oculto");
-
+function vaciarCarrito(){
+  carrito=[];
+  localStorage.removeItem("carrito");
   renderizarCarrito();
   actualizarContadorCarrito();
   calcularTotalCarrito();
-
 }
 
-function renderizarCarrito() {
+function renderizarCarrito(){
 
   const contenedor = document.getElementById("contenidoCarrito");
-  if(!contenedor) return;
+  if (!contenedor) return;
 
   contenedor.innerHTML = "";
 
@@ -401,92 +258,91 @@ function renderizarCarrito() {
 
     const subtotal = p.precio * p.cantidad;
 
-    const item = document.createElement("div");
-    item.className = "item-carrito";
+    const div = document.createElement("div");
+    div.className = "item-carrito";
 
-    item.innerHTML = `
+    div.innerHTML = `
       <strong>${p.producto}</strong><br>
       Código: ${p.codigo}<br>
-      Precio: $${p.precio.toFixed(2)}<br><br>
-
-      Cantidad:
+      Precio unitario: $${p.precio.toFixed(2)}<br><br>
 
       <button class="menos">➖</button>
-
-      <input type="number" value="${p.cantidad}" min="1" class="cantidad">
-
+      <input type="number" value="${p.cantidad}" min="1">
       <button class="mas">➕</button>
 
       <br><br>
-
       Subtotal: $${subtotal.toFixed(2)}<br><br>
 
       <button class="eliminar">🗑 Eliminar</button>
+      <hr>
     `;
 
-    item.querySelector(".menos").onclick = () => cambiarCantidad(index, -1);
-    item.querySelector(".mas").onclick = () => cambiarCantidad(index, 1);
-    item.querySelector(".eliminar").onclick = () => eliminarProducto(index);
+    div.querySelector(".menos").onclick=()=>cambiarCantidad(index,-1);
+    div.querySelector(".mas").onclick=()=>cambiarCantidad(index,1);
+    div.querySelector(".eliminar").onclick=()=>eliminarProducto(index);
 
-    item.querySelector(".cantidad").onchange = (e) =>
-      actualizarCantidad(index, e.target.value);
+    div.querySelector("input").onchange=(e)=>{
+      actualizarCantidad(index,e.target.value);
+    };
 
-    contenedor.appendChild(item);
+    contenedor.appendChild(div);
 
   });
 
 }
 
+function cambiarCantidad(index,cambio){
+
+  carrito[index].cantidad+=cambio;
+
+  if(carrito[index].cantidad<=0){
+    carrito.splice(index,1);
+  }
+
+  guardarCarrito();
+
+}
+
+function actualizarCantidad(index,cantidad){
+
+  cantidad=parseInt(cantidad);
+
+  if(isNaN(cantidad)||cantidad<=0){
+    carrito.splice(index,1);
+  }else{
+    carrito[index].cantidad=cantidad;
+  }
+
+  guardarCarrito();
+
+}
+
+function eliminarProducto(index){
+  carrito.splice(index,1);
+  guardarCarrito();
+}
+
+function guardarCarrito(){
+  localStorage.setItem("carrito",JSON.stringify(carrito));
+  renderizarCarrito();
+  actualizarContadorCarrito();
+  calcularTotalCarrito();
+}
+
 function actualizarContadorCarrito(){
-
   const contador=document.getElementById("contadorCarrito");
-
+  if(!contador) return;
   const total=carrito.reduce((a,b)=>a+b.cantidad,0);
-
   contador.textContent=total;
   contador.style.display=total>0?"inline-block":"none";
-
 }
 
 function calcularTotalCarrito(){
-
   const total=carrito.reduce((a,b)=>a+(b.precio*b.cantidad),0);
-
-  totalCarrito.textContent=total.toFixed(2);
-  totalHeader.textContent=total.toFixed(2);
-
-}
-
-function agregarAlCarrito(producto){
-
-  const existe=carrito.find(p=>p.codigo===producto.codigo);
-
-  let precio =
-    listaPrecioActiva==="LP1"
-    ? Number(producto.precioLP1)
-    : (Number(producto.precioPromocion)>0 &&
-       Number(producto.precioPromocion)<Number(producto.precioLP4))
-       ? Number(producto.precioPromocion)
-       : Number(producto.precioLP4);
-
-  if(existe){
-    existe.cantidad++;
-  }else{
-    carrito.push({
-      codigo:producto.codigo,
-      producto:producto.producto,
-      precio:precio,
-      cantidad:1
-    });
-  }
-
-  localStorage.setItem("carrito",JSON.stringify(carrito));
-
-  actualizarContadorCarrito();
-  calcularTotalCarrito();
-
-  alert("Producto agregado 🛒");
-
+  const totalCarrito=document.getElementById("totalCarrito");
+  const totalHeader=document.getElementById("totalHeader");
+  if(totalCarrito) totalCarrito.textContent=total.toFixed(2);
+  if(totalHeader) totalHeader.textContent="$"+total.toFixed(2);
 }
 
 /* ===============================
@@ -501,103 +357,23 @@ function enviarWhatsApp(){
   }
 
   let total=0;
-  let msg="Pedido MAESRA %0A%0A";
+  let msg="🛒 Pedido MAESRA %0A%0A";
 
   carrito.forEach(p=>{
 
     const sub=p.precio*p.cantidad;
     total+=sub;
 
-    msg+=`${p.producto}%0A`;
-    msg+=`Cant: ${p.cantidad}%0A`;
-    msg+=`$${sub.toFixed(2)}%0A%0A`;
+    msg+=`📦 ${p.producto}%0A`;
+    msg+=`Código: ${p.codigo}%0A`;
+    msg+=`Cantidad: ${p.cantidad}%0A`;
+    msg+=`Precio unitario: $${p.precio.toFixed(2)}%0A`;
+    msg+=`Subtotal: $${sub.toFixed(2)}%0A%0A`;
 
   });
 
-  msg+=`TOTAL $${total.toFixed(2)}`;
+  msg+=`💰 TOTAL: $${total.toFixed(2)}`;
 
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 
 }
-
-/* ===============================
-CONECTAR BOTONES UI
-=============================== */
-
-window.addEventListener("load", () => {
-
-  const btnCarrito = document.getElementById("btnCarrito");
-  const btnPrecio = document.getElementById("btnPrecio");
-  const btnCerrar = document.getElementById("cerrarCarrito");
-
-  if (btnCarrito) {
-    btnCarrito.addEventListener("click", abrirCarrito);
-  }
-
-  if (btnCerrar) {
-    btnCerrar.addEventListener("click", cerrarCarrito);
-  }
-
-  if (btnPrecio) {
-    btnPrecio.addEventListener("click", () => {
-      document.getElementById("btnPrecio").onclick();
-    });
-  }
-
-});
-
-function iniciarCarrusel(id){
-
-  const track = document.getElementById(id);
-  if(!track) return;
-
-  let scroll = 0;
-
-  setInterval(()=>{
-
-    scroll += 1;
-
-    track.scrollLeft = scroll;
-
-    if(scroll >= track.scrollWidth - track.clientWidth){
-      scroll = 0;
-    }
-
-  },20);
-
-}
-
-window.addEventListener("load",()=>{
-
-  iniciarCarrusel("promoTrack");
-  iniciarCarrusel("topProductos");
-
-});
-
-function iniciarCarrusel(id){
-
-  const track = document.getElementById(id);
-  if(!track) return;
-
-  let scroll = 0;
-
-  setInterval(()=>{
-
-    scroll += 1;
-
-    track.scrollLeft = scroll;
-
-    if(scroll >= track.scrollWidth - track.clientWidth){
-      scroll = 0;
-    }
-
-  },20);
-
-}
-
-window.addEventListener("load",()=>{
-
-  iniciarCarrusel("promoTrack");
-  iniciarCarrusel("topProductos");
-
-});
