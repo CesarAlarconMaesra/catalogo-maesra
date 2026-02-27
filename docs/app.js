@@ -458,7 +458,7 @@ function toggleListaPrecio(){
 }
   actualizarIndicadorLista();
   mostrarProductos(productos);
-}
+
 
 /* ===============================
 DETALLE PRODUCTO
