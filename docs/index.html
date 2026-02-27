@@ -109,6 +109,19 @@
 </div>
 
 <script src="app.js"></script>
-
+<!-- Modal contraseña LP1 -->
+<div id="modalPassword" class="oculto">
+  <div class="modal-contenido">
+    <h3>🔐 Acceso Lista LP1</h3>
+    <input type="password" id="inputPassword" placeholder="Ingresa contraseña" />
+    <div style="margin-top:10px; display:flex; gap:10px;">
+      <button id="btnValidarPassword">Validar</button>
+      <button id="btnCancelarPassword">Cancelar</button>
+    </div>
+    <p id="errorPassword" style="color:red; margin-top:8px; display:none;">
+      ❌ Contraseña incorrecta
+    </p>
+  </div>
+</div>
 </body>
 </html>

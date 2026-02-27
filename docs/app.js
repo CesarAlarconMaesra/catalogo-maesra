@@ -16,17 +16,50 @@ document.addEventListener("DOMContentLoaded", () => {
 const buscador = document.getElementById("buscador");
 
 if(buscador){
-  buscador.addEventListener("input", e=>{
-    const texto = e.target.value.toLowerCase();
+ buscador.addEventListener("input", e=>{
 
-    const filtrados = productos.filter(p =>
-      p.producto.toLowerCase().includes(texto) ||
-      p.codigo.toLowerCase().includes(texto)
-    );
+  const texto = e.target.value.toLowerCase();
 
-    mostrarProductos(filtrados);
-  });
+  const filtrados = productos.filter(p =>
+
+    (p.producto && p.producto.toLowerCase().includes(texto)) ||
+    (p.codigo && p.codigo.toLowerCase().includes(texto)) ||
+    (p.marca && p.marca.toLowerCase().includes(texto))
+
+  );
+
+  mostrarProductos(filtrados);
+
+});
 }
+
+const modalPassword = document.getElementById("modalPassword");
+const inputPassword = document.getElementById("inputPassword");
+const errorPassword = document.getElementById("errorPassword");
+
+document.getElementById("btnValidarPassword").onclick = () => {
+
+  if(inputPassword.value === "MaesraFebrero2026"){  // cambia aquí contraseña real
+    listaPrecioActiva = "LP1";
+    localStorage.setItem("listaPrecio", "LP1");
+    actualizarIndicadorLista();
+    mostrarProductos(productos);
+
+    modalPassword.classList.add("oculto");
+    inputPassword.value = "";
+    errorPassword.style.display = "none";
+
+  } else {
+    errorPassword.style.display = "block";
+  }
+
+};
+
+document.getElementById("btnCancelarPassword").onclick = () => {
+  modalPassword.classList.add("oculto");
+  inputPassword.value = "";
+  errorPassword.style.display = "none";
+};
 
   actualizarIndicadorLista();
   actualizarContadorCarrito();
@@ -89,6 +122,8 @@ function cargarProductos(){
     mostrarPromociones(productos);
     mostrarTopProductos(productos);
     mostrarProductos(productos);
+    activarCarruselAutomatico("promoTrack");
+    activarCarruselAutomatico("topProductos");
 
   });
 
@@ -173,24 +208,31 @@ function mostrarTopProductos(lista){
 CARRUSEL
 =============================== */
 
-function iniciarCarrusel(id){
+function activarCarruselAutomatico(idContenedor){
 
-  const track = document.getElementById(id);
-  if(!track) return;
+  const contenedor = document.getElementById(idContenedor);
 
-  let scroll = 0;
+  let animando = false;
 
-  setInterval(()=>{
+  function scrollSuave(){
+    if(animando) return;
 
-    scroll += 1;
-    track.scrollLeft = scroll;
+    animando = true;
 
-    if(scroll >= track.scrollWidth - track.clientWidth){
-      scroll = 0;
-    }
+    contenedor.scrollBy({
+      left: 200,
+      behavior: "smooth"
+    });
 
-  },20);
+    setTimeout(() => {
+      if(contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth){
+        contenedor.scrollTo({ left: 0, behavior: "smooth" });
+      }
+      animando = false;
+    }, 2000);
+  }
 
+  setInterval(scrollSuave, 4000);
 }
 
 /* ===============================
@@ -399,24 +441,15 @@ TOGGLE LISTA DE PRECIOS
 function toggleListaPrecio(){
 
   if(listaPrecioActiva === "LP4"){
-
-    const pass = prompt("Ingresa contraseña para activar Lista LP1:");
-
-    if(pass === "MaesraFebrero2026"){   // 🔐 cambia aquí la contraseña real
-      listaPrecioActiva = "LP1";
-      localStorage.setItem("listaPrecio", "LP1");
-      alert("Lista LP1 activada correctamente");
-    }else{
-      alert("❌ Contraseña incorrecta. Se mantiene Lista LP4.");
-      listaPrecioActiva = "LP4";
-      localStorage.setItem("listaPrecio", "LP4");
-    }
-
+    document.getElementById("modalPassword").classList.remove("oculto");
   } else {
     listaPrecioActiva = "LP4";
     localStorage.setItem("listaPrecio", "LP4");
+    actualizarIndicadorLista();
+    mostrarProductos(productos);
   }
 
+}
   actualizarIndicadorLista();
   mostrarProductos(productos);
 }

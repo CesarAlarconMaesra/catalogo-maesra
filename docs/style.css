@@ -19,7 +19,7 @@ HEADER
 
 header {
   background: #1f2d3d;
-  color: white;
+  color: #3792bf;
   padding: 10px 20px;
   position: sticky;
   top: 0;
@@ -319,4 +319,21 @@ section h3 {
 #promoTrack,
 #topProductos {
   padding-bottom: 5px;
+}
+
+#modalPassword {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#modalPassword input {
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
