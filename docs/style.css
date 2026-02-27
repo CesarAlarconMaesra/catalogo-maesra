@@ -20,43 +20,43 @@ HEADER
 header {
   background: #1f2d3d;
   color: white;
-  padding: 12px 20px;   /* antes estaba muy grande */
+  padding: 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .logo {
-  height: 45px;   /* más pequeño */
+  height: 40px;
 }
 
 header h1 {
   font-size: 18px;
-  margin: 0;
 }
 
 header p {
-  margin: 2px 0;
   font-size: 13px;
 }
 
 .total-header {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
 }
 
 /* =====================================================
-BOTONES HEADER
+BOTONES
 ===================================================== */
 
 button {
@@ -92,14 +92,15 @@ BUSCADOR
 ===================================================== */
 
 .search-bar {
-  padding: 10px 20px;
+  padding: 15px 20px;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px;
   font-size: 14px;
   border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 /* =====================================================
@@ -115,10 +116,11 @@ section h2 {
 }
 
 /* =====================================================
-PROMOCIONES (CARRUSEL)
+CARRUSEL PROMOS Y TOP
 ===================================================== */
 
-#promoTrack {
+#promoTrack,
+#topProductos {
   display: flex;
   gap: 15px;
   overflow-x: auto;
@@ -126,29 +128,57 @@ PROMOCIONES (CARRUSEL)
   padding-bottom: 10px;
 }
 
-.card-promo {
+/* =====================================================
+CARDS GENERALES
+===================================================== */
+
+.card,
+.card-promo,
+.card-top {
   flex: 0 0 auto;
   width: 180px;
   background: white;
   border-radius: 12px;
   padding: 12px;
   text-align: center;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
   transition: transform 0.2s ease;
+  position: relative;
 }
 
-.card-promo:hover {
+.card:hover,
+.card-promo:hover,
+.card-top:hover {
   transform: translateY(-4px);
 }
 
-.card-promo img {
+.card img,
+.card-promo img,
+.card-top img {
   width: 100%;
-  height: 110px;
+  height: 120px;
   object-fit: contain;
   margin-bottom: 8px;
 }
 
-.promo-badge {
+.card h4,
+.card-top h4 {
+  font-size: 14px;
+  margin-bottom: 4px;
+  min-height: 34px;
+}
+
+.card p,
+.card-top p {
+  font-size: 12px;
+  color: #666;
+}
+
+/* =====================================================
+PROMOCIONES
+===================================================== */
+
+.badge-promo {
   position: absolute;
   top: 8px;
   left: 8px;
@@ -172,92 +202,24 @@ PROMOCIONES (CARRUSEL)
   font-size: 15px;
 }
 
-/* =====================================================
-TOP PRODUCTOS
-===================================================== */
-
-#topProductos {
-  display: flex;
-  gap: 15px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-}
-
-.card-top {
-  flex: 0 0 auto;
-  width: 160px;
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-  transition: transform 0.2s ease;
-}
-
-.card-top:hover {
-  transform: translateY(-4px);
-}
-
-.card-top img {
-  width: 100%;
-  height: 100px;
-  object-fit: contain;
-  margin-bottom: 6px;
+.precio-normal {
+  font-weight: bold;
+  font-size: 15px;
+  margin-top: 6px;
 }
 
 /* =====================================================
-CATÁLOGO GENERAL (GRID)
+GRID PRODUCTOS
 ===================================================== */
 
 #listaProductos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 18px;
 }
 
-.product-card {
-  background: white;
-  border-radius: 14px;
-  padding: 10px;
-  width: 180px;
-  min-height: 260px; /* antes eran muy altas */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-}
-
-.product-card img {
-  width: 100%;
-  height: 110px;  /* mucho más bajo */
-  object-fit: contain;
-  margin-bottom: 6px;
-}
-
-.product-card h3 {
-  font-size: 13px;
-  margin: 4px 0;
-  min-height: 32px;
-}
-
-.product-card p {
-  font-size: 12px;
-  margin: 2px 0;
-}
-
-.precio-normal {
-  font-weight: bold;
-  font-size: 15px;
-  margin-top: 5px;
-}
-
 /* =====================================================
-MODAL PRODUCTO
+MODALES
 ===================================================== */
 
 #modal,
@@ -300,7 +262,7 @@ CARRITO
 
 .item-carrito button {
   background: #e0e0e0;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 5px;
   font-size: 12px;
 }
@@ -312,7 +274,7 @@ CARRITO
 }
 
 /* =====================================================
-SCROLL PERSONALIZADO
+SCROLL
 ===================================================== */
 
 ::-webkit-scrollbar {

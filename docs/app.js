@@ -377,3 +377,102 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 
 }
+
+/* ===============================
+TOGGLE LISTA DE PRECIOS
+=============================== */
+
+function toggleListaPrecio(){
+
+  listaPrecioActiva = listaPrecioActiva === "LP4" ? "LP1" : "LP4";
+  localStorage.setItem("listaPrecio", listaPrecioActiva);
+
+  actualizarIndicadorLista();
+  mostrarProductos(productos);
+
+}
+
+/* ===============================
+DETALLE PRODUCTO
+=============================== */
+
+function abrirDetalle(p){
+
+  document.getElementById("modal").classList.remove("oculto");
+
+  document.getElementById("dImagen").src = p.imagen;
+  document.getElementById("dNombre").textContent = p.producto;
+  document.getElementById("dCodigo").textContent = "Código: " + p.codigo;
+  document.getElementById("dMarca").textContent = "Marca: " + (p.marca || "");
+  document.getElementById("dUnidad").textContent = "Unidad: " + (p.unidad || "");
+  document.getElementById("dMaster").textContent = "Master: " + (p.master || "");
+  document.getElementById("dInner").textContent = "Inner: " + (p.inner || "");
+
+  const enPromo =
+    Number(p.precioPromocion) > 0 &&
+    Number(p.precioPromocion) < Number(p.precioLP4);
+
+  let precio =
+    listaPrecioActiva === "LP1"
+    ? Number(p.precioLP1)
+    : enPromo
+      ? Number(p.precioPromocion)
+      : Number(p.precioLP4);
+
+  document.getElementById("dPrecio").textContent = "Precio: $" + precio.toFixed(2);
+
+  const btnAgregar = document.getElementById("btnAgregarCarrito");
+
+  btnAgregar.onclick = () => agregarAlCarrito(p, precio);
+
+}
+
+/* ===============================
+AGREGAR AL CARRITO
+=============================== */
+
+function agregarAlCarrito(p, precio){
+
+  const existe = carrito.find(item => item.codigo === p.codigo);
+
+  if(existe){
+    existe.cantidad++;
+  } else {
+    carrito.push({
+      producto: p.producto,
+      codigo: p.codigo,
+      precio: precio,
+      cantidad: 1
+    });
+  }
+
+  guardarCarrito();
+  cerrarModal();
+
+}
+
+/* ===============================
+CERRAR MODAL DETALLE
+=============================== */
+
+document.getElementById("cerrar").onclick = cerrarModal;
+
+function cerrarModal(){
+  document.getElementById("modal").classList.add("oculto");
+}
+
+/* ===============================
+CORRECCIÓN TOTAL HEADER
+=============================== */
+
+function calcularTotalCarrito(){
+
+  const total = carrito.reduce((a,b)=>a+(b.precio*b.cantidad),0);
+
+  const totalCarrito=document.getElementById("totalCarrito");
+  const totalHeader=document.getElementById("totalHeader");
+
+  if(totalCarrito) totalCarrito.textContent="$"+total.toFixed(2);
+  if(totalHeader) totalHeader.textContent=total.toFixed(2);
+
+}
