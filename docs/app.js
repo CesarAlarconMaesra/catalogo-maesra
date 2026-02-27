@@ -13,6 +13,20 @@ document.addEventListener("DOMContentLoaded", () => {
     cliente = prompt("Ingresa el nombre del cliente:");
     localStorage.setItem("cliente", cliente);
   }
+const buscador = document.getElementById("buscador");
+
+if(buscador){
+  buscador.addEventListener("input", e=>{
+    const texto = e.target.value.toLowerCase();
+
+    const filtrados = productos.filter(p =>
+      p.producto.toLowerCase().includes(texto) ||
+      p.codigo.toLowerCase().includes(texto)
+    );
+
+    mostrarProductos(filtrados);
+  });
+}
 
   actualizarIndicadorLista();
   actualizarContadorCarrito();
@@ -384,12 +398,27 @@ TOGGLE LISTA DE PRECIOS
 
 function toggleListaPrecio(){
 
-  listaPrecioActiva = listaPrecioActiva === "LP4" ? "LP1" : "LP4";
-  localStorage.setItem("listaPrecio", listaPrecioActiva);
+  if(listaPrecioActiva === "LP4"){
+
+    const pass = prompt("Ingresa contraseña para activar Lista LP1:");
+
+    if(pass === "MaesraFebrero2026"){   // 🔐 cambia aquí la contraseña real
+      listaPrecioActiva = "LP1";
+      localStorage.setItem("listaPrecio", "LP1");
+      alert("Lista LP1 activada correctamente");
+    }else{
+      alert("❌ Contraseña incorrecta. Se mantiene Lista LP4.");
+      listaPrecioActiva = "LP4";
+      localStorage.setItem("listaPrecio", "LP4");
+    }
+
+  } else {
+    listaPrecioActiva = "LP4";
+    localStorage.setItem("listaPrecio", "LP4");
+  }
 
   actualizarIndicadorLista();
   mostrarProductos(productos);
-
 }
 
 /* ===============================

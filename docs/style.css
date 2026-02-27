@@ -37,9 +37,15 @@ header {
   align-items: center;
   gap: 10px;
 }
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .logo {
-  height: 40px;
+  height: 60px;
+  width: 160px;
 }
 
 header h1 {
@@ -53,6 +59,20 @@ header p {
 .total-header {
   font-size: 15px;
   font-weight: bold;
+}
+
+#buscador {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  width: 180px;
+}
+
+.lista-indicador {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffc107;
 }
 
 /* =====================================================
@@ -284,4 +304,19 @@ SCROLL
 ::-webkit-scrollbar-thumb {
   background: #bbb;
   border-radius: 10px;
+}
+
+/* Reducir espacio vertical */
+
+section {
+  padding: 12px 20px;
+}
+
+section h2 {
+  margin-bottom: 10px;
+}
+
+#promoTrack,
+#topProductos {
+  padding-bottom: 5px;
 }
