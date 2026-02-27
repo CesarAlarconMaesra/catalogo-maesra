@@ -339,3 +339,166 @@ function toggleListaPrecio() {
     mostrarProductos(productos);
   }
 }
+function abrirDetalle(p){
+
+  document.getElementById("modal").classList.remove("oculto");
+
+  document.getElementById("dImagen").src = p.imagen;
+  document.getElementById("dNombre").textContent = p.producto;
+  document.getElementById("dCodigo").textContent = "Código: " + p.codigo;
+  document.getElementById("dMarca").textContent = "Marca: " + (p.marca || "");
+  document.getElementById("dUnidad").textContent = "Unidad: " + (p.unidad || "");
+  document.getElementById("dMaster").textContent = "Master: " + (p.master || "");
+  document.getElementById("dInner").textContent = "Inner: " + (p.inner || "");
+
+  const enPromo =
+    Number(p.precioPromocion) > 0 &&
+    Number(p.precioPromocion) < Number(p.precioLP4);
+
+  let precio =
+    listaPrecioActiva === "LP1"
+      ? Number(p.precioLP1)
+      : enPromo
+        ? Number(p.precioPromocion)
+        : Number(p.precioLP4);
+
+  document.getElementById("dPrecio").textContent =
+    "Precio: $" + precio.toFixed(2);
+
+  const btnAgregar = document.getElementById("btnAgregarCarrito");
+  btnAgregar.onclick = () => agregarAlCarrito(p, precio);
+}
+
+function cerrarModal(){
+  document.getElementById("modal").classList.add("oculto");
+}
+
+document.getElementById("cerrar").onclick = cerrarModal;
+
+/* ===============================
+AGREGAR AL CARRITO
+=============================== */
+
+function agregarAlCarrito(p, precio){
+
+  const existe = carrito.find(item => item.codigo === p.codigo);
+
+  if(existe){
+    existe.cantidad++;
+  } else {
+    carrito.push({
+      producto: p.producto,
+      codigo: p.codigo,
+      precio: precio,
+      cantidad: 1
+    });
+  }
+
+  guardarCarrito();
+  cerrarModal();
+}
+
+/* ===============================
+RENDER CARRITO
+=============================== */
+
+function renderizarCarrito(){
+
+  const contenedor = document.getElementById("contenidoCarrito");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  if (carrito.length === 0) {
+    contenedor.innerHTML = "<p>El carrito está vacío</p>";
+    return;
+  }
+
+  carrito.forEach((p, index) => {
+
+    const subtotal = p.precio * p.cantidad;
+
+    const div = document.createElement("div");
+    div.className = "item-carrito";
+
+    div.innerHTML = `
+      <strong>${p.producto}</strong><br>
+      Código: ${p.codigo}<br>
+      Precio unitario: $${p.precio.toFixed(2)}<br><br>
+
+      <button class="menos">➖</button>
+      <input type="number" value="${p.cantidad}" min="1">
+      <button class="mas">➕</button>
+
+      <br><br>
+      Subtotal: $${subtotal.toFixed(2)}<br><br>
+
+      <button class="eliminar">🗑 Eliminar</button>
+      <hr>
+    `;
+
+    div.querySelector(".menos").onclick = () => cambiarCantidad(index, -1);
+    div.querySelector(".mas").onclick = () => cambiarCantidad(index, 1);
+    div.querySelector(".eliminar").onclick = () => eliminarProducto(index);
+
+    div.querySelector("input").onchange = (e)=>{
+      actualizarCantidad(index, e.target.value);
+    };
+
+    contenedor.appendChild(div);
+
+  });
+}
+
+function cambiarCantidad(index,cambio){
+  carrito[index].cantidad += cambio;
+  if(carrito[index].cantidad <= 0){
+    carrito.splice(index,1);
+  }
+  guardarCarrito();
+}
+
+function actualizarCantidad(index,cantidad){
+  cantidad = parseInt(cantidad);
+  if(isNaN(cantidad) || cantidad <= 0){
+    carrito.splice(index,1);
+  }else{
+    carrito[index].cantidad = cantidad;
+  }
+  guardarCarrito();
+}
+
+function eliminarProducto(index){
+  carrito.splice(index,1);
+  guardarCarrito();
+}
+
+/* ===============================
+WHATSAPP
+=============================== */
+
+function enviarWhatsApp(){
+
+  if(carrito.length === 0){
+    alert("Carrito vacío");
+    return;
+  }
+
+  let total = 0;
+  let msg = "🛒 Pedido MAESRA %0A%0A";
+
+  carrito.forEach(p=>{
+    const sub = p.precio * p.cantidad;
+    total += sub;
+
+    msg += `📦 ${p.producto}%0A`;
+    msg += `Código: ${p.codigo}%0A`;
+    msg += `Cantidad: ${p.cantidad}%0A`;
+    msg += `Precio unitario: $${p.precio.toFixed(2)}%0A`;
+    msg += `Subtotal: $${sub.toFixed(2)}%0A%0A`;
+  });
+
+  msg += `💰 TOTAL: $${total.toFixed(2)}`;
+
+  window.open(`https://wa.me/5216565292879?text=${msg}`);
+}
