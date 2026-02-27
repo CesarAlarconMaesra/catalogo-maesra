@@ -10,7 +10,7 @@ RESET
 }
 
 body {
-  background-color: #f2f2f2;
+  background-color: #f2f3f5;
 }
 
 /* =====================================================
@@ -44,7 +44,7 @@ header {
 }
 
 .logo {
-  height: 60px;
+  height: 50px;
   width: 160px;
 }
 
@@ -66,7 +66,7 @@ header p {
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 13px;
-  width: 180px;
+  width: 280px;
 }
 
 .lista-indicador {
@@ -88,7 +88,7 @@ button {
 }
 
 #btnPrecio {
-  background-color: #dcdcdc;
+  background-color: #ff3855;
 }
 
 #btnCarrito {
