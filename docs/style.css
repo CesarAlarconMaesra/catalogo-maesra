@@ -319,6 +319,7 @@ section h3 {
 #promoTrack,
 #topProductos {
   padding-bottom: 5px;
+  scroll-behavior: smooth;
 }
 
 #modalPassword {

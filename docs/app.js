@@ -207,28 +207,43 @@ function activarCarruselAutomatico(id) {
 
   let animando = false;
 
-  setInterval(() => {
+  function moverBloque() {
 
     if (animando) return;
-
     animando = true;
 
+    const cards = contenedor.querySelectorAll(".card, .card-top");
+
+    if (cards.length === 0) {
+      animando = false;
+      return;
+    }
+
+    const anchoCard = cards[0].offsetWidth;
+    const anchoVisible = contenedor.clientWidth;
+
+    // Cuántas tarjetas caben en pantalla
+    const tarjetasVisibles = Math.floor(anchoVisible / anchoCard);
+
+    const desplazamiento = tarjetasVisibles * anchoCard;
+
     contenedor.scrollBy({
-      left: 250,
+      left: desplazamiento,
       behavior: "smooth"
     });
 
     setTimeout(() => {
 
-      if (contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth) {
+      if (contenedor.scrollLeft + anchoVisible >= contenedor.scrollWidth) {
         contenedor.scrollTo({ left: 0, behavior: "smooth" });
       }
 
       animando = false;
 
-    }, 1500);
+    }, 1200);
+  }
 
-  }, 4000);
+  setInterval(moverBloque, 4000);
 }
 
 /* ===============================
