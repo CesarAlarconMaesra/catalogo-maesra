@@ -31,17 +31,21 @@ if(buscador){
   mostrarProductos(filtrados);
 
 });
-}
 
+
+const formPassword = document.getElementById("formPassword");
 const modalPassword = document.getElementById("modalPassword");
 const inputPassword = document.getElementById("inputPassword");
 const errorPassword = document.getElementById("errorPassword");
 
-document.getElementById("btnValidarPassword").onclick = () => {
+formPassword.addEventListener("submit", function(e){
+  e.preventDefault();
 
-  if(inputPassword.value === "MaesraFebrero2026"){  // cambia aquí contraseña real
+  if(inputPassword.value === "MAESRA2026"){  // cambia contraseña
+
     listaPrecioActiva = "LP1";
     localStorage.setItem("listaPrecio", "LP1");
+
     actualizarIndicadorLista();
     mostrarProductos(productos);
 
@@ -52,14 +56,16 @@ document.getElementById("btnValidarPassword").onclick = () => {
   } else {
     errorPassword.style.display = "block";
   }
+});
 
-};
+document.getElementById("btnCancelarPassword")
+  .addEventListener("click", function(){
 
-document.getElementById("btnCancelarPassword").onclick = () => {
-  modalPassword.classList.add("oculto");
-  inputPassword.value = "";
-  errorPassword.style.display = "none";
-};
+    modalPassword.classList.add("oculto");
+    inputPassword.value = "";
+    errorPassword.style.display = "none";
+
+});
 
   actualizarIndicadorLista();
   actualizarContadorCarrito();
