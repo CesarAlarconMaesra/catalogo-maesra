@@ -1,127 +1,250 @@
+/****************************
+ CONFIGURACIÓN GENERAL
+*****************************/
+
 let productos = [];
-let listaPrecioActiva = "LP4"; // default
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+let intervaloCarrusel;
 
-// 🔹 Revisar lista guardada
-if (localStorage.getItem("listaPrecio") === "LP1") {
-  listaPrecioActiva = "LP1";
-} else {
-  listaPrecioActiva = "LP4";
+/****************************
+ INICIALIZACIÓN
+*****************************/
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    cargarProductos();
+    actualizarCarrito();
+    iniciarCarruselAutomatico();
+
+    document.getElementById("buscador").addEventListener("input", filtrarProductos);
+});
+
+/****************************
+ CARGAR PRODUCTOS
+*****************************/
+
+async function cargarProductos() {
+
+    try {
+        const response = await fetch("productos.json");
+        productos = await response.json();
+        renderizarProductos(productos);
+
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+    }
 }
 
-// 🔹 Actualizar indicador
-function actualizarIndicadorLista() {
-  const info = document.getElementById("infoLista");
-  if (info) {
-    info.textContent = "📊 Lista activa: " + listaPrecioActiva;
-  }
+/****************************
+ RENDER PRODUCTOS
+*****************************/
+
+function renderizarProductos(lista) {
+
+    const contenedor = document.getElementById("contenedorProductos");
+    contenedor.innerHTML = "";
+
+    lista.forEach(producto => {
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="${producto.imagen}" alt="${producto.descripcion}">
+            <h4>${producto.descripcion}</h4>
+            <p><strong>${producto.marca}</strong></p>
+            <p>Código: ${producto.codigo}</p>
+            <p class="precio">$${parseFloat(producto.precio).toFixed(2)}</p>
+            <button onclick="agregarAlCarrito('${producto.codigo}')">Agregar</button>
+        `;
+
+        card.onclick = (e) => {
+            if (e.target.tagName !== "BUTTON") {
+                abrirDetalle(producto.codigo);
+            }
+        };
+
+        contenedor.appendChild(card);
+    });
 }
 
-actualizarIndicadorLista();
+/****************************
+ BUSCADOR
+*****************************/
 
-// 🔹 Cargar productos
-fetch("productos.json")
-  .then(res => res.json())
-  .then(data => {
-    productos = data;
-    mostrarProductos(productos);
-  })
-  .catch(err => {
-    console.error("Error cargando productos:", err);
-  });
+function filtrarProductos() {
 
-// 🔹 Mostrar productos
-function mostrarProductos(lista) {
+    const texto = document.getElementById("buscador").value.toLowerCase();
 
-  const contenedor = document.getElementById("listaProductos");
-  if (!contenedor) return;
-
-  contenedor.innerHTML = "";
-
-  lista.forEach(p => {
-
-    let precio = listaPrecioActiva === "LP1"
-      ? Number(p.precioLP1).toFixed(2)
-      : Number(p.precioLP4).toFixed(2);
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
-      <h4>${p.producto}</h4>
-      <p>${p.codigo}</p>
-      <p style="font-weight:bold; color:#1E88E5;">
-        $ ${precio}
-      </p>
-    `;
-
-    card.onclick = () => abrirDetalle(p);
-
-    contenedor.appendChild(card);
-  });
-}
-
-// 🔹 Buscador
-const buscador = document.getElementById("buscador");
-if (buscador) {
-  buscador.addEventListener("input", e => {
-    const t = e.target.value.toLowerCase();
-
-    mostrarProductos(
-      productos.filter(p =>
-        p.producto.toLowerCase().includes(t) ||
-        p.codigo.toLowerCase().includes(t) ||
-        p.marca.toLowerCase().includes(t)
-      )
+    const filtrados = productos.filter(p =>
+        p.descripcion.toLowerCase().includes(texto) ||
+        p.codigo.toLowerCase().includes(texto) ||
+        p.marca.toLowerCase().includes(texto)
     );
-  });
+
+    renderizarProductos(filtrados);
 }
 
-// 🔹 Modal detalle
-function abrirDetalle(p) {
+/****************************
+ CARRUSEL AUTOMÁTICO
+*****************************/
 
-  const precioMostrar = listaPrecioActiva === "LP1"
-    ? p.precioLP1
-    : p.precioLP4;
+function iniciarCarruselAutomatico() {
 
-  document.getElementById("modal").classList.remove("oculto");
+    const contenedor = document.getElementById("contenedorProductos");
 
-  document.getElementById("dImagen").src = p.imagen;
-  document.getElementById("dNombre").textContent = p.producto;
-  document.getElementById("dCodigo").textContent = "Código: " + p.codigo;
-  document.getElementById("dMarca").textContent = "Marca: " + p.marca;
-  document.getElementById("dUnidad").textContent = "Unidad: " + p.unidad;
-  document.getElementById("dMaster").textContent = "Master: " + p.master;
-  document.getElementById("dInner").textContent = "Inner: " + p.inner;
-  document.getElementById("dPrecio").textContent =
-    "Precio: $" + Number(precioMostrar).toFixed(2);
+    intervaloCarrusel = setInterval(() => {
+
+        const card = contenedor.querySelector(".card");
+        if (!card) return;
+
+        const anchoCard = card.offsetWidth + 20;
+        const visibles = Math.floor(contenedor.offsetWidth / anchoCard);
+
+        contenedor.scrollBy({
+            left: anchoCard * visibles,
+            behavior: "smooth"
+        });
+
+        if (contenedor.scrollLeft + contenedor.offsetWidth >= contenedor.scrollWidth - 10) {
+            contenedor.scrollTo({ left: 0, behavior: "smooth" });
+        }
+
+    }, 4000);
 }
 
-document.getElementById("cerrar").onclick = () => {
-  document.getElementById("modal").classList.add("oculto");
-};
+/****************************
+ DETALLE PRODUCTO
+*****************************/
 
-// 🔐 Activar LP1
-const CLAVE_LP1 = "MaesraFebrero2026";
+function abrirDetalle(codigo) {
 
-document.getElementById("btnPrecio").onclick = () => {
-  const pass = prompt("Ingresa la contraseña para ver precios LP1:");
+    const producto = productos.find(p => p.codigo === codigo);
+    if (!producto) return;
 
-  if (pass === CLAVE_LP1) {
-    listaPrecioActiva = "LP1";
-    localStorage.setItem("listaPrecio", "LP1");
-    actualizarIndicadorLista();
-    mostrarProductos(productos);
-    alert("✅ Lista LP1 activada");
-  } else {
-    alert("❌ Contraseña incorrecta");
-  }
-};
-
-// 🔹 Regresar a LP4
-function ocultarPrecios() {
-  listaPrecioActiva = "LP4";
-  localStorage.setItem("listaPrecio", "LP4");
-  actualizarIndicadorLista();
-  mostrarProductos(productos);
+    alert(
+        producto.descripcion + "\n" +
+        "Marca: " + producto.marca + "\n" +
+        "Código: " + producto.codigo + "\n" +
+        "Precio: $" + parseFloat(producto.precio).toFixed(2)
+    );
 }
+
+/****************************
+ CARRITO
+*****************************/
+
+function agregarAlCarrito(codigo) {
+
+    const producto = productos.find(p => p.codigo === codigo);
+    if (!producto) return;
+
+    const existe = carrito.find(item => item.codigo === codigo);
+
+    if (existe) {
+        existe.cantidad++;
+    } else {
+        carrito.push({
+            ...producto,
+            cantidad: 1
+        });
+    }
+
+    actualizarCarrito();
+}
+
+function actualizarCarrito() {
+
+    const contenedor = document.getElementById("carritoItems");
+    const totalElemento = document.getElementById("carritoTotal");
+
+    contenedor.innerHTML = "";
+
+    let total = 0;
+
+    carrito.forEach((item, index) => {
+
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        contenedor.innerHTML += `
+            <div class="itemCarrito">
+                <p><strong>${item.descripcion}</strong></p>
+                <p>Código: ${item.codigo}</p>
+                <p>Precio unitario: $${parseFloat(item.precio).toFixed(2)}</p>
+
+                <div class="controles">
+                    <button onclick="cambiarCantidad(${index}, -1)">−</button>
+                    <span>${item.cantidad}</span>
+                    <button onclick="cambiarCantidad(${index}, 1)">+</button>
+                </div>
+
+                <p>Subtotal: $${subtotal.toFixed(2)}</p>
+                <button onclick="eliminarDelCarrito(${index})">Eliminar</button>
+                <hr>
+            </div>
+        `;
+    });
+
+    totalElemento.textContent = total.toFixed(2);
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
+function cambiarCantidad(index, cambio) {
+
+    carrito[index].cantidad += cambio;
+
+    if (carrito[index].cantidad <= 0) {
+        carrito.splice(index, 1);
+    }
+
+    actualizarCarrito();
+}
+
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    actualizarCarrito();
+}
+
+function vaciarCarrito() {
+
+    if (carrito.length === 0) return;
+
+    if (!confirm("¿Seguro que deseas vaciar el carrito?")) return;
+
+    carrito = [];
+    localStorage.removeItem("carrito");
+
+    actualizarCarrito();
+}
+
+/****************************
+ WHATSAPP
+*****************************/
+
+function enviarWhatsApp() {
+
+    if (carrito.length === 0) return;
+
+    let mensaje = "Hola, quiero cotizar:\n\n";
+    let total = 0;
+
+    carrito.forEach(item => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        mensaje += `${item.descripcion}\n`;
+        mensaje += `Código: ${item.codigo}\n`;
+        mensaje += `Cantidad: ${item.cantidad}\n`;
+        mensaje += `Subtotal: $${subtotal.toFixed(2)}\n\n`;
+    });
+
+    mensaje += `TOTAL: $${total.toFixed(2)}`;
+
+    const telefono = "5216562226459"; // ← PON TU NÚMERO
+    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+
+    window.open(url, "_blank");
+}
+
