@@ -1,250 +1,146 @@
-/****************************
- CONFIGURACIÓN GENERAL
-*****************************/
-
 let productos = [];
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-let intervaloCarrusel;
-
-/****************************
- INICIALIZACIÓN
-*****************************/
+let productoActualDetalle = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-
     cargarProductos();
     actualizarCarrito();
-    iniciarCarruselAutomatico();
-
+    iniciarCarrusel();
     document.getElementById("buscador").addEventListener("input", filtrarProductos);
 });
 
-/****************************
- CARGAR PRODUCTOS
-*****************************/
-
 async function cargarProductos() {
-
-    try {
-        const response = await fetch("productos.json");
-        productos = await response.json();
-        renderizarProductos(productos);
-
-    } catch (error) {
-        console.error("Error cargando productos:", error);
-    }
+    const res = await fetch("productos.json");
+    productos = await res.json();
+    renderizarProductos(productos);
 }
 
-/****************************
- RENDER PRODUCTOS
-*****************************/
-
 function renderizarProductos(lista) {
-
     const contenedor = document.getElementById("contenedorProductos");
     contenedor.innerHTML = "";
 
-    lista.forEach(producto => {
-
+    lista.forEach(prod => {
         const card = document.createElement("div");
         card.className = "card";
-
         card.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.descripcion}">
-            <h4>${producto.descripcion}</h4>
-            <p><strong>${producto.marca}</strong></p>
-            <p>Código: ${producto.codigo}</p>
-            <p class="precio">$${parseFloat(producto.precio).toFixed(2)}</p>
-            <button onclick="agregarAlCarrito('${producto.codigo}')">Agregar</button>
+            <img src="${prod.imagen}">
+            <h4>${prod.descripcion}</h4>
+            <p><b>${prod.marca}</b></p>
+            <p>${prod.codigo}</p>
+            <p>$${parseFloat(prod.precio).toFixed(2)}</p>
+            <button onclick="event.stopPropagation(); agregarAlCarrito('${prod.codigo}')">Agregar</button>
         `;
-
-        card.onclick = (e) => {
-            if (e.target.tagName !== "BUTTON") {
-                abrirDetalle(producto.codigo);
-            }
-        };
-
+        card.onclick = () => abrirDetalle(prod.codigo);
         contenedor.appendChild(card);
     });
 }
 
-/****************************
- BUSCADOR
-*****************************/
-
 function filtrarProductos() {
-
-    const texto = document.getElementById("buscador").value.toLowerCase();
-
+    const txt = buscador.value.toLowerCase();
     const filtrados = productos.filter(p =>
-        p.descripcion.toLowerCase().includes(texto) ||
-        p.codigo.toLowerCase().includes(texto) ||
-        p.marca.toLowerCase().includes(texto)
+        p.descripcion.toLowerCase().includes(txt) ||
+        p.codigo.toLowerCase().includes(txt) ||
+        p.marca.toLowerCase().includes(txt)
     );
-
     renderizarProductos(filtrados);
 }
 
-/****************************
- CARRUSEL AUTOMÁTICO
-*****************************/
-
-function iniciarCarruselAutomatico() {
-
-    const contenedor = document.getElementById("contenedorProductos");
-
-    intervaloCarrusel = setInterval(() => {
-
-        const card = contenedor.querySelector(".card");
+function iniciarCarrusel() {
+    const cont = document.getElementById("contenedorProductos");
+    setInterval(() => {
+        const card = cont.querySelector(".card");
         if (!card) return;
-
-        const anchoCard = card.offsetWidth + 20;
-        const visibles = Math.floor(contenedor.offsetWidth / anchoCard);
-
-        contenedor.scrollBy({
-            left: anchoCard * visibles,
-            behavior: "smooth"
-        });
-
-        if (contenedor.scrollLeft + contenedor.offsetWidth >= contenedor.scrollWidth - 10) {
-            contenedor.scrollTo({ left: 0, behavior: "smooth" });
+        const ancho = card.offsetWidth + 20;
+        const visibles = Math.floor(cont.offsetWidth / ancho);
+        cont.scrollBy({ left: ancho * visibles, behavior: "smooth" });
+        if (cont.scrollLeft + cont.offsetWidth >= cont.scrollWidth - 5) {
+            cont.scrollTo({ left: 0, behavior: "smooth" });
         }
-
     }, 4000);
 }
 
-/****************************
- DETALLE PRODUCTO
-*****************************/
-
 function abrirDetalle(codigo) {
-
-    const producto = productos.find(p => p.codigo === codigo);
-    if (!producto) return;
-
-    alert(
-        producto.descripcion + "\n" +
-        "Marca: " + producto.marca + "\n" +
-        "Código: " + producto.codigo + "\n" +
-        "Precio: $" + parseFloat(producto.precio).toFixed(2)
-    );
+    const p = productos.find(x => x.codigo === codigo);
+    productoActualDetalle = p;
+    detalleImagen.src = p.imagen;
+    detalleDescripcion.textContent = p.descripcion;
+    detalleMarca.textContent = "Marca: " + p.marca;
+    detalleCodigo.textContent = "Código: " + p.codigo;
+    detallePrecio.textContent = "$" + parseFloat(p.precio).toFixed(2);
+    modalDetalle.style.display = "flex";
 }
 
-/****************************
- CARRITO
-*****************************/
+function cerrarModalDetalle() {
+    modalDetalle.style.display = "none";
+}
 
 function agregarAlCarrito(codigo) {
-
-    const producto = productos.find(p => p.codigo === codigo);
-    if (!producto) return;
-
-    const existe = carrito.find(item => item.codigo === codigo);
-
-    if (existe) {
-        existe.cantidad++;
-    } else {
-        carrito.push({
-            ...producto,
-            cantidad: 1
-        });
-    }
-
+    const prod = productos.find(p => p.codigo === codigo);
+    const existe = carrito.find(p => p.codigo === codigo);
+    if (existe) existe.cantidad++;
+    else carrito.push({ ...prod, cantidad: 1 });
     actualizarCarrito();
 }
 
 function actualizarCarrito() {
-
-    const contenedor = document.getElementById("carritoItems");
-    const totalElemento = document.getElementById("carritoTotal");
-
-    contenedor.innerHTML = "";
-
+    carritoItems.innerHTML = "";
     let total = 0;
-
-    carrito.forEach((item, index) => {
-
+    carrito.forEach((item, i) => {
         const subtotal = item.precio * item.cantidad;
         total += subtotal;
-
-        contenedor.innerHTML += `
-            <div class="itemCarrito">
-                <p><strong>${item.descripcion}</strong></p>
-                <p>Código: ${item.codigo}</p>
-                <p>Precio unitario: $${parseFloat(item.precio).toFixed(2)}</p>
-
-                <div class="controles">
-                    <button onclick="cambiarCantidad(${index}, -1)">−</button>
-                    <span>${item.cantidad}</span>
-                    <button onclick="cambiarCantidad(${index}, 1)">+</button>
-                </div>
-
-                <p>Subtotal: $${subtotal.toFixed(2)}</p>
-                <button onclick="eliminarDelCarrito(${index})">Eliminar</button>
+        carritoItems.innerHTML += `
+            <div>
+                <b>${item.descripcion}</b><br>
+                ${item.codigo}<br>
+                $${item.precio} x ${item.cantidad}<br>
+                Subtotal: $${subtotal.toFixed(2)}<br>
+                <button onclick="cambiarCantidad(${i},-1)">−</button>
+                <button onclick="cambiarCantidad(${i},1)">+</button>
+                <button onclick="eliminarDelCarrito(${i})">Eliminar</button>
                 <hr>
             </div>
         `;
     });
-
-    totalElemento.textContent = total.toFixed(2);
-
+    carritoTotal.textContent = total.toFixed(2);
+    contadorCarrito.textContent = carrito.reduce((a,b)=>a+b.cantidad,0);
     localStorage.setItem("carrito", JSON.stringify(carrito));
 }
 
-function cambiarCantidad(index, cambio) {
-
-    carrito[index].cantidad += cambio;
-
-    if (carrito[index].cantidad <= 0) {
-        carrito.splice(index, 1);
-    }
-
+function cambiarCantidad(i,c) {
+    carrito[i].cantidad += c;
+    if (carrito[i].cantidad <= 0) carrito.splice(i,1);
     actualizarCarrito();
 }
 
-function eliminarDelCarrito(index) {
-    carrito.splice(index, 1);
+function eliminarDelCarrito(i) {
+    carrito.splice(i,1);
     actualizarCarrito();
 }
 
 function vaciarCarrito() {
-
-    if (carrito.length === 0) return;
-
-    if (!confirm("¿Seguro que deseas vaciar el carrito?")) return;
-
+    if (!carrito.length) return;
+    if (!confirm("¿Vaciar carrito?")) return;
     carrito = [];
-    localStorage.removeItem("carrito");
-
     actualizarCarrito();
 }
 
-/****************************
- WHATSAPP
-*****************************/
-
-function enviarWhatsApp() {
-
-    if (carrito.length === 0) return;
-
-    let mensaje = "Hola, quiero cotizar:\n\n";
-    let total = 0;
-
-    carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-
-        mensaje += `${item.descripcion}\n`;
-        mensaje += `Código: ${item.codigo}\n`;
-        mensaje += `Cantidad: ${item.cantidad}\n`;
-        mensaje += `Subtotal: $${subtotal.toFixed(2)}\n\n`;
-    });
-
-    mensaje += `TOTAL: $${total.toFixed(2)}`;
-
-    const telefono = "5216562226459"; // ← PON TU NÚMERO
-    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-
-    window.open(url, "_blank");
+function abrirModalCarrito() {
+    modalCarrito.style.display = "flex";
 }
 
+function cerrarModalCarrito() {
+    modalCarrito.style.display = "none";
+}
+
+function enviarWhatsApp() {
+    if (!carrito.length) return;
+    let msg = "Hola, quiero cotizar:\n\n";
+    let total = 0;
+    carrito.forEach(i=>{
+        const sub = i.precio*i.cantidad;
+        total+=sub;
+        msg+=`${i.descripcion}\n${i.codigo}\nCant:${i.cantidad}\nSubtotal:$${sub.toFixed(2)}\n\n`;
+    });
+    msg+=`TOTAL:$${total.toFixed(2)}`;
+    window.open(`https://wa.me/5216565292879?text=${encodeURIComponent(msg)}`,"_blank");
+}
