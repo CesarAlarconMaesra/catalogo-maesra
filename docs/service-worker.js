@@ -1,4 +1,4 @@
-onst CACHE_NAME = "maesra-cache-v18";
+const CACHE_NAME = "maesra-cache-v19";
 
 const urlsToCache = [
   "/catalogo-maesra/",

@@ -114,3 +114,50 @@ header {
 button {
     margin-top: 8px;
 }
+
+/* Reducir espacio vertical */
+
+section {
+  padding: 12px 20px;
+}
+
+section h2 {
+  margin-bottom: 10px;
+}
+
+#promoTrack,
+#topProductos {
+  scroll-behavior: smooth;
+  padding-bottom: 5px;
+}
+/* Reducir espacio vertical */
+
+section {
+  padding: 12px 20px;
+}
+
+section h3 {
+  margin-bottom: 10px;
+}
+
+#promoTrack,
+#topProductos {
+  padding-bottom: 5px;
+}
+
+#modalPassword {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#modalPassword input {
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}

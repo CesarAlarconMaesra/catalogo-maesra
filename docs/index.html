@@ -1,59 +1,140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Catálogo MAESRA Febrero 2026</title>
+
+<link rel="stylesheet" href="style.css" />
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/icon-192.png">
+<meta name="theme-color" content="#1f2d3d">
+
 </head>
+
 <body>
 
+<div id="infoLista" style="text-align:center; padding:8px; font-weight:bold;"></div>
+
 <header>
-    <h2>Catálogo de Productos</h2>
+  <div class="header-content">
 
-    <input type="text" id="buscador" placeholder="Buscar por descripción, código o marca">
+    <div class="header-left">
+      <img src="img/MAESRA.jpg" class="logo">
+      <div>
+        <h1>Catálogo MAESRA</h1>
+        <p>Promociones y catálogo digital</p>
+      </div>
+    </div>
 
-    <div class="carritoIcono" onclick="abrirModalCarrito()">
+    <div class="header-right">
+
+      <input type="text" id="buscador" placeholder="Buscar producto..." />
+
+      <span id="infoLista" class="lista-indicador"></span>
+
+      <button id="btnPrecio">Cambiar Lista</button>
+
+      <button id="btnCarrito">
         🛒
         <span id="contadorCarrito">0</span>
+      </button>
+
+      <div class="total-header">
+        $<span id="totalHeader">0.00</span>
+      </div>
+
     </div>
+
+  </div>
 </header>
 
-<h3>Promociones</h3>
-<section id="contenedorPromociones" class="contenedorProductos"></section>
+<!-- PROMOCIONES -->
+<section>
+  <h2>🔥 Promociones</h2>
+  <div id="promoTrack"></div>
+</section>
 
-<h3>Más Vendidos</h3>
-<section id="contenedorMasVendidos" class="contenedorProductos"></section>
+<!-- TOP -->
+<section>
+  <h2>⭐ Más vendidos</h2>
+  <div id="topProductos"></div>
+</section>
 
-<h3>Productos</h3>
-<section id="contenedorProductos" class="contenedorProductos"></section>
+<!-- PRODUCTOS -->
+<section>
+  <h2>📦 Catálogo</h2>
+  <div id="listaProductos"></div>
+</section>
 
+<!-- MODAL PRODUCTO -->
+<div id="modal" class="oculto">
+  <div class="modal-contenido">
+    <span id="cerrar" style="cursor:pointer; float:right;">&times;</span>
 
-<!-- MODAL DETALLE -->
-<div id="modalDetalle" class="modal">
-    <div class="modalContenido">
-        <span class="cerrar" onclick="cerrarModalDetalle()">&times;</span>
-        <img id="detalleImagen">
-        <h3 id="detalleDescripcion"></h3>
-        <p id="detalleMarca"></p>
-        <p id="detalleCodigo"></p>
-        <p id="detallePrecio"></p>
-        <button id="btnAgregarDetalle">Agregar al carrito</button>
-    </div>
+    <img id="dImagen" style="width:100%; height:200px; object-fit:contain; margin-bottom:10px;"/>
+
+    <h2 id="dNombre"></h2>
+    <p id="dCodigo"></p>
+    <p id="dMarca"></p>
+    <p id="dUnidad"></p>
+    <p id="dMaster"></p>
+    <p id="dInner"></p>
+
+    <p id="dPrecio" style="font-weight:bold; margin-top:10px;"></p>
+
+    <button id="btnAgregarCarrito" style="margin-top:10px;">
+      🛒 Agregar al carrito
+    </button>
+  </div>
 </div>
 
 <!-- MODAL CARRITO -->
-<div id="modalCarrito" class="modal">
-    <div class="modalContenido carritoModal">
-        <span class="cerrar" onclick="cerrarModalCarrito()">&times;</span>
-        <h2>🛒 Carrito</h2>
-        <div id="carritoItems"></div>
-        <h3>Total: $<span id="carritoTotal">0.00</span></h3>
-        <button onclick="vaciarCarrito()">Vaciar carrito</button>
-        <button onclick="enviarWhatsApp()">Enviar por WhatsApp</button>
-    </div>
+<div id="modalCarrito" class="oculto">
+  <div class="modal-contenido">
+
+    <span onclick="cerrarCarrito()" style="cursor:pointer; float:right;">&times;</span>
+
+    <h2>🛒 Carrito</h2>
+
+    <div id="contenidoCarrito"></div>
+
+    <h3>Total: $<span id="totalCarrito">0.00</span></h3>
+
+    <button onclick="vaciarCarrito()">🗑 Vaciar carrito</button>
+    <button onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
+
+  </div>
 </div>
 
 <script src="app.js"></script>
+
+<!-- Modal contraseña LP1 -->
+<div id="modalPassword" class="oculto">
+  <div class="modal-contenido">
+    <h3>🔐 Acceso Lista LP1</h3>
+
+    <form id="formPassword">
+
+      <input type="password"
+             id="inputPassword"
+             placeholder="Ingresa contraseña"
+             required />
+
+      <div style="margin-top:10px; display:flex; gap:10px;">
+        <button type="submit">Validar</button>
+        <button type="button" id="btnCancelarPassword">Cancelar</button>
+      </div>
+
+      <p id="errorPassword"
+         style="color:red; margin-top:8px; display:none;">
+         ❌ Contraseña incorrecta
+      </p>
+
+    </form>
+
+  </div>
+</div>
 </body>
 </html>
