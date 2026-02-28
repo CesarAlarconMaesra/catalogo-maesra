@@ -24,7 +24,7 @@
       <img src="img/MAESRA.jpg" class="logo">
       <div>
         <h1>Catálogo MAESRA</h1>
-        <p>Promociones y catálogo digital</p>
+        <h4>Promociones, Productos más vendidos y catálogo digital</h4>
       </div>
     </div>
 
@@ -51,15 +51,22 @@
 </header>
 
 <!-- PROMOCIONES -->
+<section>
+  <h3>🔥 Promociones</h3>
+  <div id="promoTrack"></div>
+</section>
 
-<h3>🔥 Promociones</h3>
-<section id="contenedorPromociones" class="contenedorProductos"></section>
+<!-- TOP -->
+<section>
+  <h3>⭐ Más vendidos</h3>
+  <div id="topProductos"></div>
+</section>
 
-<h3>⭐ Más vendidos</h3>
-<section id="contenedorMasVendidos" class="contenedorProductos"></section>
-
-<h3>📦 Catálogo</h3>
-<section id="contenedorProductos" class="contenedorProductos"></section>
+<!-- PRODUCTOS -->
+<section>
+  <h3>📦 Catálogo</h3>
+  <div id="listaProductos"></div>
+</section>
 
 <!-- MODAL PRODUCTO -->
 <div id="modal" class="oculto">
@@ -102,7 +109,6 @@
 </div>
 
 <script src="app.js"></script>
-
 <!-- Modal contraseña LP1 -->
 <div id="modalPassword" class="oculto">
   <div class="modal-contenido">
