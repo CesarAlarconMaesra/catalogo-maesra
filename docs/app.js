@@ -502,3 +502,124 @@ function enviarWhatsApp(){
 
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 }
+
+async function generarCatalogoCompletoPDF() {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const fecha = new Date().toLocaleDateString();
+    const totalProductos = productos.length;
+
+    // =============================
+    // PORTADA
+    // =============================
+    doc.setFontSize(26);
+    doc.text("CATÁLOGO MAESRA", 105, 60, { align: "center" });
+
+    doc.setFontSize(14);
+    doc.text("Fecha: " + fecha, 105, 80, { align: "center" });
+    doc.text("Total productos: " + totalProductos, 105, 90, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text("Secciones:", 105, 110, { align: "center" });
+    doc.text("• Promociones", 105, 120, { align: "center" });
+    doc.text("• Más Vendidos", 105, 130, { align: "center" });
+    doc.text("• Catálogo General por Marca", 105, 140, { align: "center" });
+
+    doc.addPage();
+
+    // =============================
+    // FUNCIONES AUXILIARES
+    // =============================
+
+    async function cargarImagenOptimizada(url, maxSize = 280) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+
+            img.onload = function () {
+                const ratio = Math.min(
+                    maxSize / img.naturalWidth,
+                    maxSize / img.naturalHeight,
+                    1
+                );
+
+                const canvas = document.createElement("canvas");
+                canvas.width = img.naturalWidth * ratio;
+                canvas.height = img.naturalHeight * ratio;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const dataURL = canvas.toDataURL("image/jpeg", 0.6);
+                resolve(dataURL);
+            };
+
+            img.onerror = () => resolve(null);
+            img.src = url;
+        });
+    }
+
+    async function imprimirSeccion(titulo, listaProductos) {
+
+        doc.setFontSize(18);
+        doc.text(titulo, 14, 20);
+
+        let y = 30;
+        let contador = 0;
+
+        for (let p of listaProductos) {
+
+            if (contador === 4) {
+                doc.addPage();
+                y = 20;
+                contador = 0;
+            }
+
+            const img = await cargarImagenOptimizada(p.imagen);
+
+            if (img) {
+                doc.addImage(img, "JPEG", 15, y, 40, 40);
+            }
+
+            doc.setFontSize(10);
+            doc.text("Código: " + p.codigo, 60, y + 5);
+            doc.text("Marca: " + p.marca, 60, y + 12);
+            doc.text("Precio: $" + p.precio, 60, y + 19);
+
+            const descripcion = doc.splitTextToSize(p.descripcion || "", 120);
+            doc.text(descripcion, 60, y + 26);
+
+            y += 55;
+            contador++;
+        }
+
+        doc.addPage();
+    }
+
+    // =============================
+    // PROMOCIONES
+    // =============================
+    const promociones = productos.filter(p => p.promocion === true);
+    await imprimirSeccion("PROMOCIONES", promociones);
+
+    // =============================
+    // MÁS VENDIDOS
+    // =============================
+    const masVendidos = productos.filter(p => p.masVendido === true);
+    await imprimirSeccion("MÁS VENDIDOS", masVendidos);
+
+    // =============================
+    // GENERAL POR MARCA
+    // =============================
+
+    const marcas = [...new Set(productos.map(p => p.marca))];
+
+    for (let marca of marcas) {
+        const productosMarca = productos.filter(p => p.marca === marca);
+        await imprimirSeccion("MARCA: " + marca, productosMarca);
+    }
+
+    doc.save("Catalogo_MAESRA_Completo.pdf");
+}
