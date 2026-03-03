@@ -511,34 +511,31 @@ async function generarCatalogoCompletoPDF() {
     const fecha = new Date().toLocaleDateString();
     const totalProductos = productos.length;
 
-    // =============================
+    // =========================
     // PORTADA
-    // =============================
-    doc.setFontSize(26);
+    // =========================
+    doc.setFontSize(28);
     doc.text("CATÁLOGO MAESRA", 105, 60, { align: "center" });
 
     doc.setFontSize(14);
     doc.text("Fecha: " + fecha, 105, 80, { align: "center" });
-    doc.text("Total productos: " + totalProductos, 105, 90, { align: "center" });
+    doc.text("Total de productos: " + totalProductos, 105, 90, { align: "center" });
 
     doc.setFontSize(12);
-    doc.text("Secciones:", 105, 110, { align: "center" });
-    doc.text("• Promociones", 105, 120, { align: "center" });
-    doc.text("• Más Vendidos", 105, 130, { align: "center" });
-    doc.text("• Catálogo General por Marca", 105, 140, { align: "center" });
+    doc.text("Promociones | Más Vendidos | General por Marca", 105, 110, { align: "center" });
 
     doc.addPage();
 
-    // =============================
-    // FUNCIONES AUXILIARES
-    // =============================
-
-    async function cargarImagenOptimizada(url, maxSize = 280) {
+    // =========================
+    // FUNCION IMAGEN OPTIMIZADA
+    // =========================
+    async function cargarImagenOptimizada(url, maxSize = 260) {
         return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = "Anonymous";
 
             img.onload = function () {
+
                 const ratio = Math.min(
                     maxSize / img.naturalWidth,
                     maxSize / img.naturalHeight,
@@ -561,59 +558,101 @@ async function generarCatalogoCompletoPDF() {
         });
     }
 
+    // =========================
+    // FUNCION SECCION
+    // =========================
     async function imprimirSeccion(titulo, listaProductos) {
 
-        doc.setFontSize(18);
-        doc.text(titulo, 14, 20);
+        if (listaProductos.length === 0) return;
 
-        let y = 30;
-        let contador = 0;
+        doc.setFontSize(20);
+        doc.text(titulo, 105, 20, { align: "center" });
+
+        let xPositions = [15, 110];
+        let y = 35;
+        let columna = 0;
 
         for (let p of listaProductos) {
 
-            if (contador === 4) {
+            if (y > 240) {
                 doc.addPage();
-                y = 20;
-                contador = 0;
+                y = 30;
             }
 
+            let x = xPositions[columna];
+
+            // Marco
+            doc.setDrawColor(230);
+            doc.rect(x, y, 85, 95);
+
+            // Imagen
             const img = await cargarImagenOptimizada(p.imagen);
 
             if (img) {
-                doc.addImage(img, "JPEG", 15, y, 40, 40);
+                doc.addImage(img, "JPEG", x + 12, y + 5, 60, 60);
             }
 
+            // Datos
+            const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
+            const precioPromo = p.precioPromocion?.toFixed(2);
+
+            doc.setFontSize(9);
+            doc.text("Código: " + p.codigo, x + 5, y + 70);
+
+            const descripcion = doc.splitTextToSize(p.producto, 75);
+            doc.text(descripcion, x + 5, y + 77);
+
             doc.setFontSize(10);
-            doc.text("Código: " + p.codigo, 60, y + 5);
-            doc.text("Marca: " + p.marca, 60, y + 12);
-            doc.text("Precio: $" + p.precio, 60, y + 19);
+            doc.text("Marca: " + p.marca, x + 5, y + 88);
 
-            const descripcion = doc.splitTextToSize(p.descripcion || "", 120);
-            doc.text(descripcion, 60, y + 26);
+            // Precio
+            if (precioPromo && Number(precioPromo) > 0) {
+                doc.setTextColor(150);
+                doc.text("$" + precioNormal, x + 50, y + 70);
 
-            y += 55;
-            contador++;
+                doc.setTextColor(200, 0, 0);
+                doc.setFontSize(12);
+                doc.text("$" + precioPromo, x + 50, y + 80);
+                doc.setTextColor(0);
+            } else {
+                doc.setFontSize(12);
+                doc.text("$" + precioNormal, x + 50, y + 80);
+            }
+
+            // Badge Top
+            if (p.top === true) {
+                doc.setFillColor(255, 215, 0);
+                doc.rect(x + 55, y + 5, 25, 8, "F");
+                doc.setFontSize(8);
+                doc.text("TOP", x + 67, y + 11, { align: "center" });
+            }
+
+            columna++;
+
+            if (columna === 2) {
+                columna = 0;
+                y += 105;
+            }
         }
 
         doc.addPage();
     }
 
-    // =============================
+    // =========================
     // PROMOCIONES
-    // =============================
-    const promociones = productos.filter(p => p.promocion === true);
+    // =========================
+    const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
     await imprimirSeccion("PROMOCIONES", promociones);
 
-    // =============================
-    // MÁS VENDIDOS
-    // =============================
-    const masVendidos = productos.filter(p => p.masVendido === true);
+    // =========================
+    // MAS VENDIDOS
+    // =========================
+    const masVendidos = productos.filter(p => p.top === true);
     await imprimirSeccion("MÁS VENDIDOS", masVendidos);
 
-    // =============================
+    // =========================
     // GENERAL POR MARCA
-    // =============================
-
+    // =========================
     const marcas = [...new Set(productos.map(p => p.marca))];
 
     for (let marca of marcas) {
