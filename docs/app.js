@@ -561,83 +561,130 @@ async function generarCatalogoCompletoPDF() {
     // =========================
     // FUNCION SECCION
     // =========================
-    async function imprimirSeccion(titulo, listaProductos) {
+async function imprimirSeccion(titulo, listaProductos) {
 
-        if (listaProductos.length === 0) return;
+    if (listaProductos.length === 0) return;
 
-        doc.setFontSize(20);
-        doc.text(titulo, 105, 20, { align: "center" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    const cardWidth = 85;
+    const cardHeight = 110;
+    const gap = 10;
 
-        let xPositions = [15, 110];
-        let y = 35;
-        let columna = 0;
+    doc.setFontSize(22);
+    doc.text(titulo, pageWidth / 2, 20, { align: "center" });
 
-        for (let p of listaProductos) {
+    let y = 30;
+    let columna = 0;
 
-            if (y > 240) {
-                doc.addPage();
-                y = 30;
-            }
+    const xPositions = [
+        margin,
+        pageWidth - margin - cardWidth
+    ];
 
-            let x = xPositions[columna];
+    for (let p of listaProductos) {
 
-            // Marco
-            doc.setDrawColor(230);
-            doc.rect(x, y, 85, 95);
-
-            // Imagen
-            const img = await cargarImagenOptimizada(p.imagen);
-
-            if (img) {
-                doc.addImage(img, "JPEG", x + 12, y + 5, 60, 60);
-            }
-
-            // Datos
-            const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
-            const precioPromo = p.precioPromocion?.toFixed(2);
-
-            doc.setFontSize(9);
-            doc.text("Código: " + p.codigo, x + 5, y + 70);
-
-            const descripcion = doc.splitTextToSize(p.producto, 75);
-            doc.text(descripcion, x + 5, y + 77);
-
-            doc.setFontSize(10);
-            doc.text("Marca: " + p.marca, x + 5, y + 88);
-
-            // Precio
-            if (precioPromo && Number(precioPromo) > 0) {
-                doc.setTextColor(150);
-                doc.text("$" + precioNormal, x + 50, y + 70);
-
-                doc.setTextColor(200, 0, 0);
-                doc.setFontSize(12);
-                doc.text("$" + precioPromo, x + 50, y + 80);
-                doc.setTextColor(0);
-            } else {
-                doc.setFontSize(12);
-                doc.text("$" + precioNormal, x + 50, y + 80);
-            }
-
-            // Badge Top
-            if (p.top === true) {
-                doc.setFillColor(255, 215, 0);
-                doc.rect(x + 55, y + 5, 25, 8, "F");
-                doc.setFontSize(8);
-                doc.text("TOP", x + 67, y + 11, { align: "center" });
-            }
-
-            columna++;
-
-            if (columna === 2) {
-                columna = 0;
-                y += 105;
-            }
+        // Si no cabe, nueva página antes de dibujar
+        if (y + cardHeight > 285) {
+            doc.addPage();
+            doc.setFontSize(22);
+            doc.text(titulo, pageWidth / 2, 20, { align: "center" });
+            y = 30;
         }
 
-        doc.addPage();
+        const x = xPositions[columna];
+
+        // Marco limpio
+        doc.setDrawColor(210);
+        doc.rect(x, y, cardWidth, cardHeight);
+
+        // =========================
+        // IMAGEN CENTRADA REAL
+        // =========================
+        const img = await cargarImagenOptimizada(p.imagen, 260);
+
+        if (img) {
+            const imgWidth = 60;
+            const imgHeight = 60;
+
+            const imgX = x + (cardWidth - imgWidth) / 2;
+            const imgY = y + 5;
+
+            doc.addImage(img, "JPEG", imgX, imgY, imgWidth, imgHeight);
+        }
+
+        let textY = y + 70;
+
+        doc.setFontSize(9);
+        doc.setTextColor(0);
+
+        doc.text("Código: " + p.codigo, x + 5, textY);
+        textY += 6;
+
+        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 10);
+        doc.text(descripcion, x + 5, textY);
+        textY += descripcion.length * 5;
+
+        doc.text("Marca: " + p.marca, x + 5, textY);
+        textY += 6;
+
+        doc.text("Unidad: " + p.unidad, x + 5, textY);
+        textY += 6;
+
+        doc.text("Master: " + p.master + " | Inner: " + p.inner, x + 5, textY);
+        textY += 6;
+
+        if (p.restricciones) {
+            doc.text("Restricciones: " + p.restricciones, x + 5, textY);
+            textY += 6;
+        }
+
+        // =========================
+        // PRECIOS BIEN ACOMODADOS
+        // =========================
+
+        const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
+        const precioPromo = p.precioPromocion?.toFixed(2);
+
+        if (precioPromo && Number(precioPromo) > 0) {
+
+            doc.setFontSize(9);
+            doc.setTextColor(120);
+            doc.text("$" + precioNormal, x + cardWidth - 5, y + cardHeight - 20, { align: "right" });
+
+            doc.setFontSize(13);
+            doc.setTextColor(200, 0, 0);
+            doc.text("$" + precioPromo, x + cardWidth - 5, y + cardHeight - 10, { align: "right" });
+
+        } else {
+
+            doc.setFontSize(13);
+            doc.setTextColor(0);
+            doc.text("$" + precioNormal, x + cardWidth - 5, y + cardHeight - 12, { align: "right" });
+        }
+
+        doc.setTextColor(0);
+
+        // =========================
+        // BADGE TOP
+        // =========================
+        if (p.top === true) {
+            doc.setFillColor(255, 193, 7);
+            doc.rect(x + cardWidth - 30, y + 5, 25, 8, "F");
+            doc.setFontSize(8);
+            doc.text("TOP", x + cardWidth - 17, y + 11, { align: "center" });
+        }
+
+        columna++;
+
+        if (columna === 2) {
+            columna = 0;
+            y += cardHeight + gap;
+        }
     }
 
+    doc.addPage();
+}
     // =========================
     // PROMOCIONES
     // =========================
