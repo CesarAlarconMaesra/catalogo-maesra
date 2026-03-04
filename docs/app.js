@@ -519,201 +519,198 @@ async function generarCatalogoCompletoPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
-    const fecha = new Date().toLocaleDateString();
-    const totalProductos = productos.length;
-
-    // =========================
-    // PORTADA
-    // =========================
-    doc.setFontSize(28);
-    doc.text("CATÁLOGO MAESRA", 105, 60, { align: "center" });
-
-    doc.setFontSize(14);
-    doc.text("Fecha: " + fecha, 105, 80, { align: "center" });
-    doc.text("Total de productos: " + totalProductos, 105, 90, { align: "center" });
-
-    doc.setFontSize(12);
-    doc.text("Promociones | Más Vendidos | General por Marca", 105, 110, { align: "center" });
-
-    doc.addPage();
-
-    // =========================
-    // FUNCION IMAGEN OPTIMIZADA
-    // =========================
-    async function cargarImagenOptimizada(url, maxSize = 260) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-
-            img.onload = function () {
-
-                const ratio = Math.min(
-                    maxSize / img.naturalWidth,
-                    maxSize / img.naturalHeight,
-                    1
-                );
-
-                const canvas = document.createElement("canvas");
-                canvas.width = img.naturalWidth * ratio;
-                canvas.height = img.naturalHeight * ratio;
-
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                const dataURL = canvas.toDataURL("image/jpeg", 0.6);
-                resolve(dataURL);
-            };
-
-            img.onerror = () => resolve(null);
-            img.src = url;
-        });
-    }
-
-    // =========================
-    // FUNCION SECCION
-    // =========================
-async function imprimirSeccion(titulo, listaProductos) {
-
-    if (listaProductos.length === 0) return;
-
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    const marginX = 10;
-    const marginTop = 22;
+    let numeroPagina = 1;
 
-    const columnas = 3;
-    const filas = 4;
+    const fecha = new Date().toLocaleDateString();
 
-    const gapX = 6;
-    const gapY = 6;
+    // =========================
+    // PORTADA ELEGANTE
+    // =========================
 
-    const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
-    const cardWidth = usableWidth / columnas;
+    function portada() {
 
-    const usableHeight = pageHeight - marginTop - 15;
-    const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
+        doc.setFillColor(245, 245, 245);
+        doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    let index = 0;
-
-    function dibujarEncabezado() {
-
-        doc.setFontSize(16);
-        doc.text(titulo, pageWidth / 2, 14, { align: "center" });
-
-        // Línea divisoria
-        doc.setDrawColor(180);
-        doc.line(marginX, 18, pageWidth - marginX, 18);
-
-        // Logo
         if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", pageWidth - 30, 6, 18, 10);
-        }
-    }
-
-    dibujarEncabezado();
-
-    for (let p of listaProductos) {
-
-        const posicionPagina = index % 12;
-
-        if (posicionPagina === 0 && index !== 0) {
-            doc.addPage();
-            dibujarEncabezado();
+            doc.addImage(logoBase64, "PNG", pageWidth/2 - 40, 40, 80, 40);
         }
 
-        const col = posicionPagina % columnas;
-        const row = Math.floor(posicionPagina / columnas);
+        doc.setFontSize(28);
+        doc.setTextColor(40);
+        doc.text("CATÁLOGO GENERAL", pageWidth/2, 110, { align: "center" });
 
-        const x = marginX + col * (cardWidth + gapX);
-        const y = marginTop + row * (cardHeight + gapY);
+        doc.setFontSize(14);
+        doc.setTextColor(80);
+        doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
 
-        // Marco
-        doc.setDrawColor(220);
-        doc.rect(x, y, cardWidth, cardHeight);
-
-        // ===== IMAGEN =====
-        const img = await cargarImagenOptimizada(p.imagen, 200);
-
-        if (img) {
-            const imgSize = cardWidth * 0.6;
-            const imgX = x + (cardWidth - imgSize) / 2;
-            const imgY = y + 4;
-
-            doc.addImage(img, "JPEG", imgX, imgY, imgSize, imgSize);
-        }
-
-        let textY = y + cardWidth * 0.6 + 8;
-
-        doc.setFontSize(6.8);
-        doc.setTextColor(0);
-
-        doc.text("Código: " + p.codigo, x + 3, textY);
-        textY += 4;
-
-        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 6);
-        doc.text(descripcion.slice(0, 2), x + 3, textY);
-        textY += 8;
-
-        doc.text("Marca: " + p.marca, x + 3, textY);
-        textY += 4;
-
-        doc.text("U: " + p.unidad + " | M:" + p.master + " I:" + p.inner, x + 3, textY);
-
-        // ===== BADGE TOP =====
-        if (p.top === true) {
-            doc.setFillColor(255, 193, 7);
-            doc.rect(x + cardWidth - 18, y + 3, 15, 5, "F");
-            doc.setFontSize(6);
-            doc.text("TOP", x + cardWidth - 10.5, y + 7, { align: "center" });
-        }
-
-        // ===== PRECIOS (ZONA FIJA ABAJO) =====
-
-        const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
-        const precioPromo = p.precioPromocion?.toFixed(2);
-
-        const priceY = y + cardHeight - 6;
-
-        if (precioPromo && Number(precioPromo) > 0) {
-
-            doc.setFontSize(6);
-            doc.setTextColor(120);
-            doc.text("$" + precioNormal, x + cardWidth - 3, priceY - 4, { align: "right" });
-
-            doc.setFontSize(8.5);
-            doc.setTextColor(200, 0, 0);
-            doc.text("$" + precioPromo, x + cardWidth - 3, priceY, { align: "right" });
-
+        if (listaPrecioActiva) {
+            doc.setFontSize(12);
+            doc.setTextColor(200,0,0);
+            doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
         } else {
-
-            doc.setFontSize(8.5);
-            doc.setTextColor(0);
-            doc.text("$" + precioNormal, x + cardWidth - 3, priceY, { align: "right" });
+            doc.setFontSize(12);
+            doc.setTextColor(120);
+            doc.text("Catálogo informativo sin precios", pageWidth/2, 140, { align: "center" });
         }
 
-        doc.setTextColor(0);
-
-        index++;
+        doc.addPage();
+        numeroPagina++;
     }
 
-    doc.addPage();
-}
     // =========================
-    // PROMOCIONES
+    // NUMERACIÓN
     // =========================
-    const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
-    await imprimirSeccion("PROMOCIONES", promociones);
+
+    function agregarNumeroPagina() {
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text("Página " + numeroPagina, pageWidth - 20, pageHeight - 5);
+        numeroPagina++;
+    }
 
     // =========================
-    // MAS VENDIDOS
+    // SECCIONES 12 POR PÁGINA
     // =========================
+
+    async function imprimirSeccion(titulo, listaProductos) {
+
+        if (listaProductos.length === 0) return;
+
+        const marginX = 10;
+        const marginTop = 22;
+        const columnas = 3;
+        const filas = 4;
+        const gapX = 6;
+        const gapY = 6;
+
+        const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
+        const cardWidth = usableWidth / columnas;
+
+        const usableHeight = pageHeight - marginTop - 20;
+        const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
+
+        let index = 0;
+
+        function encabezado() {
+            doc.setFontSize(15);
+            doc.setTextColor(0);
+            doc.text(titulo, pageWidth/2, 14, { align: "center" });
+
+            doc.setDrawColor(180);
+            doc.line(marginX, 18, pageWidth - marginX, 18);
+
+            if (logoBase64) {
+                doc.addImage(logoBase64, "PNG", pageWidth - 28, 5, 18, 10);
+            }
+        }
+
+        encabezado();
+
+        for (let p of listaProductos) {
+
+            const posicion = index % 12;
+
+            if (posicion === 0 && index !== 0) {
+                agregarNumeroPagina();
+                doc.addPage();
+                encabezado();
+            }
+
+            const col = posicion % columnas;
+            const row = Math.floor(posicion / columnas);
+
+            const x = marginX + col * (cardWidth + gapX);
+            const y = marginTop + row * (cardHeight + gapY);
+
+            doc.setDrawColor(220);
+            doc.rect(x, y, cardWidth, cardHeight);
+
+            // Imagen
+            const img = await cargarImagenOptimizada(p.imagen, 200);
+            if (img) {
+                const imgSize = cardWidth * 0.55;
+                doc.addImage(img, "JPEG",
+                    x + (cardWidth - imgSize)/2,
+                    y + 4,
+                    imgSize,
+                    imgSize
+                );
+            }
+
+            let textY = y + cardWidth * 0.55 + 8;
+
+            doc.setFontSize(6.8);
+            doc.setTextColor(0);
+
+            doc.text("Código: " + p.codigo, x + 3, textY);
+            textY += 4;
+
+            const desc = doc.splitTextToSize(p.producto, cardWidth - 6);
+            doc.text(desc.slice(0,2), x + 3, textY);
+            textY += 8;
+
+            doc.text("Marca: " + p.marca, x + 3, textY);
+            textY += 4;
+
+            doc.text("U: " + p.unidad + " | M:" + p.master + " I:" + p.inner, x + 3, textY);
+            textY += 4;
+
+            if (p.restricciones) {
+                doc.setTextColor(120);
+                doc.text(p.restricciones, x + 3, textY);
+                doc.setTextColor(0);
+            }
+
+            // ===== PRECIOS SOLO SI LP1 ACTIVA =====
+
+            if (listaPrecioActiva) {
+
+                const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
+                const precioPromo = p.precioPromocion?.toFixed(2);
+                const priceY = y + cardHeight - 6;
+
+                if (precioPromo && Number(precioPromo) > 0) {
+
+                    doc.setFontSize(6);
+                    doc.setTextColor(120);
+                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY - 4, { align: "right" });
+
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(200, 0, 0);
+                    doc.text("$" + precioPromo, x + cardWidth - 3, priceY, { align: "right" });
+
+                } else {
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(0);
+                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY, { align: "right" });
+                }
+
+                doc.setTextColor(0);
+            }
+
+            index++;
+        }
+
+        agregarNumeroPagina();
+        doc.addPage();
+    }
+
+    // =========================
+    // EJECUCIÓN
+    // =========================
+
+    portada();
+
+    const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
     const masVendidos = productos.filter(p => p.top === true);
+
+    await imprimirSeccion("PROMOCIONES", promociones);
     await imprimirSeccion("MÁS VENDIDOS", masVendidos);
 
-    // =========================
-    // GENERAL POR MARCA
-    // =========================
     const marcas = [...new Set(productos.map(p => p.marca))];
 
     for (let marca of marcas) {
@@ -721,5 +718,5 @@ async function imprimirSeccion(titulo, listaProductos) {
         await imprimirSeccion("MARCA: " + marca, productosMarca);
     }
 
-    doc.save("Catalogo_MAESRA_Completo.pdf");
+    doc.save("Catalogo_MAESRA.pdf");
 }
