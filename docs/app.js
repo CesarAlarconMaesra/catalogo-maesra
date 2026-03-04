@@ -541,7 +541,7 @@ function activarLP1() {
 
 async function cargarLogo() {
     try {
-        const res = await fetch("img/logo.png");
+        const res = await fetch("img/MAESRA.jpg");
         const blob = await res.blob();
 
         return new Promise((resolve) => {
