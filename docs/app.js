@@ -514,6 +514,62 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 }
 
+async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
+
+    try {
+
+        // Ajusta si tus imágenes están en github.io
+        const urlBase = "https://cesaralarconmaesra.github.io/catalogo-maesra/img/"; 
+        const urlCompleta = rutaImagen.startsWith("http")
+            ? rutaImagen
+            : urlBase + rutaImagen;
+
+        const response = await fetch(urlCompleta);
+        const blob = await response.blob();
+
+        return new Promise((resolve) => {
+
+            const img = new Image();
+            img.onload = function () {
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                let width = img.width;
+                let height = img.height;
+
+                // Mantener proporción
+                if (width > height) {
+                    if (width > tamañoMax) {
+                        height *= tamañoMax / width;
+                        width = tamañoMax;
+                    }
+                } else {
+                    if (height > tamañoMax) {
+                        width *= tamañoMax / height;
+                        height = tamañoMax;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compresión JPEG 0.75 = buena calidad, menor peso
+                const base64 = canvas.toDataURL("image/jpeg", 0.75);
+
+                resolve(base64);
+            };
+
+            img.src = URL.createObjectURL(blob);
+        });
+
+    } catch (error) {
+        console.error("Error cargando imagen:", rutaImagen);
+        return null;
+    }
+}
 async function generarCatalogoCompletoPDF() {
 
     const { jsPDF } = window.jspdf;
