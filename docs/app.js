@@ -800,33 +800,44 @@ async function generarCatalogoCompletoPDF() {
 
 if (p.restricciones) {
 
-    doc.setFontSize(6);
+    doc.setFontSize(5.8);
     doc.setTextColor(120);
 
     const maxTextWidth = cardWidth - 6;
 
-    // Dividir texto correctamente al ancho
-    let textoRestricciones = doc.splitTextToSize(p.restricciones, maxTextWidth);
+    let textoRestricciones = doc.splitTextToSize(
+        String(p.restricciones),
+        maxTextWidth
+    );
 
-    // Calcular espacio disponible antes del área de precios
     const limiteInferior = listaPrecioActiva === "LP1"
-        ? y + cardHeight - 12   // dejar espacio para precios
+        ? y + cardHeight - 12
         : y + cardHeight - 4;
 
     const espacioDisponible = limiteInferior - textY;
 
-    const altoLinea = 3.5;
+    const altoLinea = 3.2;
     const maxLineas = Math.floor(espacioDisponible / altoLinea);
 
-    // Cortar si rebasa
-    if (textoRestricciones.length > maxLineas) {
-        textoRestricciones = textoRestricciones.slice(0, maxLineas);
-        const ultima = textoRestricciones.length - 1;
-        textoRestricciones[ultima] =
-            textoRestricciones[ultima].substring(0, textoRestricciones[ultima].length - 3) + "...";
-    }
+    // 🔥 SOLO imprimir si hay espacio real
+    if (maxLineas > 0) {
 
-    doc.text(textoRestricciones, x + 3, textY);
+        if (textoRestricciones.length > maxLineas) {
+            textoRestricciones = textoRestricciones.slice(0, maxLineas);
+
+            const ultima = textoRestricciones.length - 1;
+
+            if (ultima >= 0 && textoRestricciones[ultima]) {
+                textoRestricciones[ultima] =
+                    textoRestricciones[ultima].substring(
+                        0,
+                        textoRestricciones[ultima].length - 3
+                    ) + "...";
+            }
+        }
+
+        doc.text(textoRestricciones, x + 3, textY);
+    }
 
     doc.setTextColor(0);
 }
