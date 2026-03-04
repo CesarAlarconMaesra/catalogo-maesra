@@ -798,11 +798,38 @@ async function generarCatalogoCompletoPDF() {
 	    await new Promise(r => setTimeout(r, 0));
 	}
 
-            if (p.restricciones) {
-                doc.setTextColor(120);
-                doc.text(p.restricciones, x + 3, textY);
-                doc.setTextColor(0);
-            }
+if (p.restricciones) {
+
+    doc.setFontSize(6);
+    doc.setTextColor(120);
+
+    const maxTextWidth = cardWidth - 6;
+
+    // Dividir texto correctamente al ancho
+    let textoRestricciones = doc.splitTextToSize(p.restricciones, maxTextWidth);
+
+    // Calcular espacio disponible antes del área de precios
+    const limiteInferior = listaPrecioActiva === "LP1"
+        ? y + cardHeight - 12   // dejar espacio para precios
+        : y + cardHeight - 4;
+
+    const espacioDisponible = limiteInferior - textY;
+
+    const altoLinea = 3.5;
+    const maxLineas = Math.floor(espacioDisponible / altoLinea);
+
+    // Cortar si rebasa
+    if (textoRestricciones.length > maxLineas) {
+        textoRestricciones = textoRestricciones.slice(0, maxLineas);
+        const ultima = textoRestricciones.length - 1;
+        textoRestricciones[ultima] =
+            textoRestricciones[ultima].substring(0, textoRestricciones[ultima].length - 3) + "...";
+    }
+
+    doc.text(textoRestricciones, x + 3, textY);
+
+    doc.setTextColor(0);
+}
 
             if (listaPrecioActiva) {
 
