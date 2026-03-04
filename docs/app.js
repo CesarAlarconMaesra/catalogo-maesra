@@ -4,6 +4,10 @@ let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
 let logoBase64 = null;
 
+const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/catalogo-maesra"; // <-- AJUSTAR
+const cacheImagenes = {};
+
+
 fetch("img/MAESRA.jpg")
     .then(res => res.blob())
     .then(blob => {
@@ -514,22 +518,69 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 }
 
+
+// ===============================
+// ACTIVAR LP1 (EJEMPLO)
+// ===============================
+
+function activarLP1() {
+    const pass = prompt("Ingrese contraseña LP1:");
+
+    if (pass === "1234") { // <-- cambia tu contraseña
+        listaPrecioActiva = true;
+        alert("LP1 Activada");
+    } else {
+        alert("Contraseña incorrecta");
+    }
+}
+
+
+// ===============================
+// CARGAR LOGO
+// ===============================
+
+async function cargarLogo() {
+    try {
+        const res = await fetch("img/logo.png");
+        const blob = await res.blob();
+
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                logoBase64 = reader.result;
+                resolve();
+            };
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn("No se pudo cargar logo");
+    }
+}
+
+
+// ===============================
+// OPTIMIZADOR DE IMÁGENES
+// ===============================
+
 async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
+
+    if (!rutaImagen) return null;
+
+    if (cacheImagenes[rutaImagen]) {
+        return cacheImagenes[rutaImagen];
+    }
 
     try {
 
-        // Ajusta si tus imágenes están en github.io
-        const urlBase = "https://cesaralarconmaesra.github.io/catalogo-maesra//"; 
-        const urlCompleta = rutaImagen.startsWith("http")
-            ? rutaImagen
-            : urlBase + rutaImagen;
+        const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/img/";
 
-        const response = await fetch(urlCompleta);
+        const response = await fetch(url);
         const blob = await response.blob();
 
         return new Promise((resolve) => {
 
             const img = new Image();
+
             img.onload = function () {
 
                 const canvas = document.createElement("canvas");
@@ -538,7 +589,6 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
                 let width = img.width;
                 let height = img.height;
 
-                // Mantener proporción
                 if (width > height) {
                     if (width > tamañoMax) {
                         height *= tamañoMax / width;
@@ -556,8 +606,11 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Compresión JPEG 0.75 = buena calidad, menor peso
-                const base64 = canvas.toDataURL("image/jpeg", 0.75);
+                const base64 = canvas.toDataURL("image/jpeg", 0.7);
+
+                cacheImagenes[rutaImagen] = base64;
+
+                URL.revokeObjectURL(img.src); // 🔥 liberar memoria
 
                 resolve(base64);
             };
@@ -566,11 +619,17 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
         });
 
     } catch (error) {
-        console.error("Error cargando imagen:", rutaImagen);
+        console.warn("Error cargando imagen:", rutaImagen);
         return null;
     }
 }
-async function generarCatalogoCompletoPDF() {
+
+
+// ===============================
+// GENERADOR PDF COMPLETO
+// ===============================
+
+async function generarCatalogoCompletoPDF(productos) {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
@@ -579,47 +638,43 @@ async function generarCatalogoCompletoPDF() {
     const pageHeight = doc.internal.pageSize.getHeight();
 
     let numeroPagina = 1;
-
     const fecha = new Date().toLocaleDateString();
 
-    // =========================
-    // PORTADA ELEGANTE
-    // =========================
+    await cargarLogo();
 
-    function portada() {
+    // ===============================
+    // PORTADA
+    // ===============================
 
-        doc.setFillColor(245, 245, 245);
-        doc.rect(0, 0, pageWidth, pageHeight, "F");
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-        if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", pageWidth/2 - 40, 40, 80, 40);
-        }
-
-        doc.setFontSize(28);
-        doc.setTextColor(40);
-        doc.text("CATÁLOGO GENERAL", pageWidth/2, 110, { align: "center" });
-
-        doc.setFontSize(14);
-        doc.setTextColor(80);
-        doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
-
-        if (listaPrecioActiva) {
-            doc.setFontSize(12);
-            doc.setTextColor(200,0,0);
-            doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
-        } else {
-            doc.setFontSize(12);
-            doc.setTextColor(120);
-            doc.text("Catálogo informativo sin precios", pageWidth/2, 140, { align: "center" });
-        }
-
-        doc.addPage();
-        numeroPagina++;
+    if (logoBase64) {
+        doc.addImage(logoBase64, "PNG", pageWidth/2 - 45, 40, 90, 45);
     }
 
-    // =========================
-    // NUMERACIÓN
-    // =========================
+    doc.setFontSize(26);
+    doc.setTextColor(30);
+    doc.text("CATÁLOGO GENERAL", pageWidth/2, 110, { align: "center" });
+
+    doc.setFontSize(13);
+    doc.setTextColor(90);
+    doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
+
+    if (listaPrecioActiva) {
+        doc.setTextColor(200,0,0);
+        doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
+    } else {
+        doc.setTextColor(120);
+        doc.text("Catálogo informativo sin precios", pageWidth/2, 140, { align: "center" });
+    }
+
+    doc.addPage();
+    numeroPagina++;
+
+    // ===============================
+    // FUNCIÓN NUMERACIÓN
+    // ===============================
 
     function agregarNumeroPagina() {
         doc.setFontSize(8);
@@ -628,18 +683,20 @@ async function generarCatalogoCompletoPDF() {
         numeroPagina++;
     }
 
-    // =========================
-    // SECCIONES 12 POR PÁGINA
-    // =========================
+    // ===============================
+    // FUNCIÓN SECCIÓN 3x4
+    // ===============================
 
-    async function imprimirSeccion(titulo, listaProductos) {
+    async function imprimirSeccion(titulo, lista) {
 
-        if (listaProductos.length === 0) return;
+        if (lista.length === 0) return;
 
         const marginX = 10;
         const marginTop = 22;
+
         const columnas = 3;
         const filas = 4;
+
         const gapX = 6;
         const gapY = 6;
 
@@ -666,7 +723,7 @@ async function generarCatalogoCompletoPDF() {
 
         encabezado();
 
-        for (let p of listaProductos) {
+        for (let p of lista) {
 
             const posicion = index % 12;
 
@@ -685,8 +742,8 @@ async function generarCatalogoCompletoPDF() {
             doc.setDrawColor(220);
             doc.rect(x, y, cardWidth, cardHeight);
 
-            // Imagen
             const img = await cargarImagenOptimizada(p.imagen, 200);
+
             if (img) {
                 const imgSize = cardWidth * 0.55;
                 doc.addImage(img, "JPEG",
@@ -721,8 +778,6 @@ async function generarCatalogoCompletoPDF() {
                 doc.setTextColor(0);
             }
 
-            // ===== PRECIOS SOLO SI LP1 ACTIVA =====
-
             if (listaPrecioActiva) {
 
                 const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
@@ -755,11 +810,9 @@ async function generarCatalogoCompletoPDF() {
         doc.addPage();
     }
 
-    // =========================
-    // EJECUCIÓN
-    // =========================
-
-    portada();
+    // ===============================
+    // GENERACIÓN SECCIONES
+    // ===============================
 
     const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
     const masVendidos = productos.filter(p => p.top === true);
@@ -770,8 +823,8 @@ async function generarCatalogoCompletoPDF() {
     const marcas = [...new Set(productos.map(p => p.marca))];
 
     for (let marca of marcas) {
-        const productosMarca = productos.filter(p => p.marca === marca);
-        await imprimirSeccion("MARCA: " + marca, productosMarca);
+        const listaMarca = productos.filter(p => p.marca === marca);
+        await imprimirSeccion("MARCA: " + marca, listaMarca);
     }
 
     doc.save("Catalogo_MAESRA.pdf");
