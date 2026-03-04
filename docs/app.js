@@ -577,27 +577,37 @@ async function imprimirSeccion(titulo, listaProductos) {
     if (listaProductos.length === 0) return;
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 12;
-    const cardWidth = 90;
-    const cardHeight = 85;
-    const gapY = 8;
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    const xPositions = [
-        margin,
-        pageWidth - margin - cardWidth
-    ];
+    const marginX = 10;
+    const marginTop = 22;
 
-    let y = 32;
-    let columna = 0;
-    let fila = 0;
+    const columnas = 3;
+    const filas = 4;
+
+    const gapX = 6;
+    const gapY = 6;
+
+    const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
+    const cardWidth = usableWidth / columnas;
+
+    const usableHeight = pageHeight - marginTop - 15;
+    const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
+
+    let index = 0;
 
     function dibujarEncabezado() {
-        doc.setFontSize(18);
-        doc.text(titulo, pageWidth / 2, 18, { align: "center" });
 
-        // LOGO PEQUEÑO ESQUINA SUPERIOR DERECHA
+        doc.setFontSize(16);
+        doc.text(titulo, pageWidth / 2, 14, { align: "center" });
+
+        // Línea divisoria
+        doc.setDrawColor(180);
+        doc.line(marginX, 18, pageWidth - marginX, 18);
+
+        // Logo
         if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", pageWidth - 35, 8, 20, 12);
+            doc.addImage(logoBase64, "PNG", pageWidth - 30, 6, 18, 10);
         }
     }
 
@@ -605,102 +615,90 @@ async function imprimirSeccion(titulo, listaProductos) {
 
     for (let p of listaProductos) {
 
-        // Salto de página antes de dibujar si no cabe
-        if (fila === 3) {
+        const posicionPagina = index % 12;
+
+        if (posicionPagina === 0 && index !== 0) {
             doc.addPage();
             dibujarEncabezado();
-            y = 32;
-            fila = 0;
         }
 
-        const x = xPositions[columna];
+        const col = posicionPagina % columnas;
+        const row = Math.floor(posicionPagina / columnas);
+
+        const x = marginX + col * (cardWidth + gapX);
+        const y = marginTop + row * (cardHeight + gapY);
 
         // Marco
         doc.setDrawColor(220);
         doc.rect(x, y, cardWidth, cardHeight);
 
-        // ======================
-        // IMAGEN CENTRADA
-        // ======================
-        const img = await cargarImagenOptimizada(p.imagen, 220);
+        // ===== IMAGEN =====
+        const img = await cargarImagenOptimizada(p.imagen, 200);
 
         if (img) {
-            const imgW = 45;
-            const imgH = 45;
-
-            const imgX = x + (cardWidth - imgW) / 2;
+            const imgSize = cardWidth * 0.6;
+            const imgX = x + (cardWidth - imgSize) / 2;
             const imgY = y + 4;
 
-            doc.addImage(img, "JPEG", imgX, imgY, imgW, imgH);
+            doc.addImage(img, "JPEG", imgX, imgY, imgSize, imgSize);
         }
 
-        let textY = y + 52;
+        let textY = y + cardWidth * 0.6 + 8;
 
-        doc.setFontSize(8);
+        doc.setFontSize(6.8);
         doc.setTextColor(0);
 
-        doc.text("Código: " + p.codigo, x + 4, textY);
-        textY += 5;
+        doc.text("Código: " + p.codigo, x + 3, textY);
+        textY += 4;
 
-        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 8);
-        doc.text(descripcion.slice(0, 2), x + 4, textY); // máximo 2 líneas
-        textY += 10;
+        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 6);
+        doc.text(descripcion.slice(0, 2), x + 3, textY);
+        textY += 8;
 
-        doc.text("Marca: " + p.marca, x + 4, textY);
-        textY += 5;
+        doc.text("Marca: " + p.marca, x + 3, textY);
+        textY += 4;
 
-        doc.text("Unidad: " + p.unidad, x + 4, textY);
-        textY += 5;
+        doc.text("U: " + p.unidad + " | M:" + p.master + " I:" + p.inner, x + 3, textY);
 
-        doc.text("M: " + p.master + " | I: " + p.inner, x + 4, textY);
-
+        // ===== BADGE TOP =====
         if (p.top === true) {
             doc.setFillColor(255, 193, 7);
-            doc.rect(x + cardWidth - 22, y + 4, 18, 6, "F");
-            doc.setFontSize(7);
-            doc.text("TOP", x + cardWidth - 13, y + 9, { align: "center" });
+            doc.rect(x + cardWidth - 18, y + 3, 15, 5, "F");
+            doc.setFontSize(6);
+            doc.text("TOP", x + cardWidth - 10.5, y + 7, { align: "center" });
         }
 
-        // ======================
-        // PRECIOS FIJOS ABAJO
-        // ======================
+        // ===== PRECIOS (ZONA FIJA ABAJO) =====
 
         const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
         const precioPromo = p.precioPromocion?.toFixed(2);
 
-        const priceBaseY = y + cardHeight - 14;
+        const priceY = y + cardHeight - 6;
 
         if (precioPromo && Number(precioPromo) > 0) {
 
-            doc.setFontSize(7);
-            doc.setTextColor(130);
-            doc.text("$" + precioNormal, x + cardWidth - 4, priceBaseY - 5, { align: "right" });
+            doc.setFontSize(6);
+            doc.setTextColor(120);
+            doc.text("$" + precioNormal, x + cardWidth - 3, priceY - 4, { align: "right" });
 
-            doc.setFontSize(11);
+            doc.setFontSize(8.5);
             doc.setTextColor(200, 0, 0);
-            doc.text("$" + precioPromo, x + cardWidth - 4, priceBaseY, { align: "right" });
+            doc.text("$" + precioPromo, x + cardWidth - 3, priceY, { align: "right" });
 
         } else {
 
-            doc.setFontSize(11);
+            doc.setFontSize(8.5);
             doc.setTextColor(0);
-            doc.text("$" + precioNormal, x + cardWidth - 4, priceBaseY, { align: "right" });
+            doc.text("$" + precioNormal, x + cardWidth - 3, priceY, { align: "right" });
         }
 
         doc.setTextColor(0);
 
-        columna++;
-
-        if (columna === 2) {
-            columna = 0;
-            fila++;
-            y += cardHeight + gapY;
-        }
+        index++;
     }
 
     doc.addPage();
 }
-
     // =========================
     // PROMOCIONES
     // =========================
