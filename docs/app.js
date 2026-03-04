@@ -629,13 +629,17 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 // GENERADOR PDF COMPLETO
 // ===============================
 
-async function generarCatalogoCompletoPDF(productos) {
+async function generarCatalogoCompletoPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "mm", "a4");
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    mostrarProgreso();
+
+    const totalProductos = productos.length;
+    let contadorGlobal = 0;
 
     let numeroPagina = 1;
     const fecha = new Date().toLocaleDateString();
@@ -772,6 +776,14 @@ async function generarCatalogoCompletoPDF(productos) {
             doc.text("U: " + p.unidad + " | M:" + p.master + " I:" + p.inner, x + 3, textY);
             textY += 4;
 
+	contadorGlobal++;
+	actualizarProgreso(contadorGlobal, totalProductos);
+
+	// Permitir que el navegador respire
+	if (contadorGlobal % 5 === 0) {
+	    await new Promise(r => setTimeout(r, 0));
+	}
+
             if (p.restricciones) {
                 doc.setTextColor(120);
                 doc.text(p.restricciones, x + 3, textY);
@@ -828,4 +840,22 @@ async function generarCatalogoCompletoPDF(productos) {
     }
 
     doc.save("Catalogo_MAESRA.pdf");
+    ocultarProgreso();
+}
+
+function mostrarProgreso() {
+    document.getElementById("progresoContainer").style.display = "block";
+}
+
+function ocultarProgreso() {
+    document.getElementById("progresoContainer").style.display = "none";
+}
+
+function actualizarProgreso(actual, total) {
+
+    const porcentaje = Math.floor((actual / total) * 100);
+
+    document.getElementById("barraProgreso").style.width = porcentaje + "%";
+    document.getElementById("progresoTexto").innerText = porcentaje + "%";
+
 }
