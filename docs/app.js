@@ -4,7 +4,7 @@ let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
 let logoBase64 = null;
 
-const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/catalogo-maesra"; // <-- AJUSTAR
+const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/catalogo-maesra/"; // <-- AJUSTAR
 const cacheImagenes = {};
 
 
@@ -572,9 +572,18 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 
     try {
 
-        const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/img/";
+        // 🔥 IMPORTANTE: usar la constante global correctamente
+        const url = rutaImagen.startsWith("http")
+            ? rutaImagen
+            : `${URL_BASE_IMAGENES}/${rutaImagen}`;
 
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.warn("No se pudo cargar:", url);
+            return null;
+        }
+
         const blob = await response.blob();
 
         return new Promise((resolve) => {
@@ -606,20 +615,25 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 
                 ctx.drawImage(img, 0, 0, width, height);
 
-                const base64 = canvas.toDataURL("image/jpeg", 0.7);
+                const base64 = canvas.toDataURL("image/jpeg", 0.75);
 
                 cacheImagenes[rutaImagen] = base64;
 
-                URL.revokeObjectURL(img.src); // 🔥 liberar memoria
+                URL.revokeObjectURL(img.src);
 
                 resolve(base64);
+            };
+
+            img.onerror = function () {
+                console.warn("Error cargando imagen:", url);
+                resolve(null);
             };
 
             img.src = URL.createObjectURL(blob);
         });
 
     } catch (error) {
-        console.warn("Error cargando imagen:", rutaImagen);
+        console.warn("Error general imagen:", rutaImagen);
         return null;
     }
 }
@@ -665,7 +679,7 @@ async function generarCatalogoCompletoPDF() {
     doc.setTextColor(90);
     doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
 
-    if (listaPrecioActiva) {
+    if (listaPrecioActiva === "LP1") {
         doc.setTextColor(200,0,0);
         doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
     } else {
@@ -773,7 +787,7 @@ async function generarCatalogoCompletoPDF() {
             doc.text("Marca: " + p.marca, x + 3, textY);
             textY += 4;
 
-            doc.text("U: " + p.unidad + " | M:" + p.master + " I:" + p.inner, x + 3, textY);
+            doc.text("Unidad: " + p.unidad + " | Master:" + p.master + " Inner:" + p.inner, x + 3, textY);
             textY += 4;
 
 	contadorGlobal++;
