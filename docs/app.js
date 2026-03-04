@@ -519,7 +519,7 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
     try {
 
         // Ajusta si tus imágenes están en github.io
-        const urlBase = "https://cesaralarconmaesra.github.io/catalogo-maesra/img/"; 
+        const urlBase = "https://cesaralarconmaesra.github.io/catalogo-maesra//"; 
         const urlCompleta = rutaImagen.startsWith("http")
             ? rutaImagen
             : urlBase + rutaImagen;
