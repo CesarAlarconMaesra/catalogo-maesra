@@ -2,6 +2,17 @@ let productos = [];
 let listaPrecioActiva = localStorage.getItem("listaPrecio") || "LP4";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
+let logoBase64 = null;
+
+fetch("img/MAESRA.jpg")
+    .then(res => res.blob())
+    .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            logoBase64 = reader.result;
+        };
+        reader.readAsDataURL(blob);
+    });
 
 /* ===============================
 INICIO
@@ -566,125 +577,130 @@ async function imprimirSeccion(titulo, listaProductos) {
     if (listaProductos.length === 0) return;
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
-    const cardWidth = 85;
-    const cardHeight = 110;
-    const gap = 10;
-
-    doc.setFontSize(22);
-    doc.text(titulo, pageWidth / 2, 20, { align: "center" });
-
-    let y = 30;
-    let columna = 0;
+    const margin = 12;
+    const cardWidth = 90;
+    const cardHeight = 85;
+    const gapY = 8;
 
     const xPositions = [
         margin,
         pageWidth - margin - cardWidth
     ];
 
+    let y = 32;
+    let columna = 0;
+    let fila = 0;
+
+    function dibujarEncabezado() {
+        doc.setFontSize(18);
+        doc.text(titulo, pageWidth / 2, 18, { align: "center" });
+
+        // LOGO PEQUEÑO ESQUINA SUPERIOR DERECHA
+        if (logoBase64) {
+            doc.addImage(logoBase64, "PNG", pageWidth - 35, 8, 20, 12);
+        }
+    }
+
+    dibujarEncabezado();
+
     for (let p of listaProductos) {
 
-        // Si no cabe, nueva página antes de dibujar
-        if (y + cardHeight > 285) {
+        // Salto de página antes de dibujar si no cabe
+        if (fila === 3) {
             doc.addPage();
-            doc.setFontSize(22);
-            doc.text(titulo, pageWidth / 2, 20, { align: "center" });
-            y = 30;
+            dibujarEncabezado();
+            y = 32;
+            fila = 0;
         }
 
         const x = xPositions[columna];
 
-        // Marco limpio
-        doc.setDrawColor(210);
+        // Marco
+        doc.setDrawColor(220);
         doc.rect(x, y, cardWidth, cardHeight);
 
-        // =========================
-        // IMAGEN CENTRADA REAL
-        // =========================
-        const img = await cargarImagenOptimizada(p.imagen, 260);
+        // ======================
+        // IMAGEN CENTRADA
+        // ======================
+        const img = await cargarImagenOptimizada(p.imagen, 220);
 
         if (img) {
-            const imgWidth = 60;
-            const imgHeight = 60;
+            const imgW = 45;
+            const imgH = 45;
 
-            const imgX = x + (cardWidth - imgWidth) / 2;
-            const imgY = y + 5;
+            const imgX = x + (cardWidth - imgW) / 2;
+            const imgY = y + 4;
 
-            doc.addImage(img, "JPEG", imgX, imgY, imgWidth, imgHeight);
+            doc.addImage(img, "JPEG", imgX, imgY, imgW, imgH);
         }
 
-        let textY = y + 70;
+        let textY = y + 52;
 
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setTextColor(0);
 
-        doc.text("Código: " + p.codigo, x + 5, textY);
-        textY += 6;
+        doc.text("Código: " + p.codigo, x + 4, textY);
+        textY += 5;
 
-        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 10);
-        doc.text(descripcion, x + 5, textY);
-        textY += descripcion.length * 5;
+        const descripcion = doc.splitTextToSize(p.producto, cardWidth - 8);
+        doc.text(descripcion.slice(0, 2), x + 4, textY); // máximo 2 líneas
+        textY += 10;
 
-        doc.text("Marca: " + p.marca, x + 5, textY);
-        textY += 6;
+        doc.text("Marca: " + p.marca, x + 4, textY);
+        textY += 5;
 
-        doc.text("Unidad: " + p.unidad, x + 5, textY);
-        textY += 6;
+        doc.text("Unidad: " + p.unidad, x + 4, textY);
+        textY += 5;
 
-        doc.text("Master: " + p.master + " | Inner: " + p.inner, x + 5, textY);
-        textY += 6;
+        doc.text("M: " + p.master + " | I: " + p.inner, x + 4, textY);
 
-        if (p.restricciones) {
-            doc.text("Restricciones: " + p.restricciones, x + 5, textY);
-            textY += 6;
+        if (p.top === true) {
+            doc.setFillColor(255, 193, 7);
+            doc.rect(x + cardWidth - 22, y + 4, 18, 6, "F");
+            doc.setFontSize(7);
+            doc.text("TOP", x + cardWidth - 13, y + 9, { align: "center" });
         }
 
-        // =========================
-        // PRECIOS BIEN ACOMODADOS
-        // =========================
+        // ======================
+        // PRECIOS FIJOS ABAJO
+        // ======================
 
         const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
         const precioPromo = p.precioPromocion?.toFixed(2);
 
+        const priceBaseY = y + cardHeight - 14;
+
         if (precioPromo && Number(precioPromo) > 0) {
 
-            doc.setFontSize(9);
-            doc.setTextColor(120);
-            doc.text("$" + precioNormal, x + cardWidth - 5, y + cardHeight - 20, { align: "right" });
+            doc.setFontSize(7);
+            doc.setTextColor(130);
+            doc.text("$" + precioNormal, x + cardWidth - 4, priceBaseY - 5, { align: "right" });
 
-            doc.setFontSize(13);
+            doc.setFontSize(11);
             doc.setTextColor(200, 0, 0);
-            doc.text("$" + precioPromo, x + cardWidth - 5, y + cardHeight - 10, { align: "right" });
+            doc.text("$" + precioPromo, x + cardWidth - 4, priceBaseY, { align: "right" });
 
         } else {
 
-            doc.setFontSize(13);
+            doc.setFontSize(11);
             doc.setTextColor(0);
-            doc.text("$" + precioNormal, x + cardWidth - 5, y + cardHeight - 12, { align: "right" });
+            doc.text("$" + precioNormal, x + cardWidth - 4, priceBaseY, { align: "right" });
         }
 
         doc.setTextColor(0);
-
-        // =========================
-        // BADGE TOP
-        // =========================
-        if (p.top === true) {
-            doc.setFillColor(255, 193, 7);
-            doc.rect(x + cardWidth - 30, y + 5, 25, 8, "F");
-            doc.setFontSize(8);
-            doc.text("TOP", x + cardWidth - 17, y + 11, { align: "center" });
-        }
 
         columna++;
 
         if (columna === 2) {
             columna = 0;
-            y += cardHeight + gap;
+            fila++;
+            y += cardHeight + gapY;
         }
     }
 
     doc.addPage();
 }
+
     // =========================
     // PROMOCIONES
     // =========================
