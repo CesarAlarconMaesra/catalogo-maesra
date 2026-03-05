@@ -694,7 +694,7 @@ async function generarCatalogoCompletoPDF() {
         const usableWidth = pageWidth - (marginX*2) - (gapX*(columnas-1));
         const cardWidth = usableWidth/columnas;
 
-        const usableHeight = pageHeight - marginTop - 20;
+        const usableHeight = pageHeight - marginTop - 15;
         const cardHeight = (usableHeight - (gapY*(filas-1)))/filas;
 
         let index = 0;
@@ -717,11 +717,13 @@ async function generarCatalogoCompletoPDF() {
 
         for(let p of lista){
 
-            const posicion = index % 20;
+            const productosPorPagina = columnas * filas;
+	    const posicion = index % productosPorPagina;
 
-            if(posicion===0 && index!==0){
-                agregarNumeroPagina();
-                doc.addPage();
+            if (index % (columnas * filas) !== 0) {
+ 	   agregarNumeroPagina();
+  	  doc.addPage();
+	}
                 encabezado();
             }
 
@@ -793,7 +795,7 @@ if (p.top === true) {
             }
 
             let textY = y + cardWidth * 0.55 + 6;
-const limiteTexto = y + cardHeight - 10;
+	const limiteTexto = y + cardHeight - 12;
 
             doc.setFontSize(6);
             doc.text("Código: "+(p.codigo||""),x+2,textY);
@@ -824,7 +826,6 @@ if (p.restricciones && textY < limiteTexto) {
     );
 
     const maxLineas = 3;
-
     const lineas = texto.slice(0, maxLineas);
 
     doc.setFontSize(6);
