@@ -519,21 +519,6 @@ function enviarWhatsApp(){
 }
 
 
-// ===============================
-// ACTIVAR LP1 (EJEMPLO)
-// ===============================
-
-function activarLP1() {
-    const pass = prompt("Ingrese contraseña LP1:");
-
-    if (pass === "1234") { // <-- cambia tu contraseña
-        listaPrecioActiva = true;
-        alert("LP1 Activada");
-    } else {
-        alert("Contraseña incorrecta");
-    }
-}
-
 
 // ===============================
 // CARGAR LOGO
@@ -798,7 +783,7 @@ async function generarCatalogoCompletoPDF() {
 	    await new Promise(r => setTimeout(r, 0));
 	}
 
-if (p.restricciones) {
+if (p.restricciones && p.restricciones.trim() !== "") {
 
     doc.setFontSize(5.8);
     doc.setTextColor(120);
@@ -808,30 +793,29 @@ if (p.restricciones) {
     let textoRestricciones = doc.splitTextToSize(
         String(p.restricciones),
         maxTextWidth
-    );
+    ) || [];
 
-    const limiteInferior = listaPrecioActiva === "LP1"
-        ? y + cardHeight - 12
-        : y + cardHeight - 4;
+    const limiteInferior = (listaPrecioActiva === "LP1")
+        ? y + cardHeight - 14
+        : y + cardHeight - 6;
 
     const espacioDisponible = limiteInferior - textY;
 
     const altoLinea = 3.2;
-    const maxLineas = Math.floor(espacioDisponible / altoLinea);
+    const maxLineas = Math.max(0, Math.floor(espacioDisponible / altoLinea));
 
-    // 🔥 SOLO imprimir si hay espacio real
-    if (maxLineas > 0) {
+    if (maxLineas > 0 && textoRestricciones.length > 0) {
 
         if (textoRestricciones.length > maxLineas) {
             textoRestricciones = textoRestricciones.slice(0, maxLineas);
 
             const ultima = textoRestricciones.length - 1;
 
-            if (ultima >= 0 && textoRestricciones[ultima]) {
+            if (textoRestricciones[ultima]) {
                 textoRestricciones[ultima] =
                     textoRestricciones[ultima].substring(
                         0,
-                        textoRestricciones[ultima].length - 3
+                        Math.max(0, textoRestricciones[ultima].length - 3)
                     ) + "...";
             }
         }
@@ -841,7 +825,6 @@ if (p.restricciones) {
 
     doc.setTextColor(0);
 }
-
             if (listaPrecioActiva) {
 
                 const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
