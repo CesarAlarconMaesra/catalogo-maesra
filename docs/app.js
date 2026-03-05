@@ -681,274 +681,258 @@ async function generarCatalogoCompletoPDF() {
         numeroPagina++;
     }
 
-    async function imprimirSeccion(titulo, lista, columnas, filas) {
+async function imprimirSeccion(titulo, lista, columnas, filas) {
 
-        if(lista.length===0) return;
+    if (lista.length === 0) return;
 
-        const marginX = 10;
-        const marginTop = 22;
+    const marginX = 10;
+    const marginTop = 22;
 
-        const gapX = 4;
-        const gapY = 4;
+    const gapX = 6;
+    const gapY = 6;
 
-        const usableWidth = pageWidth - (marginX*2) - (gapX*(columnas-1));
-        const cardWidth = usableWidth/columnas;
+    const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
+    const cardWidth = usableWidth / columnas;
 
-        const usableHeight = pageHeight - marginTop - 15;
-        const cardHeight = (usableHeight - (gapY*(filas-1)))/filas;
-
-        let index = 0;
-
-        function encabezado(){
-
-            doc.setFontSize(15);
-            doc.setTextColor(0);
-            doc.text(titulo,pageWidth/2,14,{align:"center"});
-
-            doc.setDrawColor(180);
-            doc.line(marginX,18,pageWidth-marginX,18);
-
-            if(logoBase64){
-                doc.addImage(logoBase64,"JPEG",pageWidth-28,5,18,10);
-            }
-        }
-
-        encabezado();
-
-        for (let p of lista) {
+    const usableHeight = pageHeight - marginTop - 20;
+    const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
 
     const productosPorPagina = columnas * filas;
-    const posicion = index % productosPorPagina;
 
-    if (posicion === 0 && index !== 0) {
-        agregarNumeroPagina();
-        doc.addPage();
-        encabezado();
+    let index = 0;
+
+    function encabezado() {
+
+        doc.setFontSize(15);
+        doc.setTextColor(0);
+        doc.text(titulo, pageWidth/2, 14, { align: "center" });
+
+        doc.setDrawColor(180);
+        doc.line(marginX, 18, pageWidth - marginX, 18);
+
+        if (logoBase64) {
+            doc.addImage(logoBase64, "PNG", pageWidth - 28, 5, 18, 10);
+        }
     }
 
-    const col = posicion % columnas;
-    const row = Math.floor(posicion / columnas);
+    encabezado();
 
-    const x = marginX + col * (cardWidth + gapX);
-    const y = marginTop + row * (cardHeight + gapY);
+    for (let p of lista) {
 
-            doc.setDrawColor(220);
-            doc.rect(x,y,cardWidth,cardHeight);
+        const posicion = index % productosPorPagina;
 
+        if (posicion === 0 && index !== 0) {
 
-	// ===== ETIQUETA PROMOCIÓN =====
-if (Number(p.precioPromocion) > 0) {
+            agregarNumeroPagina();
+            doc.addPage();
+            encabezado();
 
-    const etiquetaW = cardWidth * 0.25;
-    const etiquetaH = 5;
-
-    doc.setFillColor(200, 0, 0);
-    doc.rect(x + cardWidth - etiquetaW, y, etiquetaW, etiquetaH, "F");
-
-    doc.setFontSize(6);
-    doc.setTextColor(255);
-    doc.text(
-        "PROMO",
-        x + cardWidth - etiquetaW/2,
-        y + 3.5,
-        { align: "center" }
-    );
-
-    doc.setTextColor(0);
-}
-
-            const img = await cargarImagenOptimizada(p.imagen,160);
-
-            if(img){
-
-                const imgSize = cardWidth*0.55;
-
-                doc.addImage(
-                    img,
-                    "JPEG",
-                    x+(cardWidth-imgSize)/2,
-                    y+3,
-                    imgSize,
-                    imgSize
-                );
-            }
-
-            let textY = y + cardWidth * 0.55 + 6;
-	const limiteTexto = y + cardHeight - 12;
-
-            doc.setFontSize(6);
-            doc.text("Código: "+(p.codigo||""),x+2,textY);
-            textY+=3.5;
-
-            const desc = doc.splitTextToSize(p.producto||"",cardWidth-4);
-            doc.text(desc.slice(0,2),x+2,textY);
-            textY+=6;
-
-            doc.text("Marca: "+(p.marca||""),x+2,textY);
-            textY+=3.5;
-
-            doc.text(
-                "Unidad:"+ (p.unidad||"") +
-                " | Master:"+ (p.master||"") +
-                " Inner:"+ (p.inner||""),
-                x+2,
-                textY
-            );
-
-            textY+=3.5;
-if (p.restricciones && textY < limiteTexto) {
-
-    const texto = doc.splitTextToSize(
-        String(p.restricciones),
-        cardWidth - 6
-    );
-
-    const maxLineas = 3;
-    const lineas = texto.slice(0, maxLineas);
-
-    doc.setFontSize(6);
-    doc.setTextColor(60);
-
-    doc.text(lineas, x + 3, textY);
-
-    doc.setTextColor(0);
-}
-
-	// ===== ETIQUETA TOP =====
-if (p.top === true) {
-
-    const etiquetaW = cardWidth * 0.25;
-    const etiquetaH = 5;
-
-    doc.setFillColor(255, 140, 0);
-    doc.rect(x, y, etiquetaW, etiquetaH, "F");
-
-    doc.setFontSize(6);
-    doc.setTextColor(255);
-    doc.text(
-        "TOP",
-        x + etiquetaW/2,
-        y + 3.5,
-        { align: "center" }
-    );
-
-    doc.setTextColor(0);
-}
-            const img = await cargarImagenOptimizada(p.imagen,160);
-
-            if(img){
-
-                const imgSize = cardWidth*0.55;
-
-                doc.addImage(
-                    img,
-                    "JPEG",
-                    x+(cardWidth-imgSize)/2,
-                    y+3,
-                    imgSize,
-                    imgSize
-                );
-            }
-
-            let textY = y + cardWidth * 0.55 + 6;
-	const limiteTexto = y + cardHeight - 12;
-
-            doc.setFontSize(6);
-            doc.text("Código: "+(p.codigo||""),x+2,textY);
-            textY+=3.5;
-
-            const desc = doc.splitTextToSize(p.producto||"",cardWidth-4);
-            doc.text(desc.slice(0,2),x+2,textY);
-            textY+=6;
-
-            doc.text("Marca: "+(p.marca||""),x+2,textY);
-            textY+=3.5;
-
-            doc.text(
-                "Unidad:"+ (p.unidad||"") +
-                " | Master:"+ (p.master||"") +
-                " Inner:"+ (p.inner||""),
-                x+2,
-                textY
-            );
-
-            textY+=3.5;
-
-if (p.restricciones && textY < limiteTexto) {
-
-    const texto = doc.splitTextToSize(
-        String(p.restricciones),
-        cardWidth - 6
-    );
-
-    const maxLineas = 3;
-    const lineas = texto.slice(0, maxLineas);
-
-    doc.setFontSize(6);
-    doc.setTextColor(60);
-
-    doc.text(lineas, x + 3, textY);
-
-    doc.setTextColor(0);
-}
-            // PRECIOS SOLO LP1
-
-            if(listaPrecioActiva === "LP1"){
-
-                const precioNormal = Number(p.precioLP1||0);
-                const precioPromo = Number(p.precioPromocion||0);
-
-                const priceY = y + cardHeight - 3;
-
-                if(precioPromo>0){
-
-                    doc.setFontSize(6);
-                    doc.setTextColor(120);
-
-                    doc.text(
-                        "$"+precioNormal.toFixed(2),
-                        x+cardWidth-2,
-                        priceY-3,
-                        {align:"right"}
-                    );
-
-                    doc.setFontSize(8);
-                    doc.setTextColor(200,0,0);
-
-                    doc.text(
-                        "$"+precioPromo.toFixed(2),
-                        x+cardWidth-2,
-                        priceY,
-                        {align:"right"}
-                    );
-
-                }else{
-
-                    doc.setFontSize(8);
-                    doc.setTextColor(0);
-
-                    doc.text(
-                        "$"+precioNormal.toFixed(2),
-                        x+cardWidth-2,
-                        priceY,
-                        {align:"right"}
-                    );
-                }
-            }
-
-            contadorGlobal++;
-            actualizarProgreso(contadorGlobal,totalProductos);
-
-            if(contadorGlobal%8===0){
-                await new Promise(r=>setTimeout(r,0));
-            }
-
-            index++;
         }
 
-        agregarNumeroPagina();
-        doc.addPage();
+        const col = posicion % columnas;
+        const row = Math.floor(posicion / columnas);
+
+        const x = marginX + col * (cardWidth + gapX);
+        const y = marginTop + row * (cardHeight + gapY);
+
+        doc.setDrawColor(220);
+        doc.rect(x, y, cardWidth, cardHeight);
+
+        /* ===============================
+           ETIQUETAS PROMO / TOP
+        =============================== */
+
+        const esPromo =
+            Number(p.precioPromocion) > 0 &&
+            Number(p.precioPromocion) < Number(p.precioLP4);
+
+        const esTop = p.top === true;
+
+        const etiquetaAncho = cardWidth * 0.28;
+        const etiquetaAlto = 4;
+
+        if (esPromo) {
+
+            doc.setFillColor(200,0,0);
+            doc.rect(
+                x + cardWidth - etiquetaAncho,
+                y,
+                etiquetaAncho,
+                etiquetaAlto,
+                "F"
+            );
+
+            doc.setFontSize(6);
+            doc.setTextColor(255);
+            doc.text(
+                "PROMO",
+                x + cardWidth - etiquetaAncho/2,
+                y + 3,
+                { align:"center" }
+            );
+
+        }
+
+        if (esTop) {
+
+            doc.setFillColor(255,140,0);
+            doc.rect(
+                x,
+                y,
+                etiquetaAncho,
+                etiquetaAlto,
+                "F"
+            );
+
+            doc.setFontSize(6);
+            doc.setTextColor(255);
+            doc.text(
+                "TOP",
+                x + etiquetaAncho/2,
+                y + 3,
+                { align:"center" }
+            );
+
+        }
+
+        doc.setTextColor(0);
+
+        /* ===============================
+           IMAGEN
+        =============================== */
+
+        const img = await cargarImagenOptimizada(p.imagen, 200);
+
+        if (img) {
+
+            const imgSize = cardWidth * 0.52;
+
+            doc.addImage(
+                img,
+                "JPEG",
+                x + (cardWidth - imgSize)/2,
+                y + etiquetaAlto + 2,
+                imgSize,
+                imgSize
+            );
+        }
+
+        /* ===============================
+           TEXTO
+        =============================== */
+
+        let textY = y + cardWidth * 0.52 + etiquetaAlto + 8;
+
+        doc.setFontSize(6.8);
+
+        doc.text("Código: " + p.codigo, x + 3, textY);
+        textY += 4;
+
+        const desc = doc.splitTextToSize(
+            p.producto,
+            cardWidth - 6
+        );
+
+        doc.text(desc.slice(0,2), x + 3, textY);
+        textY += 8;
+
+        doc.text("Marca: " + (p.marca || ""), x + 3, textY);
+        textY += 4;
+
+        doc.text(
+            "Unidad:" + (p.unidad || "") +
+            " | Master:" + (p.master || "") +
+            " Inner:" + (p.inner || ""),
+            x + 3,
+            textY
+        );
+
+        textY += 4;
+
+        /* ===============================
+           RESTRICCIONES
+        =============================== */
+
+        if (p.restricciones && p.restricciones.trim() !== "") {
+
+            const texto = doc.splitTextToSize(
+                String(p.restricciones),
+                cardWidth - 6
+            );
+
+            const lineas = texto.slice(0,3);
+
+            doc.setFontSize(6);
+            doc.setTextColor(60);
+
+            doc.text(lineas, x + 3, textY);
+
+            doc.setTextColor(0);
+        }
+
+        /* ===============================
+           PRECIOS SOLO LP1
+        =============================== */
+
+        if (listaPrecioActiva === "LP1") {
+
+            const precioNormal = Number(p.precioLP1 || 0);
+            const precioPromo = Number(p.precioPromocion || 0);
+
+            const priceY = y + cardHeight - 6;
+
+            if (precioPromo > 0) {
+
+                doc.setFontSize(6);
+                doc.setTextColor(120);
+                doc.text(
+                    "$" + precioNormal.toFixed(2),
+                    x + cardWidth - 3,
+                    priceY - 4,
+                    { align:"right" }
+                );
+
+                doc.setFontSize(8.5);
+                doc.setTextColor(200,0,0);
+                doc.text(
+                    "$" + precioPromo.toFixed(2),
+                    x + cardWidth - 3,
+                    priceY,
+                    { align:"right" }
+                );
+
+            } else {
+
+                doc.setFontSize(8.5);
+                doc.setTextColor(0);
+                doc.text(
+                    "$" + precioNormal.toFixed(2),
+                    x + cardWidth - 3,
+                    priceY,
+                    { align:"right" }
+                );
+            }
+
+            doc.setTextColor(0);
+        }
+
+        /* ===============================
+           PROGRESO
+        =============================== */
+
+        contadorGlobal++;
+        actualizarProgreso(contadorGlobal, totalProductos);
+
+        if (contadorGlobal % 8 === 0) {
+            await new Promise(r => setTimeout(r, 0));
+        }
+
+        index++;
     }
+
+    agregarNumeroPagina();
+    doc.addPage();
+}
 
     const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
     const masVendidos = productos.filter(p=>p.top===true);
