@@ -560,9 +560,9 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
         // 🔥 IMPORTANTE: usar la constante global correctamente
         const url = rutaImagen.startsWith("http")
             ? rutaImagen
-            : `${URL_BASE_IMAGENES}/${rutaImagen}`;
+            : URL_BASE_IMAGENES + rutaImagen.replace(/^\/+/, "");
 
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: "force-cache" });
 
         if (!response.ok) {
             console.warn("No se pudo cargar:", url);
@@ -749,7 +749,10 @@ async function generarCatalogoCompletoPDF() {
 
             if (img) {
                 const imgSize = cardWidth * 0.55;
-                doc.addImage(img, "JPEG",
+                let formato = "JPEG";
+		if (p.imagen && p.imagen.toLowerCase().includes(".png")) formato = "PNG";
+
+		doc.addImage(img, formato,
                     x + (cardWidth - imgSize)/2,
                     y + 4,
                     imgSize,
@@ -779,77 +782,55 @@ async function generarCatalogoCompletoPDF() {
 	actualizarProgreso(contadorGlobal, totalProductos);
 
 	// Permitir que el navegador respire
-	if (contadorGlobal % 5 === 0) {
+	if (contadorGlobal % 8 === 0) {
 	    await new Promise(r => setTimeout(r, 0));
 	}
 
 if (p.restricciones && p.restricciones.trim() !== "") {
 
-    doc.setFontSize(5.8);
+    const texto = doc.splitTextToSize(
+        String(p.restricciones),
+        cardWidth - 6
+    );
+
+    const maxLineas = 3;
+
+    const lineas = texto.slice(0, maxLineas);
+
+    doc.setFontSize(5.5);
     doc.setTextColor(120);
 
-    const maxTextWidth = cardWidth - 6;
+    doc.text(lineas, x + 3, textY);
 
-    let textoRestricciones = doc.splitTextToSize(
-        String(p.restricciones),
-        maxTextWidth
-    ) || [];
+    doc.setTextColor(0);
+}
+if (listaPrecioActiva === "LP1") {
 
-    const limiteInferior = (listaPrecioActiva === "LP1")
-        ? y + cardHeight - 14
-        : y + cardHeight - 6;
+    const precioNormal = Number(p.precioLP1 || 0);
+    const precioPromo = Number(p.precioPromocion || 0);
 
-    const espacioDisponible = limiteInferior - textY;
+    const priceY = y + cardHeight - 6;
 
-    const altoLinea = 3.2;
-    const maxLineas = Math.max(0, Math.floor(espacioDisponible / altoLinea));
+    if (precioPromo > 0) {
 
-    if (maxLineas > 0 && textoRestricciones.length > 0) {
+        doc.setFontSize(6);
+        doc.setTextColor(120);
+        doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY - 4, { align: "right" });
 
-        if (textoRestricciones.length > maxLineas) {
-            textoRestricciones = textoRestricciones.slice(0, maxLineas);
+        doc.setFontSize(8.5);
+        doc.setTextColor(200, 0, 0);
+        doc.text("$" + precioPromo.toFixed(2), x + cardWidth - 3, priceY, { align: "right" });
 
-            const ultima = textoRestricciones.length - 1;
+    } else {
 
-            if (textoRestricciones[ultima]) {
-                textoRestricciones[ultima] =
-                    textoRestricciones[ultima].substring(
-                        0,
-                        Math.max(0, textoRestricciones[ultima].length - 3)
-                    ) + "...";
-            }
-        }
+        doc.setFontSize(8.5);
+        doc.setTextColor(0);
+        doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY, { align: "right" });
 
-        doc.text(textoRestricciones, x + 3, textY);
     }
 
     doc.setTextColor(0);
 }
-            if (listaPrecioActiva) {
-
-                const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
-                const precioPromo = p.precioPromocion?.toFixed(2);
-                const priceY = y + cardHeight - 6;
-
-                if (precioPromo && Number(precioPromo) > 0) {
-
-                    doc.setFontSize(6);
-                    doc.setTextColor(120);
-                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY - 4, { align: "right" });
-
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(200, 0, 0);
-                    doc.text("$" + precioPromo, x + cardWidth - 3, priceY, { align: "right" });
-
-                } else {
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(0);
-                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY, { align: "right" });
-                }
-
-                doc.setTextColor(0);
-            }
-
             index++;
         }
 
