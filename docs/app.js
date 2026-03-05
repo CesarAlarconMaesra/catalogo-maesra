@@ -757,6 +757,24 @@ if (Number(p.precioPromocion) > 0) {
     doc.setTextColor(0);
 }
 
+if (p.restricciones && textY < limiteTexto) {
+
+    const texto = doc.splitTextToSize(
+        String(p.restricciones),
+        cardWidth - 6
+    );
+
+    const maxLineas = 3;
+    const lineas = texto.slice(0, maxLineas);
+
+    doc.setFontSize(6);
+    doc.setTextColor(60);
+
+    doc.text(lineas, x + 3, textY);
+
+    doc.setTextColor(0);
+}
+
 	// ===== ETIQUETA TOP =====
 if (p.top === true) {
 
