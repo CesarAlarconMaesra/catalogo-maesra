@@ -711,7 +711,7 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
         doc.line(marginX, 18, pageWidth - marginX, 18);
 
         if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", pageWidth - 28, 5, 18, 10);
+            doc.addImage(logoBase64, "JPEG", pageWidth - 28, 5, 18, 10);
         }
     }
 
@@ -739,7 +739,7 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
         doc.rect(x, y, cardWidth, cardHeight);
 
         /* ===============================
-           ETIQUETAS PROMO / TOP
+           ETIQUETAS
         =============================== */
 
         const esPromo =
@@ -754,45 +754,22 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
         if (esPromo) {
 
             doc.setFillColor(200,0,0);
-            doc.rect(
-                x + cardWidth - etiquetaAncho,
-                y,
-                etiquetaAncho,
-                etiquetaAlto,
-                "F"
-            );
+            doc.rect(x + cardWidth - etiquetaAncho, y, etiquetaAncho, etiquetaAlto, "F");
 
             doc.setFontSize(6);
             doc.setTextColor(255);
-            doc.text(
-                "PROMO",
-                x + cardWidth - etiquetaAncho/2,
-                y + 3,
-                { align:"center" }
-            );
+            doc.text("PROMO", x + cardWidth - etiquetaAncho/2, y + 3, {align:"center"});
 
         }
 
         if (esTop) {
 
             doc.setFillColor(255,140,0);
-            doc.rect(
-                x,
-                y,
-                etiquetaAncho,
-                etiquetaAlto,
-                "F"
-            );
+            doc.rect(x, y, etiquetaAncho, etiquetaAlto, "F");
 
             doc.setFontSize(6);
             doc.setTextColor(255);
-            doc.text(
-                "TOP",
-                x + etiquetaAncho/2,
-                y + 3,
-                { align:"center" }
-            );
-
+            doc.text("TOP", x + etiquetaAncho/2, y + 3, {align:"center"});
         }
 
         doc.setTextColor(0);
@@ -803,9 +780,9 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
 
         const img = await cargarImagenOptimizada(p.imagen, 200);
 
-        if (img) {
+        const imgSize = cardWidth * 0.52;
 
-            const imgSize = cardWidth * 0.52;
+        if (img) {
 
             doc.addImage(
                 img,
@@ -821,18 +798,14 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
            TEXTO
         =============================== */
 
-        let textY = y + cardWidth * 0.52 + etiquetaAlto + 8;
+        let textY = y + etiquetaAlto + imgSize + 6;
 
         doc.setFontSize(6.8);
 
         doc.text("Código: " + p.codigo, x + 3, textY);
         textY += 4;
 
-        const desc = doc.splitTextToSize(
-            p.producto,
-            cardWidth - 6
-        );
-
+        const desc = doc.splitTextToSize(p.producto, cardWidth - 6);
         doc.text(desc.slice(0,2), x + 3, textY);
         textY += 8;
 
@@ -856,22 +829,20 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
         if (p.restricciones && p.restricciones.trim() !== "") {
 
             const texto = doc.splitTextToSize(
-                String(p.restricciones),
+                p.restricciones,
                 cardWidth - 6
             );
-
-            const lineas = texto.slice(0,3);
 
             doc.setFontSize(6);
             doc.setTextColor(60);
 
-            doc.text(lineas, x + 3, textY);
+            doc.text(texto.slice(0,3), x + 3, textY);
 
             doc.setTextColor(0);
         }
 
         /* ===============================
-           PRECIOS SOLO LP1
+           PRECIOS
         =============================== */
 
         if (listaPrecioActiva === "LP1") {
@@ -879,62 +850,43 @@ async function imprimirSeccion(titulo, lista, columnas, filas) {
             const precioNormal = Number(p.precioLP1 || 0);
             const precioPromo = Number(p.precioPromocion || 0);
 
-            const priceY = y + cardHeight - 6;
+            const priceY = y + cardHeight - 5;
 
             if (precioPromo > 0) {
 
                 doc.setFontSize(6);
                 doc.setTextColor(120);
-                doc.text(
-                    "$" + precioNormal.toFixed(2),
-                    x + cardWidth - 3,
-                    priceY - 4,
-                    { align:"right" }
-                );
+                doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY - 3, {align:"right"});
 
                 doc.setFontSize(8.5);
                 doc.setTextColor(200,0,0);
-                doc.text(
-                    "$" + precioPromo.toFixed(2),
-                    x + cardWidth - 3,
-                    priceY,
-                    { align:"right" }
-                );
+                doc.text("$" + precioPromo.toFixed(2), x + cardWidth - 3, priceY, {align:"right"});
 
             } else {
 
                 doc.setFontSize(8.5);
                 doc.setTextColor(0);
-                doc.text(
-                    "$" + precioNormal.toFixed(2),
-                    x + cardWidth - 3,
-                    priceY,
-                    { align:"right" }
-                );
+                doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY, {align:"right"});
             }
 
             doc.setTextColor(0);
         }
 
-        /* ===============================
-           PROGRESO
-        =============================== */
-
         contadorGlobal++;
         actualizarProgreso(contadorGlobal, totalProductos);
 
-        if (contadorGlobal % 8 === 0) {
-            await new Promise(r => setTimeout(r, 0));
-        }
-
         index++;
+
     }
 
     agregarNumeroPagina();
-    doc.addPage();
+
 }
 
-    const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
+    const promociones = productos.filter(p =>
+    Number(p.precioPromocion) > 0 &&
+    Number(p.precioPromocion) < Number(p.precioLP4)
+);
     const masVendidos = productos.filter(p=>p.top===true);
 
 	await imprimirSeccion("PROMOCIONES", promociones, 3, 4); // 12
