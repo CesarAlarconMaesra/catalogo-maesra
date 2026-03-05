@@ -757,6 +757,45 @@ if (Number(p.precioPromocion) > 0) {
     doc.setTextColor(0);
 }
 
+            const img = await cargarImagenOptimizada(p.imagen,160);
+
+            if(img){
+
+                const imgSize = cardWidth*0.55;
+
+                doc.addImage(
+                    img,
+                    "JPEG",
+                    x+(cardWidth-imgSize)/2,
+                    y+3,
+                    imgSize,
+                    imgSize
+                );
+            }
+
+            let textY = y + cardWidth * 0.55 + 6;
+	const limiteTexto = y + cardHeight - 12;
+
+            doc.setFontSize(6);
+            doc.text("Código: "+(p.codigo||""),x+2,textY);
+            textY+=3.5;
+
+            const desc = doc.splitTextToSize(p.producto||"",cardWidth-4);
+            doc.text(desc.slice(0,2),x+2,textY);
+            textY+=6;
+
+            doc.text("Marca: "+(p.marca||""),x+2,textY);
+            textY+=3.5;
+
+            doc.text(
+                "Unidad:"+ (p.unidad||"") +
+                " | Master:"+ (p.master||"") +
+                " Inner:"+ (p.inner||""),
+                x+2,
+                textY
+            );
+
+            textY+=3.5;
 if (p.restricciones && textY < limiteTexto) {
 
     const texto = doc.splitTextToSize(
