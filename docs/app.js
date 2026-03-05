@@ -681,15 +681,12 @@ async function generarCatalogoCompletoPDF() {
         numeroPagina++;
     }
 
-    async function imprimirSeccion(titulo,lista){
+    async function imprimirSeccion(titulo, lista, columnas, filas) {
 
         if(lista.length===0) return;
 
         const marginX = 10;
         const marginTop = 22;
-
-        const columnas = 4;
-        const filas = 5;
 
         const gapX = 4;
         const gapY = 4;
@@ -738,33 +735,47 @@ async function generarCatalogoCompletoPDF() {
             doc.rect(x,y,cardWidth,cardHeight);
 
 
-	// ===== BANNER PROMOCION =====
+	// ===== ETIQUETA PROMOCIÓN =====
+if (Number(p.precioPromocion) > 0) {
 
-	if (Number(p.precioPromocion) > 0) {
+    const etiquetaW = cardWidth * 0.25;
+    const etiquetaH = 5;
 
-	    doc.setFillColor(220, 0, 0);
-	    doc.rect(x, y, cardWidth, 4, "F");
+    doc.setFillColor(200, 0, 0);
+    doc.rect(x + cardWidth - etiquetaW, y, etiquetaW, etiquetaH, "F");
 
-	    doc.setTextColor(255);
-	    doc.setFontSize(6);
-	    doc.text("PROMOCIÓN", x + cardWidth / 2, y + 3, { align: "center" });
+    doc.setFontSize(6);
+    doc.setTextColor(255);
+    doc.text(
+        "PROMO",
+        x + cardWidth - etiquetaW/2,
+        y + 3.5,
+        { align: "center" }
+    );
 
-	    doc.setTextColor(0);
-	}
+    doc.setTextColor(0);
+}
 
-	// ===== BANNER TOP =====
+	// ===== ETIQUETA TOP =====
+if (p.top === true) {
 
-	if (p.top === true) {
+    const etiquetaW = cardWidth * 0.25;
+    const etiquetaH = 5;
 
-	    doc.setFillColor(255, 165, 0);
-	    doc.rect(x, y, cardWidth, 4, "F");
+    doc.setFillColor(255, 140, 0);
+    doc.rect(x, y, etiquetaW, etiquetaH, "F");
 
-	    doc.setTextColor(255);
-	    doc.setFontSize(6);
-	    doc.text("TOP", x + cardWidth / 2, y + 3, { align: "center" });
+    doc.setFontSize(6);
+    doc.setTextColor(255);
+    doc.text(
+        "TOP",
+        x + etiquetaW/2,
+        y + 3.5,
+        { align: "center" }
+    );
 
-	    doc.setTextColor(0);
-	}
+    doc.setTextColor(0);
+}
             const img = await cargarImagenOptimizada(p.imagen,160);
 
             if(img){
@@ -781,7 +792,8 @@ async function generarCatalogoCompletoPDF() {
                 );
             }
 
-            let textY = y + cardWidth*0.55 + 7;
+            let textY = y + cardWidth * 0.55 + 6;
+const limiteTexto = y + cardHeight - 10;
 
             doc.setFontSize(6);
             doc.text("Código: "+(p.codigo||""),x+2,textY);
@@ -804,7 +816,7 @@ async function generarCatalogoCompletoPDF() {
 
             textY+=3.5;
 
-if (p.restricciones) {
+if (p.restricciones && textY < limiteTexto) {
 
     const texto = doc.splitTextToSize(
         String(p.restricciones),
@@ -815,14 +827,13 @@ if (p.restricciones) {
 
     const lineas = texto.slice(0, maxLineas);
 
-    doc.setFontSize(5.8);
-    doc.setTextColor(80); // gris más oscuro
+    doc.setFontSize(6);
+    doc.setTextColor(60);
 
     doc.text(lineas, x + 3, textY);
 
     doc.setTextColor(0);
 }
-
             // PRECIOS SOLO LP1
 
             if(listaPrecioActiva === "LP1"){
@@ -885,14 +896,14 @@ if (p.restricciones) {
     const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
     const masVendidos = productos.filter(p=>p.top===true);
 
-    await imprimirSeccion("PROMOCIONES",promociones);
-    await imprimirSeccion("MÁS VENDIDOS",masVendidos);
+await imprimirSeccion("PROMOCIONES", promociones, 3, 4); // 12
+await imprimirSeccion("PRODUCTOS TOP", masVendidos, 4, 4); // 16
 
     const marcas = [...new Set(productos.map(p=>p.marca))];
 
     for(let marca of marcas){
         const listaMarca = productos.filter(p=>p.marca===marca);
-        await imprimirSeccion("MARCA: "+marca,listaMarca);
+        await imprimirSeccion("MARCA: " + marca, listaMarca, 4, 5); // 20
     }
 
     doc.save("Catalogo MAESRA 2026.pdf");
