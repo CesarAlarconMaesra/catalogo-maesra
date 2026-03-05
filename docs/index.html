@@ -1,57 +1,170 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catálogo MAESRA Febrero 2026</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1f2937">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<button id="btnPrecio" style="margin-top:5px;">
-  🔐 Ver precios
-</button>
-<button onclick="ocultarPrecios()">
-  🙈 Ocultar precios
-</button>
-<button onclick="verCarrito()">🛒 Ver carrito</button>
+<title>Catálogo MAESRA Febrero 2026</title>
+
+<link rel="stylesheet" href="style.css" />
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="img/icon-192.png">
+<meta name="theme-color" content="#1f2d3d">
+
 </head>
-<div id="infoLista" style="padding:8px; font-weight:bold;">
-  📊 Lista activa: LP4
-</div>
+
 <body>
 
+<div id="infoLista" style="text-align:center; padding:8px; font-weight:bold;"></div>
+
 <header>
-  <h1>Catálogo MAESRA  Febrero 2026</h1>
-  <input type="text" id="buscador" placeholder="Buscar producto..." />
+  <div class="header-content">
+
+    <div class="header-left">
+      <img src="img/MAESRA.jpg" class="logo">
+      <div>
+        <h1>Catálogo MAESRA</h1>
+        <h4>Promociones, Productos más vendidos y catálogo digital</h4>
+      </div>
+    </div>
+
+    <div class="header-right">
+
+      <input type="text" id="buscador" placeholder="Buscar producto..." />
+
+      <span id="infoLista" class="lista-indicador"></span>
+
+      <button onclick="generarCatalogoCompletoPDF()">Descargar Catálogo Completo</button>
+
+      <button id="btnPrecio">Cambiar Lista</button>
+
+      <button id="btnCarrito">
+        🛒
+        <span id="contadorCarrito">0</span>
+      </button>
+
+      <div class="total-header">
+        $<span id="totalHeader">0.00</span>
+      </div>
+
+    </div>
+
+  </div>
 </header>
 
-<main id="listaProductos"></main>
+<!-- PROMOCIONES -->
+<section>
+  <h3>🔥 Promociones</h3>
+  <div id="promoTrack"></div>
+</section>
 
-<!-- Modal detalle -->
-<div id="modal" class="modal oculto">
-  <div class="modal-content">
-<p id="dPrecio" class="precio"></p>
-    <span id="cerrar">&times;</span>
-   <img id="dImagen" class="detalle-img" />
+<!-- TOP -->
+<section>
+  <h3>⭐ Más vendidos</h3>
+  <div id="topProductos"></div>
+</section>
+
+<!-- PRODUCTOS -->
+<section>
+  <h3>📦 Catálogo</h3>
+  <div id="listaProductos"></div>
+</section>
+
+<!-- MODAL PRODUCTO -->
+<div id="modal" class="oculto">
+  <div class="modal-contenido">
+    <span id="cerrar" style="cursor:pointer; float:right;">&times;</span>
+
+    <img id="dImagen" style="width:100%; height:200px; object-fit:contain; margin-bottom:10px;"/>
+
     <h2 id="dNombre"></h2>
     <p id="dCodigo"></p>
     <p id="dMarca"></p>
     <p id="dUnidad"></p>
     <p id="dMaster"></p>
     <p id="dInner"></p>
-    <p id="dPrecio"></p>
-    <button id="btnAgregarCarrito">🛒 Agregar al carrito</button>
+
+    <p id="dPrecio" style="font-weight:bold; margin-top:10px;"></p>
+
+    <button id="btnAgregarCarrito" style="margin-top:10px;">
+      🛒 Agregar al carrito
+    </button>
+  </div>
+</div>
+
+<!-- MODAL CARRITO -->
+<div id="modalCarrito" class="oculto">
+  <div class="modal-contenido">
+
+    <span onclick="cerrarCarrito()" style="cursor:pointer; float:right;">&times;</span>
+
+    <h2>🛒 Carrito</h2>
+
+    <div id="contenidoCarrito"></div>
+
+    <h3>Total: $<span id="totalCarrito">0.00</span></h3>
+
+    <button onclick="vaciarCarrito()">🗑 Vaciar carrito</button>
+    <button onclick="enviarWhatsApp()">📲 Enviar por WhatsApp</button>
 
   </div>
 </div>
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registrado"))
-      .catch(err => console.log("Error SW:", err));
-  }
-</script>
+
 <script src="app.js"></script>
+<!-- Modal contraseña LP1 -->
+<div id="modalPassword" class="oculto">
+  <div class="modal-contenido">
+    <h3>🔐 Acceso Lista LP1</h3>
+
+    <form id="formPassword">
+
+      <input type="password"
+             id="inputPassword"
+             placeholder="Ingresa contraseña"
+             required />
+
+      <div style="margin-top:10px; display:flex; gap:10px;">
+        <button type="submit">Validar</button>
+        <button type="button" id="btnCancelarPassword">Cancelar</button>
+      </div>
+
+      <p id="errorPassword"
+         style="color:red; margin-top:8px; display:none;">
+         ❌ Contraseña incorrecta
+      </p>
+
+    </form>
+
+  </div>
+</div>
+<!-- Librerías PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<div id="progresoContainer" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #f4f4f4;
+    padding: 10px;
+    display: none;
+    z-index: 9999;
+">
+
+    <div style="font-size:12px;margin-bottom:5px;">
+        Generando catálogo... <span id="progresoTexto">0%</span>
+    </div>
+
+    <div style="width:100%;background:#ddd;height:10px;border-radius:5px;">
+        <div id="barraProgreso" style="
+            width:0%;
+            height:100%;
+            background:#2e86de;
+            border-radius:5px;
+            transition: width 0.2s;
+        "></div>
+    </div>
+
+</div>
 </body>
 </html>
