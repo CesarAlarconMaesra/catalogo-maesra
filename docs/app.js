@@ -737,6 +737,34 @@ async function generarCatalogoCompletoPDF() {
             doc.setDrawColor(220);
             doc.rect(x,y,cardWidth,cardHeight);
 
+
+	// ===== BANNER PROMOCION =====
+
+	if (Number(p.precioPromocion) > 0) {
+
+	    doc.setFillColor(220, 0, 0);
+	    doc.rect(x, y, cardWidth, 4, "F");
+
+	    doc.setTextColor(255);
+	    doc.setFontSize(6);
+	    doc.text("PROMOCIÓN", x + cardWidth / 2, y + 3, { align: "center" });
+
+	    doc.setTextColor(0);
+	}
+
+	// ===== BANNER TOP =====
+
+	if (p.top === true) {
+
+	    doc.setFillColor(255, 165, 0);
+	    doc.rect(x, y, cardWidth, 4, "F");
+
+	    doc.setTextColor(255);
+	    doc.setFontSize(6);
+	    doc.text("TOP", x + cardWidth / 2, y + 3, { align: "center" });
+
+	    doc.setTextColor(0);
+	}
             const img = await cargarImagenOptimizada(p.imagen,160);
 
             if(img){
@@ -768,28 +796,32 @@ async function generarCatalogoCompletoPDF() {
 
             doc.text(
                 "Unidad:"+ (p.unidad||"") +
-                " | M:"+ (p.master||"") +
-                " I:"+ (p.inner||""),
+                " | Master:"+ (p.master||"") +
+                " Inner:"+ (p.inner||""),
                 x+2,
                 textY
             );
 
             textY+=3.5;
 
-            if(p.restricciones){
+if (p.restricciones) {
 
-                const texto = doc.splitTextToSize(
-                    String(p.restricciones),
-                    cardWidth-4
-                );
+    const texto = doc.splitTextToSize(
+        String(p.restricciones),
+        cardWidth - 6
+    );
 
-                doc.setFontSize(5);
-                doc.setTextColor(120);
+    const maxLineas = 3;
 
-                doc.text(texto.slice(0,4),x+2,textY);
+    const lineas = texto.slice(0, maxLineas);
 
-                doc.setTextColor(0);
-            }
+    doc.setFontSize(5.8);
+    doc.setTextColor(80); // gris más oscuro
+
+    doc.text(lineas, x + 3, textY);
+
+    doc.setTextColor(0);
+}
 
             // PRECIOS SOLO LP1
 
