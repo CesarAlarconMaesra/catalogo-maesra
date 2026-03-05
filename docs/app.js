@@ -715,23 +715,22 @@ async function generarCatalogoCompletoPDF() {
 
         encabezado();
 
-        for(let p of lista){
+        for (let p of lista) {
 
-            const productosPorPagina = columnas * filas;
-	    const posicion = index % productosPorPagina;
+    const productosPorPagina = columnas * filas;
+    const posicion = index % productosPorPagina;
 
-            if (index % (columnas * filas) !== 0) {
- 	   agregarNumeroPagina();
-  	  doc.addPage();
-	}
-                encabezado();
-            }
+    if (posicion === 0 && index !== 0) {
+        agregarNumeroPagina();
+        doc.addPage();
+        encabezado();
+    }
 
-            const col = posicion % columnas;
-            const row = Math.floor(posicion/columnas);
+    const col = posicion % columnas;
+    const row = Math.floor(posicion / columnas);
 
-            const x = marginX + col*(cardWidth+gapX);
-            const y = marginTop + row*(cardHeight+gapY);
+    const x = marginX + col * (cardWidth + gapX);
+    const y = marginTop + row * (cardHeight + gapY);
 
             doc.setDrawColor(220);
             doc.rect(x,y,cardWidth,cardHeight);
@@ -897,8 +896,8 @@ if (p.restricciones && textY < limiteTexto) {
     const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
     const masVendidos = productos.filter(p=>p.top===true);
 
-await imprimirSeccion("PROMOCIONES", promociones, 3, 4); // 12
-await imprimirSeccion("PRODUCTOS TOP", masVendidos, 4, 4); // 16
+	await imprimirSeccion("PROMOCIONES", promociones, 3, 4); // 12
+	await imprimirSeccion("PRODUCTOS TOP", masVendidos, 4, 4); // 16
 
     const marcas = [...new Set(productos.map(p=>p.marca))];
 
