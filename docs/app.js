@@ -631,10 +631,11 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 async function generarCatalogoCompletoPDF() {
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
+    const doc = new jsPDF("p","mm","a4");
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+
     mostrarProgreso();
 
     const totalProductos = productos.length;
@@ -649,188 +650,199 @@ async function generarCatalogoCompletoPDF() {
     // PORTADA
     // ===============================
 
-    doc.setFillColor(245, 245, 245);
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
+    doc.setFillColor(245,245,245);
+    doc.rect(0,0,pageWidth,pageHeight,"F");
 
-    if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", pageWidth/2 - 45, 40, 90, 45);
+    if(logoBase64){
+        doc.addImage(logoBase64,"JPEG",pageWidth/2-45,40,90,45);
     }
 
     doc.setFontSize(26);
-    doc.setTextColor(30);
-    doc.text("CATÁLOGO GENERAL", pageWidth/2, 110, { align: "center" });
+    doc.text("CATÁLOGO GENERAL",pageWidth/2,110,{align:"center"});
 
     doc.setFontSize(13);
-    doc.setTextColor(90);
-    doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
+    doc.text("Actualizado: "+fecha,pageWidth/2,125,{align:"center"});
 
-    if (listaPrecioActiva === "LP1") {
+    if(listaPrecioActiva === "LP1"){
         doc.setTextColor(200,0,0);
-        doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
-    } else {
+        doc.text("Lista de Precios LP1 Activa",pageWidth/2,140,{align:"center"});
+    }else{
         doc.setTextColor(120);
-        doc.text("Catálogo informativo sin precios", pageWidth/2, 140, { align: "center" });
+        doc.text("Catálogo informativo sin precios",pageWidth/2,140,{align:"center"});
     }
 
     doc.addPage();
     numeroPagina++;
 
-    // ===============================
-    // FUNCIÓN NUMERACIÓN
-    // ===============================
-
-    function agregarNumeroPagina() {
+    function agregarNumeroPagina(){
         doc.setFontSize(8);
         doc.setTextColor(120);
-        doc.text("Página " + numeroPagina, pageWidth - 20, pageHeight - 5);
+        doc.text("Página "+numeroPagina,pageWidth-20,pageHeight-5);
         numeroPagina++;
     }
 
-    // ===============================
-    // FUNCIÓN SECCIÓN 3x4
-    // ===============================
+    async function imprimirSeccion(titulo,lista){
 
-    async function imprimirSeccion(titulo, lista) {
-
-        if (lista.length === 0) return;
+        if(lista.length===0) return;
 
         const marginX = 10;
         const marginTop = 22;
 
-        const columnas = 3;
-        const filas = 4;
+        const columnas = 4;
+        const filas = 5;
 
-        const gapX = 6;
-        const gapY = 6;
+        const gapX = 4;
+        const gapY = 4;
 
-        const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
-        const cardWidth = usableWidth / columnas;
+        const usableWidth = pageWidth - (marginX*2) - (gapX*(columnas-1));
+        const cardWidth = usableWidth/columnas;
 
         const usableHeight = pageHeight - marginTop - 20;
-        const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
+        const cardHeight = (usableHeight - (gapY*(filas-1)))/filas;
 
         let index = 0;
 
-        function encabezado() {
+        function encabezado(){
+
             doc.setFontSize(15);
             doc.setTextColor(0);
-            doc.text(titulo, pageWidth/2, 14, { align: "center" });
+            doc.text(titulo,pageWidth/2,14,{align:"center"});
 
             doc.setDrawColor(180);
-            doc.line(marginX, 18, pageWidth - marginX, 18);
+            doc.line(marginX,18,pageWidth-marginX,18);
 
-            if (logoBase64) {
-                doc.addImage(logoBase64, "PNG", pageWidth - 28, 5, 18, 10);
+            if(logoBase64){
+                doc.addImage(logoBase64,"JPEG",pageWidth-28,5,18,10);
             }
         }
 
         encabezado();
 
-        for (let p of lista) {
+        for(let p of lista){
 
-            const posicion = index % 12;
+            const posicion = index % 20;
 
-            if (posicion === 0 && index !== 0) {
+            if(posicion===0 && index!==0){
                 agregarNumeroPagina();
                 doc.addPage();
                 encabezado();
             }
 
             const col = posicion % columnas;
-            const row = Math.floor(posicion / columnas);
+            const row = Math.floor(posicion/columnas);
 
-            const x = marginX + col * (cardWidth + gapX);
-            const y = marginTop + row * (cardHeight + gapY);
+            const x = marginX + col*(cardWidth+gapX);
+            const y = marginTop + row*(cardHeight+gapY);
 
             doc.setDrawColor(220);
-            doc.rect(x, y, cardWidth, cardHeight);
+            doc.rect(x,y,cardWidth,cardHeight);
 
-            const img = await cargarImagenOptimizada(p.imagen, 200);
+            const img = await cargarImagenOptimizada(p.imagen,160);
 
-            if (img) {
-                const imgSize = cardWidth * 0.55;
-                let formato = "JPEG";
-		if (p.imagen && p.imagen.toLowerCase().includes(".png")) formato = "PNG";
+            if(img){
 
-		doc.addImage(img, formato,
-                    x + (cardWidth - imgSize)/2,
-                    y + 4,
+                const imgSize = cardWidth*0.55;
+
+                doc.addImage(
+                    img,
+                    "JPEG",
+                    x+(cardWidth-imgSize)/2,
+                    y+3,
                     imgSize,
                     imgSize
                 );
             }
 
-            let textY = y + cardWidth * 0.55 + 8;
+            let textY = y + cardWidth*0.55 + 7;
 
-            doc.setFontSize(6.8);
-            doc.setTextColor(0);
+            doc.setFontSize(6);
+            doc.text("Código: "+(p.codigo||""),x+2,textY);
+            textY+=3.5;
 
-            doc.text("Código: " + p.codigo, x + 3, textY);
-            textY += 4;
+            const desc = doc.splitTextToSize(p.producto||"",cardWidth-4);
+            doc.text(desc.slice(0,2),x+2,textY);
+            textY+=6;
 
-            const desc = doc.splitTextToSize(p.producto, cardWidth - 6);
-            doc.text(desc.slice(0,2), x + 3, textY);
-            textY += 8;
+            doc.text("Marca: "+(p.marca||""),x+2,textY);
+            textY+=3.5;
 
-            doc.text("Marca: " + p.marca, x + 3, textY);
-            textY += 4;
+            doc.text(
+                "Unidad:"+ (p.unidad||"") +
+                " | M:"+ (p.master||"") +
+                " I:"+ (p.inner||""),
+                x+2,
+                textY
+            );
 
-            doc.text("Unidad: " + p.unidad + " | Master:" + p.master + " Inner:" + p.inner, x + 3, textY);
-            textY += 4;
+            textY+=3.5;
 
-	contadorGlobal++;
-	actualizarProgreso(contadorGlobal, totalProductos);
+            if(p.restricciones){
 
-	// Permitir que el navegador respire
-	if (contadorGlobal % 8 === 0) {
-	    await new Promise(r => setTimeout(r, 0));
-	}
+                const texto = doc.splitTextToSize(
+                    String(p.restricciones),
+                    cardWidth-4
+                );
 
-if (p.restricciones && p.restricciones.trim() !== "") {
+                doc.setFontSize(5);
+                doc.setTextColor(120);
 
-    const texto = doc.splitTextToSize(
-        String(p.restricciones),
-        cardWidth - 6
-    );
+                doc.text(texto.slice(0,4),x+2,textY);
 
-    const maxLineas = 3;
+                doc.setTextColor(0);
+            }
 
-    const lineas = texto.slice(0, maxLineas);
+            // PRECIOS SOLO LP1
 
-    doc.setFontSize(5.5);
-    doc.setTextColor(120);
+            if(listaPrecioActiva === "LP1"){
 
-    doc.text(lineas, x + 3, textY);
+                const precioNormal = Number(p.precioLP1||0);
+                const precioPromo = Number(p.precioPromocion||0);
 
-    doc.setTextColor(0);
-}
-if (listaPrecioActiva === "LP1") {
+                const priceY = y + cardHeight - 3;
 
-    const precioNormal = Number(p.precioLP1 || 0);
-    const precioPromo = Number(p.precioPromocion || 0);
+                if(precioPromo>0){
 
-    const priceY = y + cardHeight - 6;
+                    doc.setFontSize(6);
+                    doc.setTextColor(120);
 
-    if (precioPromo > 0) {
+                    doc.text(
+                        "$"+precioNormal.toFixed(2),
+                        x+cardWidth-2,
+                        priceY-3,
+                        {align:"right"}
+                    );
 
-        doc.setFontSize(6);
-        doc.setTextColor(120);
-        doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY - 4, { align: "right" });
+                    doc.setFontSize(8);
+                    doc.setTextColor(200,0,0);
 
-        doc.setFontSize(8.5);
-        doc.setTextColor(200, 0, 0);
-        doc.text("$" + precioPromo.toFixed(2), x + cardWidth - 3, priceY, { align: "right" });
+                    doc.text(
+                        "$"+precioPromo.toFixed(2),
+                        x+cardWidth-2,
+                        priceY,
+                        {align:"right"}
+                    );
 
-    } else {
+                }else{
 
-        doc.setFontSize(8.5);
-        doc.setTextColor(0);
-        doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY, { align: "right" });
+                    doc.setFontSize(8);
+                    doc.setTextColor(0);
 
-    }
+                    doc.text(
+                        "$"+precioNormal.toFixed(2),
+                        x+cardWidth-2,
+                        priceY,
+                        {align:"right"}
+                    );
+                }
+            }
 
-    doc.setTextColor(0);
-}
+            contadorGlobal++;
+            actualizarProgreso(contadorGlobal,totalProductos);
+
+            if(contadorGlobal%8===0){
+                await new Promise(r=>setTimeout(r,0));
+            }
+
             index++;
         }
 
@@ -838,24 +850,21 @@ if (listaPrecioActiva === "LP1") {
         doc.addPage();
     }
 
-    // ===============================
-    // GENERACIÓN SECCIONES
-    // ===============================
+    const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
+    const masVendidos = productos.filter(p=>p.top===true);
 
-    const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
-    const masVendidos = productos.filter(p => p.top === true);
+    await imprimirSeccion("PROMOCIONES",promociones);
+    await imprimirSeccion("MÁS VENDIDOS",masVendidos);
 
-    await imprimirSeccion("PROMOCIONES", promociones);
-    await imprimirSeccion("MÁS VENDIDOS", masVendidos);
+    const marcas = [...new Set(productos.map(p=>p.marca))];
 
-    const marcas = [...new Set(productos.map(p => p.marca))];
-
-    for (let marca of marcas) {
-        const listaMarca = productos.filter(p => p.marca === marca);
-        await imprimirSeccion("MARCA: " + marca, listaMarca);
+    for(let marca of marcas){
+        const listaMarca = productos.filter(p=>p.marca===marca);
+        await imprimirSeccion("MARCA: "+marca,listaMarca);
     }
 
-    doc.save("Catalogo_MAESRA.pdf");
+    doc.save("Catalogo MAESRA 2026.pdf");
+
     ocultarProgreso();
 }
 
