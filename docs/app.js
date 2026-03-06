@@ -557,7 +557,7 @@ return cacheImagenes[rutaImagen];
 
 try{
 
-const cache = await caches.open("maesra-cache-v20");
+const cache = await caches.open("maesra-cache-v21");
 
 let response = await cache.match(rutaImagen);
 
