@@ -928,7 +928,6 @@ return null;
 
     agregarNumeroPagina();
 
-}
 
     const promociones = productos.filter(p =>
     Number(p.precioPromocion) > 0 &&
