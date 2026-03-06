@@ -752,38 +752,79 @@ doc.addImage(img,"JPEG",x+10,y+5,40,30);
 
 }
 
-async function imprimirSeccion(lista,titulo){
+async function imprimirSeccion(lista, titulo){
 
 doc.addPage();
-
 dibujarHeader(titulo);
 
 let index = 0;
 
-for(const producto of lista){
+for (const p of lista){
 
 let posicion = index % productosPorPagina;
-
-let col = posicion % columnas;
-let fila = Math.floor(posicion/columnas);
-
-let x = margenX + col * (tarjetaW + 5);
-let y = margenY + fila * (tarjetaH + 5);
 
 if(posicion === 0 && index !== 0){
 
 agregarNumeroPagina();
-
 doc.addPage();
 dibujarHeader(titulo);
 
 }
 
-dibujarTarjeta(x,y,producto);
+let col = posicion % columnas;
+let fila = Math.floor(posicion / columnas);
 
-await dibujarImagenProducto(x,y,producto);
+let x = margenX + col * (tarjetaW + 5);
+let y = margenY + fila * (tarjetaH + 5);
 
-escribirTextoProducto(x,y,producto);
+dibujarTarjeta(x,y,p);
+
+// IMAGEN
+let url = URL_BASE_IMAGENES + "img/" + p.codigo + ".jpg";
+let img = await cargarImagen(url);
+
+if(img){
+doc.addImage(img,"JPEG",x+10,y+5,40,30);
+}
+
+// TEXTO
+let linea = y + 38;
+
+doc.setFontSize(8);
+doc.text(`Código: ${p.codigo}`,x+2,linea);
+
+linea +=4;
+
+let nombre = doc.splitTextToSize(p.producto || "", tarjetaW-4);
+doc.text(nombre,x+2,linea);
+
+linea += nombre.length * 4 +2;
+
+doc.text(`Marca: ${p.marca || ""}`,x+2,linea);
+
+linea +=4;
+
+doc.text(`Unidad: ${p.unidad || ""}`,x+2,linea);
+
+linea +=4;
+
+if(p.Master || p.Inner){
+
+doc.text(`Master:${p.Master || "-"}  Inner:${p.Inner || "-"}`,x+2,linea);
+linea +=4;
+
+}
+
+// RESTRICCIONES
+if(p.restricciones){
+
+doc.setFontSize(7);
+
+let restr = doc.splitTextToSize(p.restricciones, tarjetaW-4);
+
+doc.text(restr,x+2,linea);
+
+}
 
 index++;
 
