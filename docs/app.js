@@ -632,12 +632,16 @@ return null;
 // ===============================
 
 async function generarCatalogoCompletoPDF(){
+mostrarProgreso();
 
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","a4");
 
 const pageWidth = doc.internal.pageSize.getWidth();
 const pageHeight = doc.internal.pageSize.getHeight();
+
+const totalProductos = productos.length;
+let contadorGlobal = 0;
 
 await cargarLogo();
 
@@ -826,7 +830,8 @@ let y = margenY + row*h;
 await dibujarTarjeta(p,x,y,w-3,h-3);
 
 index++;
-
+contadorGlobal++;
+actualizarProgreso(contadorGlobal,totalProductos);
 }
 
 agregarNumeroPagina();
