@@ -524,40 +524,48 @@ function enviarWhatsApp(){
 // CARGAR LOGO
 // ===============================
 
-async function cargarLogo() {
-    try {
-        const res = await fetch("img/MAESRA.jpg");
-        const blob = await res.blob();
+async function cargarLogo(){
 
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                logoBase64 = reader.result;
-                resolve();
-            };
-            reader.readAsDataURL(blob);
-        });
-    } catch (e) {
-        console.warn("No se pudo cargar logo");
-    }
+if(logoBase64) return;
+
+try{
+
+const res = await fetch("img/MAESRA.jpg");
+const blob = await res.blob();
+
+return new Promise(resolve=>{
+
+const reader = new FileReader();
+
+reader.onloadend=()=>{
+logoBase64 = reader.result;
+resolve();
+};
+
+reader.readAsDataURL(blob);
+
+});
+
+}catch(e){
+console.warn("No se pudo cargar logo");
+}
+
 }
 
 
 // ===============================
-// OPTIMIZADOR DE IMÁGENES
+// CARGAR IMAGEN DESDE CACHE
 // ===============================
 
 async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200){
 
 if(!rutaImagen) return null;
 
-if(cacheImagenes[rutaImagen]){
-return cacheImagenes[rutaImagen];
-}
+if(cacheImagenes[rutaImagen]) return cacheImagenes[rutaImagen];
 
 try{
 
-const cache = await caches.open("maesra-cache-v20");
+const cache = await caches.open("maesra-cache-v21");
 
 let response = await cache.match(rutaImagen);
 
@@ -571,9 +579,7 @@ response = await fetch(url);
 
 }
 
-if(!response || !response.ok){
-return null;
-}
+if(!response || !response.ok) return null;
 
 const blob = await response.blob();
 
@@ -581,13 +587,13 @@ return new Promise(resolve=>{
 
 const img = new Image();
 
-img.onload = function(){
+img.onload=function(){
 
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
+const canvas=document.createElement("canvas");
+const ctx=canvas.getContext("2d");
 
-let w = img.width;
-let h = img.height;
+let w=img.width;
+let h=img.height;
 
 if(w>h){
 if(w>tamañoMax){
@@ -610,6 +616,8 @@ const base64 = canvas.toDataURL("image/jpeg",0.75);
 
 cacheImagenes[rutaImagen]=base64;
 
+URL.revokeObjectURL(img.src);
+
 resolve(base64);
 
 };
@@ -624,14 +632,16 @@ console.warn("imagen no encontrada",rutaImagen);
 return null;
 
 }
+
 }
 
 
 // ===============================
-// GENERADOR PDF COMPLETO
+// GENERADOR PDF
 // ===============================
 
 async function generarCatalogoCompletoPDF(){
+
 mostrarProgreso();
 
 const { jsPDF } = window.jspdf;
@@ -640,19 +650,31 @@ const doc = new jsPDF("p","mm","a4");
 const pageWidth = doc.internal.pageSize.getWidth();
 const pageHeight = doc.internal.pageSize.getHeight();
 
-const totalProductos = productos.length;
-let contadorGlobal = 0;
-
 await cargarLogo();
 
-let numeroPagina = 1;
+let pagina = 1;
+let contador = 0;
+const total = productos.length;
 
-function agregarNumeroPagina(){
+
+// ===============================
+// NUMERO PAGINA
+// ===============================
+
+function numeroPagina(){
+
 doc.setFontSize(8);
 doc.setTextColor(120);
-doc.text("Página "+numeroPagina,pageWidth-25,pageHeight-5);
-numeroPagina++;
+doc.text("Página "+pagina,pageWidth-25,pageHeight-5);
+
+pagina++;
+
 }
+
+
+// ===============================
+// HEADER
+// ===============================
 
 function header(titulo){
 
@@ -669,31 +691,31 @@ doc.addImage(logoBase64,"JPEG",pageWidth-35,8,22,10);
 
 }
 
+
+// ===============================
+// CONFIGURACION LAYOUT
+// ===============================
+
 function layout(tipo){
 
-if(tipo==="promo"){
-return {cols:3,rows:4,total:12,height:60}
-}
+if(tipo==="promo") return {cols:3,rows:4,total:12,height:60};
+if(tipo==="top") return {cols:4,rows:4,total:16,height:55};
 
-if(tipo==="top"){
-return {cols:4,rows:4,total:16,height:55}
-}
-
-return {cols:4,rows:5,total:20,height:50}
+return {cols:4,rows:5,total:20,height:50};
 
 }
+
+
+// ===============================
+// TARJETA PRODUCTO
+// ===============================
 
 async function dibujarTarjeta(p,x,y,w,h){
-
-doc.setDrawColor(210);
-doc.rect(x,y,w,h);
 
 let img = await cargarImagenOptimizada(p.imagen,200);
 
 if(img){
-
 doc.addImage(img,"JPEG",x+w/2-15,y+3,30,22);
-
 }
 
 let ty = y+28;
@@ -701,27 +723,26 @@ let ty = y+28;
 doc.setFontSize(7);
 
 doc.text(`Código: ${p.codigo}`,x+2,ty);
-
 ty+=4;
 
 let nombre = doc.splitTextToSize(p.producto,w-4);
 doc.text(nombre,x+2,ty);
 
-ty += nombre.length*3.2 +1;
+ty += nombre.length*3 +1;
 
 doc.text(`Marca: ${p.marca || ""}`,x+2,ty);
-
 ty+=3;
 
 doc.text(`Unidad:${p.unidad || ""}`,x+2,ty);
-
 ty+=3;
 
 doc.text(`Master:${p.master || "-"} Inner:${p.inner || "-"}`,x+2,ty);
-
 ty+=3;
 
-/* RESTRICCIONES */
+
+// ===============================
+// RESTRICCIONES
+// ===============================
 
 if(p.restricciones){
 
@@ -735,15 +756,18 @@ doc.setTextColor(0);
 
 }
 
-/* PRECIOS SOLO SI LP1 */
 
-if(listaPrecioActiva === "LP1"){
+// ===============================
+// PRECIOS SOLO SI LP1
+// ===============================
 
-let py = y+h-5;
+if(listaPrecioActiva==="LP1"){
+
+let py = y+h-4;
 
 doc.setFontSize(8);
 
-if(p.precioPromocion){
+if(Number(p.precioPromocion)>0){
 
 doc.setTextColor(200,0,0);
 doc.text("$"+Number(p.precioPromocion).toFixed(2),x+w-22,py);
@@ -762,7 +786,10 @@ doc.setTextColor(0);
 
 }
 
-/* ETIQUETA PROMO */
+
+// ===============================
+// ETIQUETA PROMO
+// ===============================
 
 if(Number(p.precioPromocion)>0){
 
@@ -777,7 +804,10 @@ doc.setTextColor(0);
 
 }
 
-/* ETIQUETA TOP */
+
+// ===============================
+// ETIQUETA TOP
+// ===============================
 
 if(p.top===true){
 
@@ -792,37 +822,47 @@ doc.setTextColor(0);
 
 }
 
+contador++;
+actualizarProgreso(contador,total);
+
 }
+
+
+// ===============================
+// IMPRIMIR SECCION
+// ===============================
 
 async function imprimirSeccion(lista,titulo,tipo){
 
+if(lista.length===0) return;
+
 const cfg = layout(tipo);
 
-const margenX = 10;
-const margenY = 35;
+const margenX=10;
+const margenY=35;
 
-const w = (pageWidth-(margenX*2))/cfg.cols;
-const h = cfg.height;
+const w=(pageWidth-(margenX*2))/cfg.cols;
+const h=cfg.height;
 
 doc.addPage();
 header(titulo);
 
-let index = 0;
+let index=0;
 
 for(const p of lista){
 
-let pos = index % cfg.total;
+let pos=index%cfg.total;
 
 if(pos===0 && index!==0){
 
-agregarNumeroPagina();
+numeroPagina();
 doc.addPage();
 header(titulo);
 
 }
 
-let col = pos % cfg.cols;
-let row = Math.floor(pos / cfg.cols);
+let col = pos%cfg.cols;
+let row = Math.floor(pos/cfg.cols);
 
 let x = margenX + col*w;
 let y = margenY + row*h;
@@ -830,25 +870,23 @@ let y = margenY + row*h;
 await dibujarTarjeta(p,x,y,w-3,h-3);
 
 index++;
-contadorGlobal++;
-actualizarProgreso(contadorGlobal,totalProductos);
-}
-
-agregarNumeroPagina();
 
 }
 
-/* =========================
-PORTADA
-========================= */
+numeroPagina();
+
+}
+
+
+// ===============================
+// PORTADA
+// ===============================
 
 doc.setFillColor(245,245,245);
 doc.rect(0,0,pageWidth,pageHeight,"F");
 
 if(logoBase64){
-
 doc.addImage(logoBase64,"JPEG",pageWidth/2-50,40,100,45);
-
 }
 
 doc.setFontSize(28);
@@ -857,18 +895,15 @@ doc.text("CATÁLOGO MAESRA",pageWidth/2,120,{align:"center"});
 doc.setFontSize(14);
 
 if(listaPrecioActiva==="LP1"){
-
 doc.text("Catálogo con precios",pageWidth/2,135,{align:"center"});
-
 }else{
-
 doc.text("Catálogo informativo",pageWidth/2,135,{align:"center"});
-
 }
 
-/* =========================
-SECCIONES
-========================= */
+
+// ===============================
+// SECCIONES
+// ===============================
 
 const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
 
@@ -878,38 +913,50 @@ await imprimirSeccion(promociones,"PROMOCIONES","promo");
 
 await imprimirSeccion(top,"PRODUCTOS TOP","top");
 
-/* =========================
-POR MARCAS
-========================= */
 
-const marcas = [...new Set(productos.map(p=>p.marca))];
+// ===============================
+// POR MARCAS
+// ===============================
+
+const marcas=[...new Set(productos.map(p=>p.marca))];
 
 for(const m of marcas){
 
-const lista = productos.filter(p=>p.marca===m);
+const lista=productos.filter(p=>p.marca===m);
 
 await imprimirSeccion(lista,"MARCA: "+m,"catalogo");
 
 }
 
-doc.save("Catalogo_MAESRA_2026.pdf");
+
+// ===============================
+// GUARDAR PDF
+// ===============================
+
+doc.save("Catalogo MAESRA 2026.pdf");
 
 ocultarProgreso();
+
 }
 
-function mostrarProgreso() {
-    document.getElementById("progresoContainer").style.display = "block";
+
+// ===============================
+// BARRA PROGRESO
+// ===============================
+
+function mostrarProgreso(){
+document.getElementById("progresoContainer").style.display="block";
 }
 
-function ocultarProgreso() {
-    document.getElementById("progresoContainer").style.display = "none";
+function ocultarProgreso(){
+document.getElementById("progresoContainer").style.display="none";
 }
 
-function actualizarProgreso(actual, total) {
+function actualizarProgreso(actual,total){
 
-    const porcentaje = Math.floor((actual / total) * 100);
+const porcentaje=Math.floor((actual/total)*100);
 
-    document.getElementById("barraProgreso").style.width = porcentaje + "%";
-    document.getElementById("progresoTexto").innerText = porcentaje + "%";
+document.getElementById("barraProgreso").style.width=porcentaje+"%";
+document.getElementById("progresoTexto").innerText=porcentaje+"%";
 
 }
