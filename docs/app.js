@@ -630,260 +630,179 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 
 async function generarCatalogoCompletoPDF() {
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p","mm","a4");
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF("p","mm","letter");
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    mostrarProgreso();
-
-    const totalProductos = productos.length;
-    let contadorGlobal = 0;
-
-    let numeroPagina = 1;
-    const fecha = new Date().toLocaleDateString();
-
-    await cargarLogo();
-
-    // ===============================
-    // PORTADA
-    // ===============================
-
-    doc.setFillColor(245,245,245);
-    doc.rect(0,0,pageWidth,pageHeight,"F");
-
-    if(logoBase64){
-        doc.addImage(logoBase64,"JPEG",pageWidth/2-45,40,90,45);
-    }
-
-    doc.setFontSize(26);
-    doc.text("CATÁLOGO GENERAL",pageWidth/2,110,{align:"center"});
-
-    doc.setFontSize(13);
-    doc.text("Actualizado: "+fecha,pageWidth/2,125,{align:"center"});
-
-    if(listaPrecioActiva === "LP1"){
-        doc.setTextColor(200,0,0);
-        doc.text("Lista de Precios LP1 Activa",pageWidth/2,140,{align:"center"});
-    }else{
-        doc.setTextColor(120);
-        doc.text("Catálogo informativo sin precios",pageWidth/2,140,{align:"center"});
-    }
-
-    doc.addPage();
-    numeroPagina++;
-
-    function agregarNumeroPagina(){
-        doc.setFontSize(8);
-        doc.setTextColor(120);
-        doc.text("Página "+numeroPagina,pageWidth-20,pageHeight-5);
-        numeroPagina++;
-    }
-function dibujarHeader(doc, titulo){
-
-const pageWidth = doc.internal.pageSize.getWidth();
-
-doc.setFontSize(18);
-doc.setTextColor(0);
-doc.text(titulo, pageWidth/2, 20, {align:"center"});
-
-doc.setDrawColor(180);
-doc.line(10,25,pageWidth-10,25);
-
-if(logoBase64){
-doc.addImage(logoBase64,"JPEG",pageWidth-35,8,22,10);
-}
-
-}
-
-async function imprimirSeccion(doc, productos, titulo, productosPorPagina) {
-
-const pageWidth = doc.internal.pageSize.getWidth();
+let productosPorPagina = 12;
+let contadorPagina = 1;
 
 const margenX = 10;
-const margenY = 35;
+const margenY = 30;
 
-const columnas = titulo === "PROMOCIONES" ? 3 : 4;
-const filas = titulo === "PROMOCIONES" ? 4 : 4;
+const tarjetaW = 60;
+const tarjetaH = 70;
 
-const cardWidth = (pageWidth - (margenX * 2)) / columnas;
-const cardHeight = titulo === "PROMOCIONES" ? 60 : 50;
+const columnas = 3;
+const filas = 4;
 
-let index = 0;
+const cacheImagenes = {};
 
-dibujarHeader(doc, titulo);
-
-for (const producto of productos) {
-
-let posicion = index % productosPorPagina;
-
-if (posicion === 0 && index !== 0) {
-
-agregarNumeroPagina();
-doc.addPage();
-dibujarHeader(doc, titulo);
-
+function agregarNumeroPagina(){
+doc.setFontSize(8);
+doc.text("Página " + contadorPagina, 195, 275, {align:"right"});
+contadorPagina++;
 }
 
-let col = posicion % columnas;
-let row = Math.floor(posicion / columnas);
+function dibujarHeader(titulo){
 
-let x = margenX + col * cardWidth;
-let y = margenY + row * cardHeight;
+doc.setFontSize(18);
+doc.text(titulo,105,15,{align:"center"});
 
-dibujarTarjetaProducto(doc, producto, x, y, cardWidth, cardHeight);
+doc.setLineWidth(0.5);
+doc.line(10,18,200,18);
 
-index++;
-
+if(logoBase64){
+doc.addImage(logoBase64,"PNG",175,5,25,10);
 }
 
 }
 
-async function dibujarTarjetaProducto(doc, producto, x, y, width, height) {
+async function cargarImagen(url){
 
-doc.setDrawColor(210);
-doc.rect(x, y, width - 4, height - 4);
+if(cacheImagenes[url]) return cacheImagenes[url];
 
-let imgY = y + 3;
+try{
 
-let img = await cargarImagenCatalogo(producto.imagen);
+const response = await fetch(url);
+const blob = await response.blob();
 
-if (img) {
-doc.addImage(img, "JPEG", x + width/2 - 10, imgY, 20, 20);
-}
+return new Promise(resolve=>{
+const reader = new FileReader();
 
-let textY = y + 25;
-
-doc.setFontSize(7);
-
-doc.text(`Código: ${producto.codigo}`, x + 3, textY);
-
-textY += 4;
-
-let nombre = doc.splitTextToSize(producto.producto, width - 8);
-doc.text(nombre, x + 3, textY);
-
-textY += nombre.length * 3.5 + 2;
-
-doc.text(`Marca: ${producto.marca}`, x + 3, textY);
-
-textY += 4;
-
-doc.text(`Unidad: ${producto.unidad} | Master:${producto.master} Inner:${producto.inner}`, x + 3, textY);
-
-textY += 4;
-
-
-/* RESTRICCIONES */
-if (producto.restricciones) {
-
-doc.setTextColor(80);
-
-let restricciones = doc.splitTextToSize(producto.restricciones, width - 8);
-
-doc.text(restricciones, x + 3, textY);
-
-doc.setTextColor(0);
-
-}
-
-
-/* ETIQUETA PROMO */
-if (producto.precioPromocion) {
-
-doc.setFillColor(200,0,0);
-doc.rect(x + width - 18, y + 1, 16, 5, "F");
-
-doc.setTextColor(255);
-doc.setFontSize(6);
-doc.text("PROMO", x + width - 16, y + 4);
-
-doc.setTextColor(0);
-
-}
-
-
-/* ETIQUETA TOP */
-if (producto.top === true) {
-
-doc.setFillColor(255,140,0);
-doc.rect(x + 1, y + 1, 14, 5, "F");
-
-doc.setTextColor(255);
-doc.setFontSize(6);
-doc.text("TOP", x + 4, y + 4);
-
-doc.setTextColor(0);
-
-}
-
-}
-        /* ===============================
-           IMAGEN
-        =============================== */
-
-async function cargarImagenCatalogo(ruta) {
-
-const base = "https://cesaralarconmaesra.github.io/catalogo-maesra/";
-
-let extensiones = ["jpg","png","jpeg","webp"];
-
-for (let ext of extensiones) {
-
-try {
-
-let url = base + ruta.replace(/\.[^/.]+$/, "") + "." + ext;
-
-let res = await fetch(url);
-
-if (res.ok) {
-
-let blob = await res.blob();
-
-return await new Promise(resolve => {
-
-let reader = new FileReader();
-
-reader.onload = () => resolve(reader.result);
+reader.onloadend = function(){
+cacheImagenes[url] = reader.result;
+resolve(reader.result);
+};
 
 reader.readAsDataURL(blob);
 
 });
 
-}
-
-}catch(e){}
-
-}
-
+}catch(e){
 return null;
+}
 
 }
-   
 
+function dibujarTarjeta(x,y,p){
 
-    agregarNumeroPagina();
+doc.setDrawColor(200);
+doc.rect(x,y,tarjetaW,tarjetaH);
 
+}
 
-    const promociones = productos.filter(p =>
-    Number(p.precioPromocion) > 0 &&
-    Number(p.precioPromocion) < Number(p.precioLP4)
-);
-    const masVendidos = productos.filter(p=>p.top===true);
+function escribirTextoProducto(x,y,p){
 
-await imprimirSeccion(doc, promociones, "PROMOCIONES", 12);
-await imprimirSeccion(doc, masVendidos, "PRODUCTOS TOP", 16);
-    const marcas = [...new Set(productos.map(p=>p.marca))];
+let linea = y + 40;
 
-    for(let marca of marcas){
-        const listaMarca = productos.filter(p=>p.marca===marca);
-        await imprimirSeccion(doc, listaMarca, "MARCA: " + marca, 20);
-    }
+doc.setFontSize(8);
 
-    doc.save("Catalogo MAESRA 2026.pdf");
+doc.text(`Código: ${p.codigo}`,x+2,linea);
 
-    ocultarProgreso();
+linea +=4;
+
+let nombre = doc.splitTextToSize(p.producto, tarjetaW-4);
+doc.text(nombre,x+2,linea);
+
+linea += nombre.length*4 +2;
+
+doc.text(`Marca: ${p.marca}`,x+2,linea);
+
+linea+=4;
+
+doc.text(`Unidad: ${p.unidad}`,x+2,linea);
+
+linea+=4;
+
+doc.text(`Master: ${p.master || "-"}`,x+2,linea);
+
+linea+=4;
+
+if(p.restriccion){
+
+doc.setFontSize(7);
+
+let restr = doc.splitTextToSize(p.restriccion, tarjetaW-4);
+
+doc.text(restr,x+2,linea);
+
+}
+
+}
+
+async function dibujarImagenProducto(x,y,p){
+
+let url = URL_BASE_IMAGENES + "img/" + p.codigo + ".jpg";
+
+let img = await cargarImagen(url);
+
+if(!img) return;
+
+doc.addImage(img,"JPEG",x+10,y+5,40,30);
+
+}
+
+async function imprimirSeccion(lista,titulo){
+
+doc.addPage();
+
+dibujarHeader(titulo);
+
+let index = 0;
+
+for(const producto of lista){
+
+let posicion = index % productosPorPagina;
+
+let col = posicion % columnas;
+let fila = Math.floor(posicion/columnas);
+
+let x = margenX + col * (tarjetaW + 5);
+let y = margenY + fila * (tarjetaH + 5);
+
+if(posicion === 0 && index !== 0){
+
+agregarNumeroPagina();
+
+doc.addPage();
+dibujarHeader(titulo);
+
+}
+
+dibujarTarjeta(x,y,producto);
+
+await dibujarImagenProducto(x,y,producto);
+
+escribirTextoProducto(x,y,producto);
+
+index++;
+
+}
+
+agregarNumeroPagina();
+
+}
+
+let productosTOP = productos.filter(p=>p.top === "SI");
+let promociones = productos.filter(p=>p.promo === "SI");
+
+await imprimirSeccion(productosTOP,"PRODUCTOS TOP");
+
+await imprimirSeccion(promociones,"PROMOCIONES");
+
+doc.save("catalogo_maesra.pdf");
+
+ocultarProgreso();
 }
 
 function mostrarProgreso() {
