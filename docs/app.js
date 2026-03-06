@@ -743,12 +743,6 @@ ty+=3;
 
 /* RESTRICCIONES */
 
-let restr = doc.splitTextToSize("⚠ " + p.restricciones, w - 4);
-
-restr = restr.slice(0,4);
-
-Entonces queda:
-
 if (p.restricciones) {
 
     doc.setTextColor(90);
