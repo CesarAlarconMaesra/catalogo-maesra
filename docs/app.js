@@ -680,6 +680,22 @@ async function generarCatalogoCompletoPDF() {
         doc.text("Página "+numeroPagina,pageWidth-20,pageHeight-5);
         numeroPagina++;
     }
+function dibujarHeader(doc, titulo){
+
+const pageWidth = doc.internal.pageSize.getWidth();
+
+doc.setFontSize(18);
+doc.setTextColor(0);
+doc.text(titulo, pageWidth/2, 20, {align:"center"});
+
+doc.setDrawColor(180);
+doc.line(10,25,pageWidth-10,25);
+
+if(logoBase64){
+doc.addImage(logoBase64,"JPEG",pageWidth-35,8,22,10);
+}
+
+}
 
 async function imprimirSeccion(doc, productos, titulo, productosPorPagina) {
 
@@ -841,83 +857,7 @@ reader.readAsDataURL(blob);
 return null;
 
 }
-        /* ===============================
-           TEXTO
-        =============================== */
-
-        let textY = y + etiquetaAlto + imgSize + 6;
-
-        doc.setFontSize(6.8);
-
-        doc.text("Código: " + p.codigo, x + 3, textY);
-        textY += 4;
-
-        const desc = doc.splitTextToSize(p.producto, cardWidth - 6);
-        doc.text(desc.slice(0,2), x + 3, textY);
-        textY += 8;
-
-        doc.text("Marca: " + (p.marca || ""), x + 3, textY);
-        textY += 4;
-
-        doc.text(
-            "Unidad:" + (p.unidad || "") +
-            " | Master:" + (p.master || "") +
-            " Inner:" + (p.inner || ""),
-            x + 3,
-            textY
-        );
-
-        textY += 4;
-
-        /* ===============================
-           RESTRICCIONES
-        =============================== */
-
-        if (p.restricciones && p.restricciones.trim() !== "") {
-
-            const texto = doc.splitTextToSize(
-                p.restricciones,
-                cardWidth - 6
-            );
-
-            doc.setFontSize(6);
-            doc.setTextColor(60);
-
-            doc.text(texto.slice(0,3), x + 3, textY);
-
-            doc.setTextColor(0);
-        }
-
-        /* ===============================
-           PRECIOS
-        =============================== */
-
-        if (listaPrecioActiva === "LP1") {
-
-            const precioNormal = Number(p.precioLP1 || 0);
-            const precioPromo = Number(p.precioPromocion || 0);
-
-            const priceY = y + cardHeight - 5;
-
-            if (precioPromo > 0) {
-
-                doc.setFontSize(6);
-                doc.setTextColor(120);
-                doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY - 3, {align:"right"});
-
-                doc.setFontSize(8.5);
-                doc.setTextColor(200,0,0);
-                doc.text("$" + precioPromo.toFixed(2), x + cardWidth - 3, priceY, {align:"right"});
-
-            } else {
-
-                doc.setFontSize(8.5);
-                doc.setTextColor(0);
-                doc.text("$" + precioNormal.toFixed(2), x + cardWidth - 3, priceY, {align:"right"});
-            }
-
-            doc.setTextColor(0);
-        }
+   
 
         contadorGlobal++;
         actualizarProgreso(contadorGlobal, totalProductos);
@@ -935,14 +875,13 @@ return null;
 );
     const masVendidos = productos.filter(p=>p.top===true);
 
-	await imprimirSeccion("PROMOCIONES", promociones, 3, 4); // 12
-	await imprimirSeccion("PRODUCTOS TOP", masVendidos, 4, 4); // 16
-
+	await imprimirSeccion(doc, promociones, "PROMOCIONES", 12);
+	await imprimirSeccion(doc, masVendidos, "PRODUCTOS TOP", 16);
     const marcas = [...new Set(productos.map(p=>p.marca))];
 
     for(let marca of marcas){
         const listaMarca = productos.filter(p=>p.marca===marca);
-        await imprimirSeccion("MARCA: " + marca, listaMarca, 4, 5); // 20
+        await imprimirSeccion(doc, listaMarca, "MARCA: " + marca, 20);
     }
 
     doc.save("Catalogo MAESRA 2026.pdf");
