@@ -741,22 +741,29 @@ doc.text(`Master:${p.master || "-"} Inner:${p.inner || "-"}`,x+2,ty);
 ty+=3;
 
 
-// ===============================
-// RESTRICCIONES
-// ===============================
+/* RESTRICCIONES */
 
-if(p.restricciones){
+let restr = doc.splitTextToSize("⚠ " + p.restricciones, w - 4);
 
-doc.setTextColor(90);
+restr = restr.slice(0,4);
 
-let restr = doc.splitTextToSize("⚠ "+p.restricciones,w-4);
+Entonces queda:
 
-doc.text(restr,x+2,ty);
+if (p.restricciones) {
 
-doc.setTextColor(0);
+    doc.setTextColor(90);
+
+    let restr = doc.splitTextToSize("⚠ " + p.restricciones, w - 4);
+
+    restr = restr.slice(0,4);
+
+    doc.text(restr, x + 2, ty);
+
+    ty += restr.length * 3.2 + 1;
+
+    doc.setTextColor(0);
 
 }
-
 
 // ===============================
 // PRECIOS SOLO SI LP1

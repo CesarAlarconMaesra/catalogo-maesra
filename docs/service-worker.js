@@ -9,67 +9,105 @@ const urlsToCache = [
   "/catalogo-maesra/img/sin_imagen.jpg"
 ];
 
+// ===============================
 // INSTALACIÓN
+// ===============================
+
 self.addEventListener("install", event => {
+
   self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
-});
-
-// ACTIVACIÓN
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME)
-            .map(key => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// FETCH
-return fetch(event.request).then(fetchResponse => {
-
-          return caches.open("catalogo-cache-v21").then(cache => {
-            cache.put(event.request, fetchResponse.clone());
-            return fetchResponse;
-          });
-
-        });
-
+      .then(cache => {
+        return cache.addAll(APP_ASSETS);
       })
-    );
+  );
+
+});
+
+// ===============================
+// ACTIVACIÓN
+// ===============================
+
+self.addEventListener("activate", event => {
+
+  event.waitUntil(
+
+    caches.keys().then(keys => {
+
+      return Promise.all(
+
+        keys.map(key => {
+
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+
+        })
+
+      );
+
+    })
+
+  );
+
+  self.clients.claim();
+
+});
+
+// ===============================
+// FETCH
+// ===============================
 
 self.addEventListener("fetch", event => {
 
-  // NO cachear productos.json (para que precios se actualicen)
-  if (event.request.url.includes("productos.json")) {
-    event.respondWith(fetch(event.request));
+  const request = event.request;
+
+  // ===============================
+  // IMÁGENES
+  // ===============================
+
+  if (request.destination === "image") {
+
+    event.respondWith(
+
+      caches.match(request).then(cached => {
+
+        if (cached) return cached;
+
+        return fetch(request).then(response => {
+
+          return caches.open(CACHE_NAME).then(cache => {
+
+            cache.put(request, response.clone());
+
+            return response;
+
+          });
+
+        }).catch(() => cached);
+
+      })
+
+    );
+
     return;
+
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) return response;
+  // ===============================
+  // OTROS ARCHIVOS
+  // ===============================
 
-        return fetch(event.request)
-          .then(fetchResponse => {
-            if (event.request.method === "GET") {
-              const responseClone = fetchResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => cache.put(event.request, responseClone));
-            }
-            return fetchResponse;
-          })
-          .catch(() => {
-            if (event.request.destination === "image") {
-              return caches.match("/catalogo-maesra/img/sin_imagen.jpg");
-            }
-          });
-      })
+  event.respondWith(
+
+    caches.match(request).then(response => {
+
+      return response || fetch(request);
+
+    })
+
   );
+
 });
