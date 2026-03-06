@@ -875,8 +875,8 @@ return null;
 );
     const masVendidos = productos.filter(p=>p.top===true);
 
-	await imprimirSeccion(doc, promociones, "PROMOCIONES", 12);
-	await imprimirSeccion(doc, masVendidos, "PRODUCTOS TOP", 16);
+await imprimirSeccion(doc, promociones, "PROMOCIONES", 12);
+await imprimirSeccion(doc, masVendidos, "PRODUCTOS TOP", 16);
     const marcas = [...new Set(productos.map(p=>p.marca))];
 
     for(let marca of marcas){
