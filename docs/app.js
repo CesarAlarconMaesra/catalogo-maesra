@@ -681,119 +681,166 @@ async function generarCatalogoCompletoPDF() {
         numeroPagina++;
     }
 
-async function imprimirSeccion(titulo, lista, columnas, filas) {
+async function imprimirSeccion(doc, productos, titulo, productosPorPagina) {
 
-    if (lista.length === 0) return;
+const pageWidth = doc.internal.pageSize.getWidth();
 
-    const marginX = 10;
-    const marginTop = 22;
+const margenX = 10;
+const margenY = 35;
 
-    const gapX = 6;
-    const gapY = 6;
+const columnas = titulo === "PROMOCIONES" ? 3 : 4;
+const filas = titulo === "PROMOCIONES" ? 4 : 4;
 
-    const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
-    const cardWidth = usableWidth / columnas;
+const cardWidth = (pageWidth - (margenX * 2)) / columnas;
+const cardHeight = titulo === "PROMOCIONES" ? 60 : 50;
 
-    const usableHeight = pageHeight - marginTop - 20;
-    const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
+let index = 0;
 
-    const productosPorPagina = columnas * filas;
+for (const producto of productos) {
 
-    let index = 0;
+let posicion = index % productosPorPagina;
 
-    function encabezado() {
+if (posicion === 0 && index !== 0) {
 
-        doc.setFontSize(15);
-        doc.setTextColor(0);
-        doc.text(titulo, pageWidth/2, 14, { align: "center" });
+doc.addPage();
+dibujarHeader(doc, titulo);
 
-        doc.setDrawColor(180);
-        doc.line(marginX, 18, pageWidth - marginX, 18);
+}
 
-        if (logoBase64) {
-            doc.addImage(logoBase64, "JPEG", pageWidth - 28, 5, 18, 10);
-        }
-    }
+let col = posicion % columnas;
+let row = Math.floor(posicion / columnas);
 
-    encabezado();
+let x = margenX + col * cardWidth;
+let y = margenY + row * cardHeight;
 
-    for (let p of lista) {
+dibujarTarjetaProducto(doc, producto, x, y, cardWidth, cardHeight);
 
-        const posicion = index % productosPorPagina;
+index++;
 
-        if (posicion === 0 && index !== 0) {
+}
 
-            agregarNumeroPagina();
-            doc.addPage();
-            encabezado();
+}
 
-        }
+async function dibujarTarjetaProducto(doc, producto, x, y, width, height) {
 
-        const col = posicion % columnas;
-        const row = Math.floor(posicion / columnas);
+doc.setDrawColor(210);
+doc.rect(x, y, width - 4, height - 4);
 
-        const x = marginX + col * (cardWidth + gapX);
-        const y = marginTop + row * (cardHeight + gapY);
+let imgY = y + 3;
 
-        doc.setDrawColor(220);
-        doc.rect(x, y, cardWidth, cardHeight);
+let img = await cargarImagenCatalogo(producto.imagen);
 
-        /* ===============================
-           ETIQUETAS
-        =============================== */
+if (img) {
+doc.addImage(img, "JPEG", x + width/2 - 10, imgY, 20, 20);
+}
 
-        const esPromo =
-            Number(p.precioPromocion) > 0 &&
-            Number(p.precioPromocion) < Number(p.precioLP4);
+let textY = y + 25;
 
-        const esTop = p.top === true;
+doc.setFontSize(7);
 
-        const etiquetaAncho = cardWidth * 0.28;
-        const etiquetaAlto = 4;
+doc.text(`Código: ${producto.codigo}`, x + 3, textY);
 
-        if (esPromo) {
+textY += 4;
 
-            doc.setFillColor(200,0,0);
-            doc.rect(x + cardWidth - etiquetaAncho, y, etiquetaAncho, etiquetaAlto, "F");
+let nombre = doc.splitTextToSize(producto.producto, width - 8);
+doc.text(nombre, x + 3, textY);
 
-            doc.setFontSize(6);
-            doc.setTextColor(255);
-            doc.text("PROMO", x + cardWidth - etiquetaAncho/2, y + 3, {align:"center"});
+textY += nombre.length * 3.5 + 2;
 
-        }
+doc.text(`Marca: ${producto.marca}`, x + 3, textY);
 
-        if (esTop) {
+textY += 4;
 
-            doc.setFillColor(255,140,0);
-            doc.rect(x, y, etiquetaAncho, etiquetaAlto, "F");
+doc.text(`Unidad: ${producto.unidad} | Master:${producto.master} Inner:${producto.inner}`, x + 3, textY);
 
-            doc.setFontSize(6);
-            doc.setTextColor(255);
-            doc.text("TOP", x + etiquetaAncho/2, y + 3, {align:"center"});
-        }
+textY += 4;
 
-        doc.setTextColor(0);
 
+/* RESTRICCIONES */
+if (producto.restricciones) {
+
+doc.setTextColor(80);
+
+let restricciones = doc.splitTextToSize(producto.restricciones, width - 8);
+
+doc.text(restricciones, x + 3, textY);
+
+doc.setTextColor(0);
+
+}
+
+
+/* ETIQUETA PROMO */
+if (producto.precioPromocion) {
+
+doc.setFillColor(200,0,0);
+doc.rect(x + width - 18, y + 1, 16, 5, "F");
+
+doc.setTextColor(255);
+doc.setFontSize(6);
+doc.text("PROMO", x + width - 16, y + 4);
+
+doc.setTextColor(0);
+
+}
+
+
+/* ETIQUETA TOP */
+if (producto.top === true) {
+
+doc.setFillColor(255,140,0);
+doc.rect(x + 1, y + 1, 14, 5, "F");
+
+doc.setTextColor(255);
+doc.setFontSize(6);
+doc.text("TOP", x + 4, y + 4);
+
+doc.setTextColor(0);
+
+}
+
+}
         /* ===============================
            IMAGEN
         =============================== */
 
-        const img = await cargarImagenOptimizada(p.imagen, 200);
+async function cargarImagenCatalogo(ruta) {
 
-        const imgSize = cardWidth * 0.52;
+const base = "https://cesaralarconmaesra.github.io/catalogo-maesra/";
 
-        if (img) {
+let extensiones = ["jpg","png","jpeg","webp"];
 
-            doc.addImage(
-                img,
-                "JPEG",
-                x + (cardWidth - imgSize)/2,
-                y + etiquetaAlto + 2,
-                imgSize,
-                imgSize
-            );
-        }
+for (let ext of extensiones) {
 
+try {
+
+let url = base + ruta.replace(/\.[^/.]+$/, "") + "." + ext;
+
+let res = await fetch(url);
+
+if (res.ok) {
+
+let blob = await res.blob();
+
+return await new Promise(resolve => {
+
+let reader = new FileReader();
+
+reader.onload = () => resolve(reader.result);
+
+reader.readAsDataURL(blob);
+
+});
+
+}
+
+}catch(e){}
+
+}
+
+return null;
+
+}
         /* ===============================
            TEXTO
         =============================== */
