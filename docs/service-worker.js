@@ -31,6 +31,18 @@ self.addEventListener("activate", event => {
 });
 
 // FETCH
+return fetch(event.request).then(fetchResponse => {
+
+          return caches.open("catalogo-cache-v21").then(cache => {
+            cache.put(event.request, fetchResponse.clone());
+            return fetchResponse;
+          });
+
+        });
+
+      })
+    );
+
 self.addEventListener("fetch", event => {
 
   // NO cachear productos.json (para que precios se actualicen)
