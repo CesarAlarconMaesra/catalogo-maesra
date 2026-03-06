@@ -547,80 +547,83 @@ async function cargarLogo() {
 // OPTIMIZADOR DE IMÁGENES
 // ===============================
 
-async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
+async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200){
 
-    if (!rutaImagen) return null;
+if(!rutaImagen) return null;
 
-    if (cacheImagenes[rutaImagen]) {
-        return cacheImagenes[rutaImagen];
-    }
+if(cacheImagenes[rutaImagen]){
+return cacheImagenes[rutaImagen];
+}
 
-    try {
+try{
 
-        // 🔥 IMPORTANTE: usar la constante global correctamente
-        const url = rutaImagen.startsWith("http")
-            ? rutaImagen
-            : URL_BASE_IMAGENES + rutaImagen.replace(/^\/+/, "");
+const cache = await caches.open("v20");
 
-        const response = await fetch(url, { cache: "force-cache" });
+let response = await cache.match(rutaImagen);
 
-        if (!response.ok) {
-            console.warn("No se pudo cargar:", url);
-            return null;
-        }
+if(!response){
 
-        const blob = await response.blob();
+const url = rutaImagen.startsWith("http")
+? rutaImagen
+: URL_BASE_IMAGENES + rutaImagen.replace(/^\/+/, "");
 
-        return new Promise((resolve) => {
+response = await fetch(url);
 
-            const img = new Image();
+}
 
-            img.onload = function () {
+if(!response || !response.ok){
+return null;
+}
 
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
+const blob = await response.blob();
 
-                let width = img.width;
-                let height = img.height;
+return new Promise(resolve=>{
 
-                if (width > height) {
-                    if (width > tamañoMax) {
-                        height *= tamañoMax / width;
-                        width = tamañoMax;
-                    }
-                } else {
-                    if (height > tamañoMax) {
-                        width *= tamañoMax / height;
-                        height = tamañoMax;
-                    }
-                }
+const img = new Image();
 
-                canvas.width = width;
-                canvas.height = height;
+img.onload = function(){
 
-                ctx.drawImage(img, 0, 0, width, height);
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
 
-                const base64 = canvas.toDataURL("image/jpeg", 0.75);
+let w = img.width;
+let h = img.height;
 
-                cacheImagenes[rutaImagen] = base64;
+if(w>h){
+if(w>tamañoMax){
+h*=tamañoMax/w;
+w=tamañoMax;
+}
+}else{
+if(h>tamañoMax){
+w*=tamañoMax/h;
+h=tamañoMax;
+}
+}
 
-                URL.revokeObjectURL(img.src);
+canvas.width=w;
+canvas.height=h;
 
-                resolve(base64);
-            };
+ctx.drawImage(img,0,0,w,h);
 
-            img.onerror = function () {
-                console.warn("Error cargando imagen:", url);
-                resolve(null);
-            };
+const base64 = canvas.toDataURL("image/jpeg",0.75);
 
-            img.src = URL.createObjectURL(blob);
-        });
+cacheImagenes[rutaImagen]=base64;
 
-    } catch (error) {
-        console.warn("Error general imagen:", rutaImagen);
-        return null;
-    }
+resolve(base64);
+
+};
+
+img.src = URL.createObjectURL(blob);
+
+});
+
+}catch(e){
+
+console.warn("imagen no encontrada",rutaImagen);
+return null;
+
+}
 }
 
 
@@ -720,7 +723,7 @@ if(p.restricciones){
 
 doc.setTextColor(90);
 
-let restr = doc.splitTextToSize(p.restricciones,w-4);
+let restr = doc.splitTextToSize("⚠ "+p.restricciones,w-4);
 
 doc.text(restr,x+2,ty);
 
