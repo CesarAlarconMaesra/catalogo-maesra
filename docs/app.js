@@ -712,12 +712,15 @@ const cardHeight = titulo === "PROMOCIONES" ? 60 : 50;
 
 let index = 0;
 
+dibujarHeader(doc, titulo);
+
 for (const producto of productos) {
 
 let posicion = index % productosPorPagina;
 
 if (posicion === 0 && index !== 0) {
 
+agregarNumeroPagina();
 doc.addPage();
 dibujarHeader(doc, titulo);
 
@@ -859,12 +862,6 @@ return null;
 }
    
 
-        contadorGlobal++;
-        actualizarProgreso(contadorGlobal, totalProductos);
-
-        index++;
-
-    }
 
     agregarNumeroPagina();
 
