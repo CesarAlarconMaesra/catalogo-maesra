@@ -628,203 +628,199 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 // GENERADOR PDF COMPLETO
 // ===============================
 
-async function generarCatalogoCompletoPDF() {
+async function generarCatalogoCompletoPDF(){
 
 const { jsPDF } = window.jspdf;
-const doc = new jsPDF("p","mm","letter");
+const doc = new jsPDF("p","mm","a4");
 
-let productosPorPagina = 12;
-let contadorPagina = 1;
+const pageWidth = doc.internal.pageSize.getWidth();
+const pageHeight = doc.internal.pageSize.getHeight();
 
-const margenX = 10;
-const margenY = 30;
+await cargarLogo();
 
-const tarjetaW = 60;
-const tarjetaH = 70;
-
-const columnas = 3;
-const filas = 4;
-
-const cacheImagenes = {};
+let numeroPagina = 1;
 
 function agregarNumeroPagina(){
 doc.setFontSize(8);
-doc.text("Página " + contadorPagina, 195, 275, {align:"right"});
-contadorPagina++;
+doc.setTextColor(120);
+doc.text("Página "+numeroPagina,pageWidth-25,pageHeight-5);
+numeroPagina++;
 }
 
-function dibujarHeader(titulo){
+function header(titulo){
 
 doc.setFontSize(18);
-doc.text(titulo,105,15,{align:"center"});
+doc.setTextColor(0);
+doc.text(titulo,pageWidth/2,20,{align:"center"});
 
-doc.setLineWidth(0.5);
-doc.line(10,18,200,18);
+doc.setDrawColor(180);
+doc.line(10,25,pageWidth-10,25);
 
 if(logoBase64){
-doc.addImage(logoBase64,"PNG",175,5,25,10);
+doc.addImage(logoBase64,"JPEG",pageWidth-35,8,22,10);
 }
 
 }
 
-async function cargarImagen(url){
+function layout(tipo){
 
-if(cacheImagenes[url]) return cacheImagenes[url];
-
-try{
-
-const response = await fetch(url);
-const blob = await response.blob();
-
-return new Promise(resolve=>{
-const reader = new FileReader();
-
-reader.onloadend = function(){
-cacheImagenes[url] = reader.result;
-resolve(reader.result);
-};
-
-reader.readAsDataURL(blob);
-
-});
-
-}catch(e){
-return null;
+if(tipo==="promo"){
+return {cols:3,rows:4,total:12,height:60}
 }
+
+if(tipo==="top"){
+return {cols:4,rows:4,total:16,height:55}
+}
+
+return {cols:4,rows:5,total:20,height:50}
 
 }
 
-function dibujarTarjeta(x,y,p){
+async function dibujarTarjeta(p,x,y,w,h){
 
-doc.setDrawColor(200);
-doc.rect(x,y,tarjetaW,tarjetaH);
+doc.setDrawColor(210);
+doc.rect(x,y,w,h);
+
+let img = await cargarImagenOptimizada(p.imagen,200);
+
+if(img){
+
+doc.addImage(img,"JPEG",x+w/2-15,y+3,30,22);
 
 }
 
-function escribirTextoProducto(x,y,p){
-
-let linea = y + 40;
-
-doc.setFontSize(8);
-
-doc.text(`Código: ${p.codigo}`,x+2,linea);
-
-linea +=4;
-
-let nombre = doc.splitTextToSize(p.producto, tarjetaW-4);
-doc.text(nombre,x+2,linea);
-
-linea += nombre.length*4 +2;
-
-doc.text(`Marca: ${p.marca}`,x+2,linea);
-
-linea+=4;
-
-doc.text(`Unidad: ${p.unidad}`,x+2,linea);
-
-linea+=4;
-
-doc.text(`Master: ${p.master || "-"}`,x+2,linea);
-
-linea+=4;
-
-if(p.restriccion){
+let ty = y+28;
 
 doc.setFontSize(7);
 
-let restr = doc.splitTextToSize(p.restriccion, tarjetaW-4);
+doc.text(`Código: ${p.codigo}`,x+2,ty);
 
-doc.text(restr,x+2,linea);
+ty+=4;
+
+let nombre = doc.splitTextToSize(p.producto,w-4);
+doc.text(nombre,x+2,ty);
+
+ty += nombre.length*3.2 +1;
+
+doc.text(`Marca: ${p.marca || ""}`,x+2,ty);
+
+ty+=3;
+
+doc.text(`Unidad:${p.unidad || ""}`,x+2,ty);
+
+ty+=3;
+
+doc.text(`Master:${p.master || "-"} Inner:${p.inner || "-"}`,x+2,ty);
+
+ty+=3;
+
+/* RESTRICCIONES */
+
+if(p.restricciones){
+
+doc.setTextColor(90);
+
+let restr = doc.splitTextToSize(p.restricciones,w-4);
+
+doc.text(restr,x+2,ty);
+
+doc.setTextColor(0);
+
+}
+
+/* PRECIOS SOLO SI LP1 */
+
+if(listaPrecioActiva === "LP1"){
+
+let py = y+h-5;
+
+doc.setFontSize(8);
+
+if(p.precioPromocion){
+
+doc.setTextColor(200,0,0);
+doc.text("$"+Number(p.precioPromocion).toFixed(2),x+w-22,py);
+
+doc.setTextColor(120);
+doc.text("$"+Number(p.precioLP1).toFixed(2),x+w-40,py);
+
+}else{
+
+doc.setTextColor(0);
+doc.text("$"+Number(p.precioLP1).toFixed(2),x+w-22,py);
+
+}
+
+doc.setTextColor(0);
+
+}
+
+/* ETIQUETA PROMO */
+
+if(Number(p.precioPromocion)>0){
+
+doc.setFillColor(200,0,0);
+doc.rect(x+w-18,y+1,17,5,"F");
+
+doc.setTextColor(255);
+doc.setFontSize(6);
+doc.text("PROMO",x+w-15,y+4);
+
+doc.setTextColor(0);
+
+}
+
+/* ETIQUETA TOP */
+
+if(p.top===true){
+
+doc.setFillColor(255,140,0);
+doc.rect(x+1,y+1,15,5,"F");
+
+doc.setTextColor(255);
+doc.setFontSize(6);
+doc.text("TOP",x+4,y+4);
+
+doc.setTextColor(0);
 
 }
 
 }
 
-async function dibujarImagenProducto(x,y,p){
+async function imprimirSeccion(lista,titulo,tipo){
 
-let url = URL_BASE_IMAGENES + "img/" + p.codigo + ".jpg";
+const cfg = layout(tipo);
 
-let img = await cargarImagen(url);
+const margenX = 10;
+const margenY = 35;
 
-if(!img) return;
-
-doc.addImage(img,"JPEG",x+10,y+5,40,30);
-
-}
-
-async function imprimirSeccion(lista, titulo){
+const w = (pageWidth-(margenX*2))/cfg.cols;
+const h = cfg.height;
 
 doc.addPage();
-dibujarHeader(titulo);
+header(titulo);
 
 let index = 0;
 
-for (const p of lista){
+for(const p of lista){
 
-let posicion = index % productosPorPagina;
+let pos = index % cfg.total;
 
-if(posicion === 0 && index !== 0){
+if(pos===0 && index!==0){
 
 agregarNumeroPagina();
 doc.addPage();
-dibujarHeader(titulo);
+header(titulo);
 
 }
 
-let col = posicion % columnas;
-let fila = Math.floor(posicion / columnas);
+let col = pos % cfg.cols;
+let row = Math.floor(pos / cfg.cols);
 
-let x = margenX + col * (tarjetaW + 5);
-let y = margenY + fila * (tarjetaH + 5);
+let x = margenX + col*w;
+let y = margenY + row*h;
 
-dibujarTarjeta(x,y,p);
-
-// IMAGEN
-let url = URL_BASE_IMAGENES + "img/" + p.codigo + ".jpg";
-let img = await cargarImagen(url);
-
-if(img){
-doc.addImage(img,"JPEG",x+10,y+5,40,30);
-}
-
-// TEXTO
-let linea = y + 38;
-
-doc.setFontSize(8);
-doc.text(`Código: ${p.codigo}`,x+2,linea);
-
-linea +=4;
-
-let nombre = doc.splitTextToSize(p.producto || "", tarjetaW-4);
-doc.text(nombre,x+2,linea);
-
-linea += nombre.length * 4 +2;
-
-doc.text(`Marca: ${p.marca || ""}`,x+2,linea);
-
-linea +=4;
-
-doc.text(`Unidad: ${p.unidad || ""}`,x+2,linea);
-
-linea +=4;
-
-if(p.Master || p.Inner){
-
-doc.text(`Master:${p.Master || "-"}  Inner:${p.Inner || "-"}`,x+2,linea);
-linea +=4;
-
-}
-
-// RESTRICCIONES
-if(p.restricciones){
-
-doc.setFontSize(7);
-
-let restr = doc.splitTextToSize(p.restricciones, tarjetaW-4);
-
-doc.text(restr,x+2,linea);
-
-}
+await dibujarTarjeta(p,x,y,w-3,h-3);
 
 index++;
 
@@ -834,14 +830,61 @@ agregarNumeroPagina();
 
 }
 
-let productosTOP = productos.filter(p=>p.top === "SI");
-let promociones = productos.filter(p=>p.promo === "SI");
+/* =========================
+PORTADA
+========================= */
 
-await imprimirSeccion(productosTOP,"PRODUCTOS TOP");
+doc.setFillColor(245,245,245);
+doc.rect(0,0,pageWidth,pageHeight,"F");
 
-await imprimirSeccion(promociones,"PROMOCIONES");
+if(logoBase64){
 
-doc.save("catalogo_maesra.pdf");
+doc.addImage(logoBase64,"JPEG",pageWidth/2-50,40,100,45);
+
+}
+
+doc.setFontSize(28);
+doc.text("CATÁLOGO MAESRA",pageWidth/2,120,{align:"center"});
+
+doc.setFontSize(14);
+
+if(listaPrecioActiva==="LP1"){
+
+doc.text("Catálogo con precios",pageWidth/2,135,{align:"center"});
+
+}else{
+
+doc.text("Catálogo informativo",pageWidth/2,135,{align:"center"});
+
+}
+
+/* =========================
+SECCIONES
+========================= */
+
+const promociones = productos.filter(p=>Number(p.precioPromocion)>0);
+
+const top = productos.filter(p=>p.top===true);
+
+await imprimirSeccion(promociones,"PROMOCIONES","promo");
+
+await imprimirSeccion(top,"PRODUCTOS TOP","top");
+
+/* =========================
+POR MARCAS
+========================= */
+
+const marcas = [...new Set(productos.map(p=>p.marca))];
+
+for(const m of marcas){
+
+const lista = productos.filter(p=>p.marca===m);
+
+await imprimirSeccion(lista,"MARCA: "+m,"catalogo");
+
+}
+
+doc.save("Catalogo_MAESRA_2026.pdf");
 
 ocultarProgreso();
 }
