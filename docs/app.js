@@ -565,7 +565,8 @@ if(cacheImagenes[rutaImagen]) return cacheImagenes[rutaImagen];
 
 try{
 
-const cache = await caches.open("maesra-cache-v21");
+const cache = await caches.open("catalogo-cache-v21");
+const cached = await cache.match(urlImagen);
 
 let response = await cache.match(rutaImagen);
 
