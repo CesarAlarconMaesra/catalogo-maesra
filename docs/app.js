@@ -132,6 +132,8 @@ function cargarProductos() {
 
       productos = data;
 
+      precacheImagenes();   // ← agrega esto
+
       productos.sort((a, b) => {
         const ap = Number(a.precioPromocion) > 0;
         const bp = Number(b.precioPromocion) > 0;
@@ -552,7 +554,42 @@ console.warn("No se pudo cargar logo");
 
 }
 
+// ===============================
+// PRECARGAR IMAGEN A CACHE
+// ===============================
+async function precacheImagenes() {
 
+  if (!productos || !productos.length) return;
+
+  const cache = await caches.open("catalogo-cache-v21");
+
+  for (let p of productos) {
+
+    let url = `${URL_BASE_IMAGENES}img/${p.codigo}.jpg`;
+
+    try {
+
+      let existe = await cache.match(url);
+
+      if (!existe) {
+
+        let resp = await fetch(url);
+
+        if (resp.ok) {
+
+          await cache.put(url, resp.clone());
+
+        }
+
+      }
+
+    } catch(e) {}
+
+  }
+
+  console.log("Imágenes cacheadas");
+
+}
 // ===============================
 // CARGAR IMAGEN DESDE CACHE
 // ===============================
