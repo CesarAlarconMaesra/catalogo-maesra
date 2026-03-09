@@ -739,7 +739,7 @@ doc.rect(x,y,12,5,"F");
 doc.setTextColor(255);
 doc.setFontSize(6);
 
-doc.text("TOP",x+9,y+5,{align:"center"});
+doc.text("TOP",x+6,y+3.5,{align:"center"});
 
 doc.setTextColor(0);
 
@@ -756,7 +756,7 @@ let ty = y+5;
 
 /* etiquetas */
 
-if(p.promo) etiquetaPromo();
+if(p.promociones) etiquetaPromo();
 if(p.top) etiquetaTop();
 
 /* imagen */
@@ -767,11 +767,11 @@ if(blob){
 
 const base64 = await blobBase64(blob);
 
-doc.addImage(base64,"JPEG",x+3,ty,cardW-6,18);
+doc.addImage(base64,"JPEG",x+4,ty,cardW-8,16);
 
 }
 
-ty+=20;
+ty+=18;
 
 doc.setFontSize(7);
 
@@ -811,15 +811,18 @@ doc.setTextColor(200,0,0);
 
 let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
-let maxLineas = Math.floor((y + cardH - ty) / 3);
+let espacioDisponible = (y + cardH) - ty - 2;
+
+let maxLineas = Math.floor(espacioDisponible / 3);
+
+if(maxLineas > 0){
 
 r = r.slice(0,maxLineas);
-
 doc.text(r,x+2,ty);
 
-doc.setTextColor(0);
-
 }
+
+doc.setTextColor(0);
 
 }
 
@@ -870,11 +873,8 @@ PROMOCIONES
 ================================ */
 
 let promos = productos.filter(p =>
-    p.promo === > 0 ||
-    p.promo === 1 ||
-    p.promo === "1" ||
-    p.promo === "SI" ||
-    p.promo === "si"
+  Number(p.precioPromocion) > 0 &&
+  Number(p.precioPromocion) < Number(p.precioLP4)
 );
 if(promos.length){
 
@@ -939,7 +939,15 @@ nuevaPagina("PRODUCTOS TOP");
 RESTO
 ================================ */
 
-let resto = productos.filter(p=>!p.promo && !p.top);
+let resto = productos.filter(p => {
+
+  const enPromo =
+    Number(p.precioPromocion) > 0 &&
+    Number(p.precioPromocion) < Number(p.precioLP4);
+
+  return !enPromo && !p.top;
+
+});
 
 if(resto.length){
 
