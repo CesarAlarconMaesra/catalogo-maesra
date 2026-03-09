@@ -720,12 +720,12 @@ DIBUJAR ETIQUETAS
 function etiquetaPromo(){
 
 doc.setFillColor(220,0,0);
-doc.rect(x+cardW-22,y,22,7,"F");
+doc.rect(x+cardW-14,y,12,5,"F");
 
 doc.setTextColor(255);
-doc.setFontSize(7);
+doc.setFontSize(6);
 
-doc.text("PROMO",x+cardW-11,y+5,{align:"center"});
+doc.text("PROMO",x+cardW-7,y+3.5,{align:"center"});
 
 doc.setTextColor(0);
 
@@ -734,10 +734,10 @@ doc.setTextColor(0);
 function etiquetaTop(){
 
 doc.setFillColor(255,140,0);
-doc.rect(x,y,18,7,"F");
+doc.rect(x,y,12,5,"F");
 
 doc.setTextColor(255);
-doc.setFontSize(7);
+doc.setFontSize(6);
 
 doc.text("TOP",x+9,y+5,{align:"center"});
 
@@ -751,7 +751,6 @@ DIBUJAR TARJETA
 
 async function dibujarProducto(p){
 
-doc.rect(x,y,cardW,cardH);
 
 let ty = y+5;
 
@@ -768,11 +767,11 @@ if(blob){
 
 const base64 = await blobBase64(blob);
 
-doc.addImage(base64,"JPEG",x+5,ty,cardW-10,22);
+doc.addImage(base64,"JPEG",x+3,ty,cardW-6,18);
 
 }
 
-ty+=25;
+ty+=20;
 
 doc.setFontSize(7);
 
@@ -812,7 +811,9 @@ doc.setTextColor(200,0,0);
 
 let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
-r = r.slice(0,3);
+let maxLineas = Math.floor((y + cardH - ty) / 3);
+
+r = r.slice(0,maxLineas);
 
 doc.text(r,x+2,ty);
 
