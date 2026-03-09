@@ -628,7 +628,7 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 // GENERADOR PDF COMPLETO
 // ===============================
 
-async function generarCatalogoPDF(){
+async function generarCatalogoCompletoPDF(){
 
 const { jsPDF } = window.jspdf;
 
