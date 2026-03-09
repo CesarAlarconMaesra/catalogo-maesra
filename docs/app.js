@@ -628,256 +628,313 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 // GENERADOR PDF COMPLETO
 // ===============================
 
-async function generarCatalogoCompletoPDF() {
+async function generarCatalogoPDF(){
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
+const { jsPDF } = window.jspdf;
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    mostrarProgreso();
+const doc = new jsPDF("p","mm","letter");
 
-    const totalProductos = productos.length;
-    let contadorGlobal = 0;
+const margen = 10;
+const pageW = 216;
+const pageH = 279;
 
-    let numeroPagina = 1;
-    const fecha = new Date().toLocaleDateString();
+let x = margen;
+let y = 40;
 
-    await cargarLogo();
+const cols = 3;
+const cardW = (pageW - margen*2) / cols;
+const cardH = 55;
 
-    // ===============================
-    // PORTADA
-    // ===============================
+let col = 0;
 
-    doc.setFillColor(245, 245, 245);
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
+let progreso = document.getElementById("progresoPDF");
 
-    if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", pageWidth/2 - 45, 40, 90, 45);
+function setProgreso(p){
+  if(progreso) progreso.style.width = p + "%";
+}
+
+/* =========================
+   CACHE
+========================= */
+
+const cache = await caches.open("catalogo-cache-v21");
+
+/* =========================
+   DETECTAR IMAGEN
+========================= */
+
+async function obtenerImagenProducto(codigo){
+
+  const extensiones = ["jpg","png","webp"];
+
+  for(let ext of extensiones){
+
+    const url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
+
+    let cached = await cache.match(url);
+
+    if(cached){
+
+      const blob = await cached.blob();
+      return blob;
+
     }
 
-    doc.setFontSize(26);
-    doc.setTextColor(30);
-    doc.text("CATÁLOGO GENERAL", pageWidth/2, 110, { align: "center" });
+    try{
 
-    doc.setFontSize(13);
+      const resp = await fetch(url,{method:"HEAD"});
+
+      if(resp.ok){
+
+        const img = await fetch(url);
+        const blob = await img.blob();
+
+        cache.put(url,img.clone());
+
+        return blob;
+
+      }
+
+    }catch(e){}
+
+  }
+
+  return null;
+}
+
+/* =========================
+   CONVERTIR BLOB A BASE64
+========================= */
+
+function blobToBase64(blob){
+
+  return new Promise(resolve=>{
+
+    const reader = new FileReader();
+
+    reader.onloadend = ()=> resolve(reader.result);
+
+    reader.readAsDataURL(blob);
+
+  });
+
+}
+
+/* =========================
+   DIBUJAR TARJETA
+========================= */
+
+async function dibujarProducto(p){
+
+  let ty = y;
+
+  doc.rect(x,y,cardW,cardH);
+
+  ty += 5;
+
+  /* IMAGEN */
+
+  const blob = await obtenerImagenProducto(p.codigo);
+
+  if(blob){
+
+    const base64 = await blobToBase64(blob);
+
+    doc.addImage(base64,"JPEG",x+5,ty,cardW-10,20);
+
+  }
+
+  ty += 25;
+
+  doc.setFontSize(7);
+
+  doc.text(`Código: ${p.codigo}`,x+2,ty);
+
+  ty += 3;
+
+  let nombre = doc.splitTextToSize(p.producto,cardW-4);
+
+  doc.text(nombre,x+2,ty);
+
+  ty += nombre.length * 3;
+
+  doc.text(`Marca: ${p.marca}`,x+2,ty);
+  ty+=3;
+
+  doc.text(`Unidad: ${p.unidad}`,x+2,ty);
+  ty+=3;
+
+  doc.text(`Master: ${p.master}`,x+2,ty);
+  ty+=3;
+
+  /* PRECIO SOLO LP1 */
+
+  if(listaPrecioActiva === "LP1" && p.LP1){
+
+    doc.setFontSize(8);
+
+    doc.text(`$${p.LP1}`,x+2,ty);
+
+    ty+=4;
+
+  }
+
+  /* RESTRICCIONES */
+
+  if(p.restricciones){
+
     doc.setTextColor(90);
-    doc.text("Actualizado: " + fecha, pageWidth/2, 125, { align: "center" });
 
-    if (listaPrecioActiva === "LP1") {
-        doc.setTextColor(200,0,0);
-        doc.text("Lista de Precios LP1 Activa", pageWidth/2, 140, { align: "center" });
-    } else {
-        doc.setTextColor(120);
-        doc.text("Catálogo informativo sin precios", pageWidth/2, 140, { align: "center" });
-    }
+    let restr = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
-    doc.addPage();
-    numeroPagina++;
+    restr = restr.slice(0,4);
 
-    // ===============================
-    // FUNCIÓN NUMERACIÓN
-    // ===============================
+    doc.text(restr,x+2,ty);
 
-    function agregarNumeroPagina() {
-        doc.setFontSize(8);
-        doc.setTextColor(120);
-        doc.text("Página " + numeroPagina, pageWidth - 20, pageHeight - 5);
-        numeroPagina++;
-    }
-
-    // ===============================
-    // FUNCIÓN SECCIÓN 3x4
-    // ===============================
-
-    async function imprimirSeccion(titulo, lista) {
-
-        if (lista.length === 0) return;
-
-        const marginX = 10;
-        const marginTop = 22;
-
-        const columnas = 3;
-        const filas = 4;
-
-        const gapX = 6;
-        const gapY = 6;
-
-        const usableWidth = pageWidth - (marginX * 2) - (gapX * (columnas - 1));
-        const cardWidth = usableWidth / columnas;
-
-        const usableHeight = pageHeight - marginTop - 20;
-        const cardHeight = (usableHeight - (gapY * (filas - 1))) / filas;
-
-        let index = 0;
-
-        function encabezado() {
-            doc.setFontSize(15);
-            doc.setTextColor(0);
-            doc.text(titulo, pageWidth/2, 14, { align: "center" });
-
-            doc.setDrawColor(180);
-            doc.line(marginX, 18, pageWidth - marginX, 18);
-
-            if (logoBase64) {
-                doc.addImage(logoBase64, "PNG", pageWidth - 28, 5, 18, 10);
-            }
-        }
-
-        encabezado();
-
-        for (let p of lista) {
-
-            const posicion = index % 12;
-
-            if (posicion === 0 && index !== 0) {
-                agregarNumeroPagina();
-                doc.addPage();
-                encabezado();
-            }
-
-            const col = posicion % columnas;
-            const row = Math.floor(posicion / columnas);
-
-            const x = marginX + col * (cardWidth + gapX);
-            const y = marginTop + row * (cardHeight + gapY);
-
-            doc.setDrawColor(220);
-            doc.rect(x, y, cardWidth, cardHeight);
-
-            const img = await cargarImagenOptimizada(p.imagen, 200);
-
-            if (img) {
-                const imgSize = cardWidth * 0.55;
-                doc.addImage(img, "JPEG",
-                    x + (cardWidth - imgSize)/2,
-                    y + 4,
-                    imgSize,
-                    imgSize
-                );
-            }
-
-            let textY = y + cardWidth * 0.55 + 8;
-
-            doc.setFontSize(6.8);
-            doc.setTextColor(0);
-
-            doc.text("Código: " + p.codigo, x + 3, textY);
-            textY += 4;
-
-            const desc = doc.splitTextToSize(p.producto, cardWidth - 6);
-            doc.text(desc.slice(0,2), x + 3, textY);
-            textY += 8;
-
-            doc.text("Marca: " + p.marca, x + 3, textY);
-            textY += 4;
-
-            doc.text("Unidad: " + p.unidad + " | Master:" + p.master + " Inner:" + p.inner, x + 3, textY);
-            textY += 4;
-
-	contadorGlobal++;
-	actualizarProgreso(contadorGlobal, totalProductos);
-
-	// Permitir que el navegador respire
-	if (contadorGlobal % 5 === 0) {
-	    await new Promise(r => setTimeout(r, 0));
-	}
-
-if (p.restricciones && p.restricciones.trim() !== "") {
-
-    doc.setFontSize(5.8);
-    doc.setTextColor(120);
-
-    const maxTextWidth = cardWidth - 6;
-
-    let textoRestricciones = doc.splitTextToSize(
-        String(p.restricciones),
-        maxTextWidth
-    ) || [];
-
-    const limiteInferior = (listaPrecioActiva === "LP1")
-        ? y + cardHeight - 14
-        : y + cardHeight - 6;
-
-    const espacioDisponible = limiteInferior - textY;
-
-    const altoLinea = 3.2;
-    const maxLineas = Math.max(0, Math.floor(espacioDisponible / altoLinea));
-
-    if (maxLineas > 0 && textoRestricciones.length > 0) {
-
-        if (textoRestricciones.length > maxLineas) {
-            textoRestricciones = textoRestricciones.slice(0, maxLineas);
-
-            const ultima = textoRestricciones.length - 1;
-
-            if (textoRestricciones[ultima]) {
-                textoRestricciones[ultima] =
-                    textoRestricciones[ultima].substring(
-                        0,
-                        Math.max(0, textoRestricciones[ultima].length - 3)
-                    ) + "...";
-            }
-        }
-
-        doc.text(textoRestricciones, x + 3, textY);
-    }
+    ty += restr.length * 3;
 
     doc.setTextColor(0);
-}
-            if (listaPrecioActiva) {
 
-                const precioNormal = p.precioLP1?.toFixed(2) || "N/D";
-                const precioPromo = p.precioPromocion?.toFixed(2);
-                const priceY = y + cardHeight - 6;
+  }
 
-                if (precioPromo && Number(precioPromo) > 0) {
-
-                    doc.setFontSize(6);
-                    doc.setTextColor(120);
-                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY - 4, { align: "right" });
-
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(200, 0, 0);
-                    doc.text("$" + precioPromo, x + cardWidth - 3, priceY, { align: "right" });
-
-                } else {
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(0);
-                    doc.text("$" + precioNormal, x + cardWidth - 3, priceY, { align: "right" });
-                }
-
-                doc.setTextColor(0);
-            }
-
-            index++;
-        }
-
-        agregarNumeroPagina();
-        doc.addPage();
-    }
-
-    // ===============================
-    // GENERACIÓN SECCIONES
-    // ===============================
-
-    const promociones = productos.filter(p => Number(p.precioPromocion) > 0);
-    const masVendidos = productos.filter(p => p.top === true);
-
-    await imprimirSeccion("PROMOCIONES", promociones);
-    await imprimirSeccion("MÁS VENDIDOS", masVendidos);
-
-    const marcas = [...new Set(productos.map(p => p.marca))];
-
-    for (let marca of marcas) {
-        const listaMarca = productos.filter(p => p.marca === marca);
-        await imprimirSeccion("MARCA: " + marca, listaMarca);
-    }
-
-    doc.save("Catalogo_MAESRA.pdf");
-    ocultarProgreso();
 }
 
+/* =========================
+   SECCIÓN
+========================= */
+
+function nuevaPagina(titulo){
+
+  doc.addPage();
+
+  doc.setFontSize(18);
+
+  doc.text(titulo,pageW/2,20,{align:"center"});
+
+  x = margen;
+  y = 40;
+  col = 0;
+
+}
+
+/* =========================
+   FILTRAR SECCIONES
+========================= */
+
+const promociones = productos.filter(p=>p.promo).slice(0,12);
+
+const top = productos.filter(p=>p.top).slice(0,16);
+
+const resto = productos.filter(p=>!p.promo && !p.top).slice(0,20);
+
+/* =========================
+   PROMOCIONES
+========================= */
+
+doc.setFontSize(18);
+doc.text("PROMOCIONES",pageW/2,20,{align:"center"});
+
+for(let i=0;i<promociones.length;i++){
+
+  await dibujarProducto(promociones[i]);
+
+  col++;
+
+  if(col===cols){
+
+    col=0;
+    x=margen;
+    y+=cardH;
+
+    if(y + cardH > pageH){
+
+      nuevaPagina("PROMOCIONES");
+
+    }
+
+  }else{
+
+    x+=cardW;
+
+  }
+
+  setProgreso((i/promociones.length)*30);
+
+}
+
+/* =========================
+   TOP
+========================= */
+
+nuevaPagina("PRODUCTOS TOP");
+
+for(let i=0;i<top.length;i++){
+
+  await dibujarProducto(top[i]);
+
+  col++;
+
+  if(col===cols){
+
+    col=0;
+    x=margen;
+    y+=cardH;
+
+    if(y + cardH > pageH){
+
+      nuevaPagina("PRODUCTOS TOP");
+
+    }
+
+  }else{
+
+    x+=cardW;
+
+  }
+
+  setProgreso(30 + (i/top.length)*30);
+
+}
+
+/* =========================
+   RESTO
+========================= */
+
+nuevaPagina("PRODUCTOS");
+
+for(let i=0;i<resto.length;i++){
+
+  await dibujarProducto(resto[i]);
+
+  col++;
+
+  if(col===cols){
+
+    col=0;
+    x=margen;
+    y+=cardH;
+
+    if(y + cardH > pageH){
+
+      nuevaPagina("PRODUCTOS");
+
+    }
+
+  }else{
+
+    x+=cardW;
+
+  }
+
+  setProgreso(60 + (i/resto.length)*40);
+
+}
+
+doc.save("Catalogo MAESRA 2026.pdf");
+
+setProgreso(100);
+
+}
 function mostrarProgreso() {
     document.getElementById("progresoContainer").style.display = "block";
 }
