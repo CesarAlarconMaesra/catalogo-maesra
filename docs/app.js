@@ -631,7 +631,6 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 async function generarCatalogoCompletoPDF(){
 
 const { jsPDF } = window.jspdf;
-
 const doc = new jsPDF("p","mm","letter");
 
 const margen = 10;
@@ -639,302 +638,333 @@ const pageW = 216;
 const pageH = 279;
 
 let x = margen;
-let y = 40;
+let y = 35;
 
-const cols = 3;
-const cardW = (pageW - margen*2) / cols;
-const cardH = 55;
+let cols = 3;
+let filas = 4;
+
+let cardW = (pageW - margen*2) / cols;
+let cardH = 55;
 
 let col = 0;
-
-let progreso = document.getElementById("progresoPDF");
-
-function setProgreso(p){
-  if(progreso) progreso.style.width = p + "%";
-}
-
-/* =========================
-   CACHE
-========================= */
+let fila = 0;
 
 const cache = await caches.open("catalogo-cache-v21");
 
-/* =========================
-   DETECTAR IMAGEN
-========================= */
+/* ================================
+OBTENER IMAGEN (detecta jpg png webp)
+================================ */
 
-async function obtenerImagenProducto(codigo){
+async function obtenerImagen(codigo){
 
-  const extensiones = ["jpg","png","webp"];
+const extensiones = ["jpg","png","webp"];
 
-  for(let ext of extensiones){
+for(let ext of extensiones){
 
-    const url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
+let url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
 
-    let cached = await cache.match(url);
+let cached = await cache.match(url);
 
-    if(cached){
+if(cached){
 
-      const blob = await cached.blob();
-      return blob;
-
-    }
-
-    try{
-
-      const resp = await fetch(url,{method:"HEAD"});
-
-      if(resp.ok){
-
-        const img = await fetch(url);
-        const blob = await img.blob();
-
-        cache.put(url,img.clone());
-
-        return blob;
-
-      }
-
-    }catch(e){}
-
-  }
-
-  return null;
-}
-
-/* =========================
-   CONVERTIR BLOB A BASE64
-========================= */
-
-function blobToBase64(blob){
-
-  return new Promise(resolve=>{
-
-    const reader = new FileReader();
-
-    reader.onloadend = ()=> resolve(reader.result);
-
-    reader.readAsDataURL(blob);
-
-  });
+let blob = await cached.blob();
+return blob;
 
 }
 
-/* =========================
-   DIBUJAR TARJETA
-========================= */
+try{
+
+let resp = await fetch(url,{method:"HEAD"});
+
+if(resp.ok){
+
+let img = await fetch(url);
+let blob = await img.blob();
+
+cache.put(url,img.clone());
+
+return blob;
+
+}
+
+}catch(e){}
+
+}
+
+return null;
+
+}
+
+/* ================================
+BLOB A BASE64
+================================ */
+
+function blobBase64(blob){
+
+return new Promise(resolve=>{
+
+const reader = new FileReader();
+
+reader.onloadend = ()=>resolve(reader.result);
+
+reader.readAsDataURL(blob);
+
+});
+
+}
+
+/* ================================
+DIBUJAR ETIQUETAS
+================================ */
+
+function etiquetaPromo(){
+
+doc.setFillColor(220,0,0);
+doc.rect(x+cardW-22,y,22,7,"F");
+
+doc.setTextColor(255);
+doc.setFontSize(7);
+
+doc.text("PROMO",x+cardW-11,y+5,{align:"center"});
+
+doc.setTextColor(0);
+
+}
+
+function etiquetaTop(){
+
+doc.setFillColor(255,140,0);
+doc.rect(x,y,18,7,"F");
+
+doc.setTextColor(255);
+doc.setFontSize(7);
+
+doc.text("TOP",x+9,y+5,{align:"center"});
+
+doc.setTextColor(0);
+
+}
+
+/* ================================
+DIBUJAR TARJETA
+================================ */
 
 async function dibujarProducto(p){
 
-  let ty = y;
+doc.rect(x,y,cardW,cardH);
 
-  doc.rect(x,y,cardW,cardH);
+let ty = y+5;
 
-  ty += 5;
+/* etiquetas */
 
-  /* IMAGEN */
+if(p.promo) etiquetaPromo();
+if(p.top) etiquetaTop();
 
-  const blob = await obtenerImagenProducto(p.codigo);
+/* imagen */
 
-  if(blob){
+const blob = await obtenerImagen(p.codigo);
 
-    const base64 = await blobToBase64(blob);
+if(blob){
 
-    doc.addImage(base64,"JPEG",x+5,ty,cardW-10,20);
+const base64 = await blobBase64(blob);
 
-  }
-
-  ty += 25;
-
-  doc.setFontSize(7);
-
-  doc.text(`Código: ${p.codigo}`,x+2,ty);
-
-  ty += 3;
-
-  let nombre = doc.splitTextToSize(p.producto,cardW-4);
-
-  doc.text(nombre,x+2,ty);
-
-  ty += nombre.length * 3;
-
-  doc.text(`Marca: ${p.marca}`,x+2,ty);
-  ty+=3;
-
-  doc.text(`Unidad: ${p.unidad}`,x+2,ty);
-  ty+=3;
-
-  doc.text(`Master: ${p.master}`,x+2,ty);
-  ty+=3;
-
-  /* PRECIO SOLO LP1 */
-
-  if(listaPrecioActiva === "LP1" && p.LP1){
-
-    doc.setFontSize(8);
-
-    doc.text(`$${p.LP1}`,x+2,ty);
-
-    ty+=4;
-
-  }
-
-  /* RESTRICCIONES */
-
-  if(p.restricciones){
-
-    doc.setTextColor(90);
-
-    let restr = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
-
-    restr = restr.slice(0,4);
-
-    doc.text(restr,x+2,ty);
-
-    ty += restr.length * 3;
-
-    doc.setTextColor(0);
-
-  }
+doc.addImage(base64,"JPEG",x+5,ty,cardW-10,22);
 
 }
 
-/* =========================
-   SECCIÓN
-========================= */
+ty+=25;
+
+doc.setFontSize(7);
+
+doc.text(`Código: ${p.codigo}`,x+2,ty);
+ty+=3;
+
+let nombre = doc.splitTextToSize(p.producto,cardW-4);
+
+doc.text(nombre,x+2,ty);
+ty += nombre.length*3;
+
+doc.text(`Marca: ${p.marca}`,x+2,ty);
+ty+=3;
+
+doc.text(`Unidad: ${p.unidad}`,x+2,ty);
+ty+=3;
+
+doc.text(`Master: ${p.master}`,x+2,ty);
+ty+=3;
+
+/* precio LP1 */
+
+if(listaPrecioActiva==="LP1" && p.LP1){
+
+doc.setFontSize(8);
+doc.text(`$${p.LP1}`,x+2,ty);
+
+ty+=4;
+
+}
+
+/* restricciones */
+
+if(p.restricciones){
+
+doc.setTextColor(200,0,0);
+
+let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
+
+r = r.slice(0,3);
+
+doc.text(r,x+2,ty);
+
+doc.setTextColor(0);
+
+}
+
+}
+
+/* ================================
+POSICION SIGUIENTE
+================================ */
+
+function siguiente(){
+
+col++;
+
+if(col>=cols){
+
+col=0;
+fila++;
+x=margen;
+y+=cardH;
+
+}else{
+
+x+=cardW;
+
+}
+
+}
+
+/* ================================
+NUEVA PAGINA
+================================ */
 
 function nuevaPagina(titulo){
 
-  doc.addPage();
+doc.addPage();
 
-  doc.setFontSize(18);
+doc.setFontSize(18);
+doc.text(titulo,pageW/2,20,{align:"center"});
 
-  doc.text(titulo,pageW/2,20,{align:"center"});
+x=margen;
+y=35;
 
-  x = margen;
-  y = 40;
-  col = 0;
+col=0;
+fila=0;
 
 }
 
-/* =========================
-   FILTRAR SECCIONES
-========================= */
+/* ================================
+PROMOCIONES
+================================ */
 
-const promociones = productos.filter(p=>p.promo).slice(0,12);
+let promos = productos.filter(p=>p.promo);
 
-const top = productos.filter(p=>p.top).slice(0,16);
-
-const resto = productos.filter(p=>!p.promo && !p.top).slice(0,20);
-
-/* =========================
-   PROMOCIONES
-========================= */
+if(promos.length){
 
 doc.setFontSize(18);
 doc.text("PROMOCIONES",pageW/2,20,{align:"center"});
 
-for(let i=0;i<promociones.length;i++){
+cols=3;
+filas=4;
 
-  await dibujarProducto(promociones[i]);
+cardW=(pageW-margen*2)/cols;
+cardH=55;
 
-  col++;
+for(let i=0;i<promos.length;i++){
 
-  if(col===cols){
+await dibujarProducto(promos[i]);
 
-    col=0;
-    x=margen;
-    y+=cardH;
+siguiente();
 
-    if(y + cardH > pageH){
+if(fila>=filas){
 
-      nuevaPagina("PROMOCIONES");
-
-    }
-
-  }else{
-
-    x+=cardW;
-
-  }
-
-  setProgreso((i/promociones.length)*30);
+nuevaPagina("PROMOCIONES");
 
 }
 
-/* =========================
-   TOP
-========================= */
+}
+
+}
+
+/* ================================
+TOP
+================================ */
+
+let tops = productos.filter(p=>p.top);
+
+if(tops.length){
 
 nuevaPagina("PRODUCTOS TOP");
 
-for(let i=0;i<top.length;i++){
+cols=4;
+filas=4;
 
-  await dibujarProducto(top[i]);
+cardW=(pageW-margen*2)/cols;
+cardH=45;
 
-  col++;
+for(let i=0;i<tops.length;i++){
 
-  if(col===cols){
+await dibujarProducto(tops[i]);
 
-    col=0;
-    x=margen;
-    y+=cardH;
+siguiente();
 
-    if(y + cardH > pageH){
+if(fila>=filas){
 
-      nuevaPagina("PRODUCTOS TOP");
-
-    }
-
-  }else{
-
-    x+=cardW;
-
-  }
-
-  setProgreso(30 + (i/top.length)*30);
+nuevaPagina("PRODUCTOS TOP");
 
 }
 
-/* =========================
-   RESTO
-========================= */
+}
+
+}
+
+/* ================================
+RESTO
+================================ */
+
+let resto = productos.filter(p=>!p.promo && !p.top);
+
+if(resto.length){
 
 nuevaPagina("PRODUCTOS");
 
+cols=4;
+filas=5;
+
+cardW=(pageW-margen*2)/cols;
+cardH=45;
+
 for(let i=0;i<resto.length;i++){
 
-  await dibujarProducto(resto[i]);
+await dibujarProducto(resto[i]);
 
-  col++;
+siguiente();
 
-  if(col===cols){
+if(fila>=filas){
 
-    col=0;
-    x=margen;
-    y+=cardH;
+nuevaPagina("PRODUCTOS");
 
-    if(y + cardH > pageH){
+}
 
-      nuevaPagina("PRODUCTOS");
-
-    }
-
-  }else{
-
-    x+=cardW;
-
-  }
-
-  setProgreso(60 + (i/resto.length)*40);
+}
 
 }
 
 doc.save("Catalogo MAESRA 2026.pdf");
 
-setProgreso(100);
-
 }
+
 function mostrarProgreso() {
     document.getElementById("progresoContainer").style.display = "block";
 }
