@@ -869,8 +869,13 @@ fila=0;
 PROMOCIONES
 ================================ */
 
-let promos = productos.filter(p=>p.promo);
-
+let promos = productos.filter(p =>
+    p.promo === >0
+    p.promo === 1 ||
+    p.promo === "1" ||
+    p.promo === "SI" ||
+    p.promo === "si"
+);
 if(promos.length){
 
 doc.setFontSize(18);
