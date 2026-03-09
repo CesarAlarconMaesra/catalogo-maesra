@@ -630,6 +630,8 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
 
 async function generarCatalogoCompletoPDF(){
 
+mostrarProgreso();
+
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
@@ -649,11 +651,12 @@ let cardH = 55;
 let col = 0;
 let fila = 0;
 
-const cache = await caches.open("catalogo-cache-v21");
+let contador = 0;
+let totalProductos = productos.length;
 
-/* ================================
-OBTENER IMAGEN (detecta jpg png webp)
-================================ */
+/* ==============================
+OBTENER IMAGEN
+============================== */
 
 async function obtenerImagen(codigo){
 
@@ -663,28 +666,13 @@ for(let ext of extensiones){
 
 let url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
 
-let cached = await cache.match(url);
-
-if(cached){
-
-let blob = await cached.blob();
-return blob;
-
-}
-
 try{
 
-let resp = await fetch(url,{method:"HEAD"});
+let resp = await fetch(url);
 
 if(resp.ok){
-
-let img = await fetch(url);
-let blob = await img.blob();
-
-cache.put(url,img.clone());
-
+let blob = await resp.blob();
 return blob;
-
 }
 
 }catch(e){}
@@ -695,9 +683,9 @@ return null;
 
 }
 
-/* ================================
+/* ==============================
 BLOB A BASE64
-================================ */
+============================== */
 
 function blobBase64(blob){
 
@@ -713,23 +701,27 @@ reader.readAsDataURL(blob);
 
 }
 
-/* ================================
-DIBUJAR ETIQUETAS
-================================ */
+/* ==============================
+ETIQUETA PROMO
+============================== */
 
 function etiquetaPromo(){
 
 doc.setFillColor(220,0,0);
-doc.rect(x+cardW-14,y,12,5,"F");
+doc.rect(x+cardW-12,y,12,5,"F");
 
 doc.setTextColor(255);
 doc.setFontSize(6);
 
-doc.text("PROMO",x+cardW-7,y+3.5,{align:"center"});
+doc.text("PROMO",x+cardW-6,y+3.5,{align:"center"});
 
 doc.setTextColor(0);
 
 }
+
+/* ==============================
+ETIQUETA TOP
+============================== */
 
 function etiquetaTop(){
 
@@ -745,18 +737,23 @@ doc.setTextColor(0);
 
 }
 
-/* ================================
+/* ==============================
 DIBUJAR TARJETA
-================================ */
+============================== */
 
 async function dibujarProducto(p){
 
+let ty = y + 5;
 
-let ty = y+5;
+/* detectar promo */
+
+const enPromo =
+Number(p.precioPromocion) > 0 &&
+Number(p.precioPromocion) < Number(p.precioLP4);
 
 /* etiquetas */
 
-if(p.promociones) etiquetaPromo();
+if(enPromo) etiquetaPromo();
 if(p.top) etiquetaTop();
 
 /* imagen */
@@ -771,35 +768,41 @@ doc.addImage(base64,"JPEG",x+4,ty,cardW-8,16);
 
 }
 
-ty+=18;
+ty += 18;
+
+/* texto */
 
 doc.setFontSize(7);
 
 doc.text(`Código: ${p.codigo}`,x+2,ty);
-ty+=3;
+ty += 3;
 
 let nombre = doc.splitTextToSize(p.producto,cardW-4);
-
 doc.text(nombre,x+2,ty);
 ty += nombre.length*3;
 
+if(p.marca){
 doc.text(`Marca: ${p.marca}`,x+2,ty);
-ty+=3;
+ty += 3;
+}
 
+if(p.unidad){
 doc.text(`Unidad: ${p.unidad}`,x+2,ty);
-ty+=3;
+ty += 3;
+}
 
+if(p.master){
 doc.text(`Master: ${p.master}`,x+2,ty);
-ty+=3;
+ty += 3;
+}
 
-/* precio LP1 */
+/* precio solo LP1 */
 
-if(listaPrecioActiva==="LP1" && p.LP1){
+if(listaPrecioActiva==="LP1" && p.precioLP1){
 
 doc.setFontSize(8);
-doc.text(`$${p.LP1}`,x+2,ty);
-
-ty+=4;
+doc.text(`$${Number(p.precioLP1).toFixed(2)}`,x+2,ty);
+ty += 4;
 
 }
 
@@ -812,7 +815,6 @@ doc.setTextColor(200,0,0);
 let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
 let espacioDisponible = (y + cardH) - ty - 2;
-
 let maxLineas = Math.floor(espacioDisponible / 3);
 
 if(maxLineas > 0){
@@ -826,9 +828,14 @@ doc.setTextColor(0);
 
 }
 
-/* ================================
-POSICION SIGUIENTE
-================================ */
+contador++;
+actualizarProgreso(contador,totalProductos);
+
+}
+
+/* ==============================
+SIGUIENTE POSICION
+============================== */
 
 function siguiente(){
 
@@ -849,9 +856,9 @@ x+=cardW;
 
 }
 
-/* ================================
+/* ==============================
 NUEVA PAGINA
-================================ */
+============================== */
 
 function nuevaPagina(titulo){
 
@@ -868,14 +875,15 @@ fila=0;
 
 }
 
-/* ================================
+/* ==============================
 PROMOCIONES
-================================ */
+============================== */
 
 let promos = productos.filter(p =>
-  Number(p.precioPromocion) > 0 &&
-  Number(p.precioPromocion) < Number(p.precioLP4)
+Number(p.precioPromocion) > 0 &&
+Number(p.precioPromocion) < Number(p.precioLP4)
 );
+
 if(promos.length){
 
 doc.setFontSize(18);
@@ -887,9 +895,9 @@ filas=4;
 cardW=(pageW-margen*2)/cols;
 cardH=55;
 
-for(let i=0;i<promos.length;i++){
+for(let p of promos){
 
-await dibujarProducto(promos[i]);
+await dibujarProducto(p);
 
 siguiente();
 
@@ -903,9 +911,9 @@ nuevaPagina("PROMOCIONES");
 
 }
 
-/* ================================
-TOP
-================================ */
+/* ==============================
+TOP PRODUCTOS
+============================== */
 
 let tops = productos.filter(p=>p.top);
 
@@ -919,9 +927,9 @@ filas=4;
 cardW=(pageW-margen*2)/cols;
 cardH=45;
 
-for(let i=0;i<tops.length;i++){
+for(let p of tops){
 
-await dibujarProducto(tops[i]);
+await dibujarProducto(p);
 
 siguiente();
 
@@ -935,17 +943,17 @@ nuevaPagina("PRODUCTOS TOP");
 
 }
 
-/* ================================
-RESTO
-================================ */
+/* ==============================
+RESTO PRODUCTOS
+============================== */
 
 let resto = productos.filter(p => {
 
-  const enPromo =
-    Number(p.precioPromocion) > 0 &&
-    Number(p.precioPromocion) < Number(p.precioLP4);
+const enPromo =
+Number(p.precioPromocion) > 0 &&
+Number(p.precioPromocion) < Number(p.precioLP4);
 
-  return !enPromo && !p.top;
+return !enPromo && !p.top;
 
 });
 
@@ -959,9 +967,9 @@ filas=5;
 cardW=(pageW-margen*2)/cols;
 cardH=45;
 
-for(let i=0;i<resto.length;i++){
+for(let p of resto){
 
-await dibujarProducto(resto[i]);
+await dibujarProducto(p);
 
 siguiente();
 
@@ -977,21 +985,24 @@ nuevaPagina("PRODUCTOS");
 
 doc.save("Catalogo MAESRA 2026.pdf");
 
+ocultarProgreso();
+
+}
+function mostrarProgreso(){
+document.getElementById("progresoContainer").style.display="block";
+document.getElementById("barraProgreso").style.width="0%";
+document.getElementById("progresoTexto").innerText="0%";
 }
 
-function mostrarProgreso() {
-    document.getElementById("progresoContainer").style.display = "block";
+function ocultarProgreso(){
+document.getElementById("progresoContainer").style.display="none";
 }
 
-function ocultarProgreso() {
-    document.getElementById("progresoContainer").style.display = "none";
-}
+function actualizarProgreso(actual,total){
 
-function actualizarProgreso(actual, total) {
+const porcentaje=Math.floor((actual/total)*100);
 
-    const porcentaje = Math.floor((actual / total) * 100);
-
-    document.getElementById("barraProgreso").style.width = porcentaje + "%";
-    document.getElementById("progresoTexto").innerText = porcentaje + "%";
+document.getElementById("barraProgreso").style.width=porcentaje+"%";
+document.getElementById("progresoTexto").innerText=porcentaje+"%";
 
 }
