@@ -663,7 +663,7 @@ async function precargarImagenes(productos, lote = 20) {
 
 async function generarCatalogoCompletoPDF(){
 
-mostrarProgreso();
+await mostrarProgreso();
 
 const totalProductos = productos.length;
 let contadorGlobal = 0;
@@ -744,7 +744,7 @@ DIBUJAR TARJETA
 
 async function dibujarProducto(p){
 
-let ty = y + 5;
+let ty = y + 6;
 
 /* detectar promo */
 
@@ -774,8 +774,8 @@ img.src = base64;
 
 /* tamaño máximo imagen */
 
-const maxW = cardW - 12;
-const maxH = 14;
+const maxW = cardW - 8;
+const maxH = 20;
 
 let w = img.width;
 let h = img.height;
@@ -857,9 +857,10 @@ let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
 /* máximo 3 líneas */
 
-r = r.slice(0,3);
+r = r.slice(0,2);
 
 doc.text(r,x+2,ty);
+ty += r.length * 3;
 
 doc.setTextColor(0);
 
@@ -931,11 +932,11 @@ if(promos.length){
 doc.setFontSize(18);
 doc.text("PROMOCIONES",pageW/2,20,{align:"center"});
 
-cols=3;
-filas=4;
+cols = 3;
+filas = 4;
 
-cardW=(pageW-margen*2)/cols;
-cardH=55;
+cardW = (pageW - margen*2) / cols;
+cardH = (pageH - 40) / filas;
 
 for(let p of promos){
 
@@ -966,8 +967,8 @@ nuevaPagina("PRODUCTOS TOP");
 cols=4;
 filas=4;
 
-cardW=(pageW-margen*2)/cols;
-cardH=45;
+cardW = (pageW - margen*2) / cols;
+cardH = (pageH - 40) / filas;
 
 for(let p of tops){
 
@@ -1006,8 +1007,8 @@ nuevaPagina("PRODUCTOS");
 cols=4;
 filas=5;
 
-cardW=(pageW-margen*2)/cols;
-cardH=45;
+cardW = (pageW - margen*2) / cols;
+cardH = (pageH - 40) / filas;
 
 for(let p of resto){
 
@@ -1030,8 +1031,13 @@ doc.save("Catalogo MAESRA 2026.pdf");
 ocultarProgreso();
 
 }
-function mostrarProgreso() {
-    document.getElementById("progresoContainer").style.display = "block";
+async function mostrarProgreso() {
+
+    const cont = document.getElementById("progresoContainer");
+    cont.style.display = "block";
+
+    // permitir render del DOM
+    await new Promise(r => setTimeout(r, 50));
 }
 
 function ocultarProgreso() {
