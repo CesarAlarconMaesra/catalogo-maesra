@@ -623,6 +623,39 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
     }
 }
 
+// ===============================
+// PRECARGA MASIVA DE IMÁGENES
+// ===============================
+
+async function precargarImagenes(productos, lote = 20) {
+
+    const imagenes = productos
+        .map(p => p.imagen)
+        .filter(Boolean);
+
+    let index = 0;
+
+    async function worker() {
+
+        while (index < imagenes.length) {
+
+            const actual = imagenes[index++];
+
+            if (!cacheImagenes[actual]) {
+                await cargarImagenOptimizada(actual, 200);
+            }
+
+        }
+    }
+
+    const workers = [];
+
+    for (let i = 0; i < lote; i++) {
+        workers.push(worker());
+    }
+
+    await Promise.all(workers);
+}
 
 // ===============================
 // GENERADOR PDF COMPLETO
@@ -636,8 +669,17 @@ const totalProductos = productos.length;
 let contadorGlobal = 0;
 
 /* permitir que el navegador pinte la barra */
-
 await new Promise(r => requestAnimationFrame(r));
+
+/* ===============================
+PRECARGAR IMÁGENES (OPTIMIZACIÓN)
+=============================== */
+
+document.getElementById("progresoTexto").innerText = "Cargando imágenes...";
+
+await precargarImagenes(productos, 20);
+
+document.getElementById("progresoTexto").innerText = "Generando catálogo...";
 
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
@@ -719,7 +761,7 @@ if(p.top) etiquetaTop();
 IMAGEN PROPORCIONAL
 ========================= */
 
-const base64 = await cargarImagenOptimizada(p.imagen,200);
+const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen,200);
 
 if(base64){
 
@@ -829,6 +871,8 @@ actualizarProgreso(contadorGlobal, totalProductos);
 // Permitir que el navegador respire
 if (contadorGlobal % 5 === 0) {
     await new Promise(r => setTimeout(r, 0));
+}
+
 }
 
 /* ==============================
@@ -998,7 +1042,10 @@ function actualizarProgreso(actual, total) {
 
     const porcentaje = Math.floor((actual / total) * 100);
 
-    document.getElementById("barraProgreso").style.width = porcentaje + "%";
-    document.getElementById("progresoTexto").innerText = porcentaje + "%";
+    const barra = document.getElementById("barraProgreso");
+    const texto = document.getElementById("progresoTexto");
+
+    if (barra) barra.style.width = porcentaje + "%";
+    if (texto) texto.innerText = porcentaje + "%";
 
 }
