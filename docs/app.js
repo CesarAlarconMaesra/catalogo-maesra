@@ -634,7 +634,7 @@ mostrarProgreso();
 
 /* permitir que el navegador pinte la barra */
 
-await new Promise(r => setTimeout(r,100));
+await new Promise(r => setTimeout(r,50));
 
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
@@ -662,32 +662,26 @@ let totalProductos = productos.length;
 OBTENER IMAGEN
 ============================== */
 
-async function obtenerImagen(codigo){
-
-const extensiones = ["jpg","png","webp"];
-
-for(let ext of extensiones){
-
-let url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
+async function obtenerImagen(rutaImagen){
 
 try{
 
-let resp = await fetch(url,{method:"HEAD"});
+const url = rutaImagen.startsWith("http")
+? rutaImagen
+: URL_BASE_IMAGENES + rutaImagen;
 
-if(resp.ok){
+const resp = await fetch(url);
 
-let imgResp = await fetch(url);
-let blob = await imgResp.blob();
+if(!resp.ok) return null;
 
-return blob;
+return await resp.blob();
 
-}
+}catch(e){
 
-}catch(e){}
-
-}
-
+console.warn("Imagen no encontrada:",rutaImagen);
 return null;
+
+}
 
 }
 
@@ -768,7 +762,7 @@ if(p.top) etiquetaTop();
 IMAGEN PROPORCIONAL
 ========================= */
 
-const blob = await obtenerImagen(p.codigo);
+const blob = await obtenerImagen(p.imagen);
 
 if(blob){
 
