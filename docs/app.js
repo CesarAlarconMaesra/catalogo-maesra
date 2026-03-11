@@ -632,6 +632,10 @@ async function generarCatalogoCompletoPDF(){
 
 mostrarProgreso();
 
+/* permitir que el navegador pinte la barra */
+
+await new Promise(r => setTimeout(r,100));
+
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
@@ -668,11 +672,15 @@ let url = `${URL_BASE_IMAGENES}img/${codigo}.${ext}`;
 
 try{
 
-let resp = await fetch(url);
+let resp = await fetch(url,{method:"HEAD"});
 
 if(resp.ok){
-let blob = await resp.blob();
+
+let imgResp = await fetch(url);
+let blob = await imgResp.blob();
+
 return blob;
+
 }
 
 }catch(e){}
@@ -776,7 +784,7 @@ img.src = base64;
 /* tamaño máximo imagen */
 
 const maxW = cardW - 12;
-const maxH = 16;
+const maxH = 14;
 
 let w = img.width;
 let h = img.height;
