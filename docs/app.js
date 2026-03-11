@@ -756,7 +756,9 @@ Number(p.precioPromocion) < Number(p.precioLP4);
 if(enPromo) etiquetaPromo();
 if(p.top) etiquetaTop();
 
-/* imagen */
+/* =========================
+IMAGEN PROPORCIONAL
+========================= */
 
 const blob = await obtenerImagen(p.codigo);
 
@@ -764,13 +766,39 @@ if(blob){
 
 const base64 = await blobBase64(blob);
 
-doc.addImage(base64,"JPEG",x+4,ty,cardW-8,16);
+const img = new Image();
+
+await new Promise(resolve=>{
+img.onload = resolve;
+img.src = base64;
+});
+
+/* tamaño máximo imagen */
+
+const maxW = cardW - 12;
+const maxH = 16;
+
+let w = img.width;
+let h = img.height;
+
+const ratio = Math.min(maxW / w, maxH / h);
+
+w *= ratio;
+h *= ratio;
+
+/* centrado */
+
+const imgX = x + (cardW - w) / 2;
+
+doc.addImage(base64,"JPEG",imgX,ty,w,h);
 
 }
 
 ty += 18;
 
-/* texto */
+/* =========================
+TEXTO PRODUCTO
+========================= */
 
 doc.setFontSize(7);
 
@@ -781,22 +809,33 @@ let nombre = doc.splitTextToSize(p.producto,cardW-4);
 doc.text(nombre,x+2,ty);
 ty += nombre.length*3;
 
+/* marca */
+
 if(p.marca){
 doc.text(`Marca: ${p.marca}`,x+2,ty);
 ty += 3;
 }
 
-if(p.unidad){
-doc.text(`Unidad: ${p.unidad}`,x+2,ty);
+/* =========================
+UNIDAD MASTER INNER EN UNA LÍNEA
+========================= */
+
+let lineaEmpaque = [];
+
+if(p.unidad) lineaEmpaque.push(`Unidad:${p.unidad}`);
+if(p.master) lineaEmpaque.push(`Master:${p.master}`);
+if(p.inner) lineaEmpaque.push(`Inner:${p.inner}`);
+
+if(lineaEmpaque.length){
+
+doc.text(lineaEmpaque.join("  "),x+2,ty);
 ty += 3;
+
 }
 
-if(p.master){
-doc.text(`Master: ${p.master}`,x+2,ty);
-ty += 3;
-}
-
-/* precio solo LP1 */
+/* =========================
+PRECIO SOLO LP1
+========================= */
 
 if(listaPrecioActiva==="LP1" && p.precioLP1){
 
@@ -806,7 +845,10 @@ ty += 4;
 
 }
 
-/* restricciones */
+/* =========================
+RESTRICCIONES
+MAXIMO 3 LINEAS
+========================= */
 
 if(p.restricciones){
 
@@ -814,15 +856,11 @@ doc.setTextColor(200,0,0);
 
 let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
-let espacioDisponible = (y + cardH) - ty - 2;
-let maxLineas = Math.floor(espacioDisponible / 3);
+/* máximo 3 líneas */
 
-if(maxLineas > 0){
+r = r.slice(0,3);
 
-r = r.slice(0,maxLineas);
 doc.text(r,x+2,ty);
-
-}
 
 doc.setTextColor(0);
 
