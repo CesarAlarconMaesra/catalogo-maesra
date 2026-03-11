@@ -558,9 +558,9 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
     try {
 
         // 🔥 IMPORTANTE: usar la constante global correctamente
-        const url = rutaImagen.startsWith("http")
-            ? rutaImagen
-            : `${URL_BASE_IMAGENES}/${rutaImagen}`;
+    const url = rutaImagen.startsWith("http")
+    ? rutaImagen
+    : URL_BASE_IMAGENES + rutaImagen;
 
         const response = await fetch(url);
 
@@ -637,14 +637,14 @@ let contadorGlobal = 0;
 
 /* permitir que el navegador pinte la barra */
 
-await new Promise(r => setTimeout(r,50));
+await new Promise(r => requestAnimationFrame(r));
 
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
 const margen = 10;
-const pageW = 216;
-const pageH = 279;
+const pageW = doc.internal.pageSize.getWidth();
+const pageH = doc.internal.pageSize.getHeight();
 
 let x = margen;
 let y = 35;
@@ -659,50 +659,6 @@ let col = 0;
 let fila = 0;
 
 
-/* ==============================
-OBTENER IMAGEN
-============================== */
-
-async function obtenerImagen(rutaImagen){
-
-try{
-
-const url = rutaImagen.startsWith("http")
-? rutaImagen
-: URL_BASE_IMAGENES + rutaImagen;
-
-const resp = await fetch(url);
-
-if(!resp.ok) return null;
-
-return await resp.blob();
-
-}catch(e){
-
-console.warn("Imagen no encontrada:",rutaImagen);
-return null;
-
-}
-
-}
-
-/* ==============================
-BLOB A BASE64
-============================== */
-
-function blobBase64(blob){
-
-return new Promise(resolve=>{
-
-const reader = new FileReader();
-
-reader.onloadend = ()=>resolve(reader.result);
-
-reader.readAsDataURL(blob);
-
-});
-
-}
 
 /* ==============================
 ETIQUETA PROMO
@@ -763,11 +719,9 @@ if(p.top) etiquetaTop();
 IMAGEN PROPORCIONAL
 ========================= */
 
-const blob = await obtenerImagen(p.imagen);
+const base64 = await cargarImagenOptimizada(p.imagen,200);
 
-if(blob){
-
-const base64 = await blobBase64(blob);
+if(base64){
 
 const img = new Image();
 
