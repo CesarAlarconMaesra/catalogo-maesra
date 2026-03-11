@@ -632,6 +632,9 @@ async function generarCatalogoCompletoPDF(){
 
 mostrarProgreso();
 
+const totalProductos = productos.length;
+let contadorGlobal = 0;
+
 /* permitir que el navegador pinte la barra */
 
 await new Promise(r => setTimeout(r,50));
@@ -655,8 +658,6 @@ let cardH = 55;
 let col = 0;
 let fila = 0;
 
-let contador = 0;
-let totalProductos = productos.length;
 
 /* ==============================
 OBTENER IMAGEN
@@ -868,9 +869,12 @@ doc.setTextColor(0);
 
 }
 
-contador++;
-actualizarProgreso(contador,totalProductos);
+contadorGlobal++;
+actualizarProgreso(contadorGlobal, totalProductos);
 
+// Permitir que el navegador respire
+if (contadorGlobal % 5 === 0) {
+    await new Promise(r => setTimeout(r, 0));
 }
 
 /* ==============================
@@ -1028,21 +1032,19 @@ doc.save("Catalogo MAESRA 2026.pdf");
 ocultarProgreso();
 
 }
-function mostrarProgreso(){
-document.getElementById("progresoContainer").style.display="block";
-document.getElementById("barraProgreso").style.width="0%";
-document.getElementById("progresoTexto").innerText="0%";
+function mostrarProgreso() {
+    document.getElementById("progresoContainer").style.display = "block";
 }
 
-function ocultarProgreso(){
-document.getElementById("progresoContainer").style.display="none";
+function ocultarProgreso() {
+    document.getElementById("progresoContainer").style.display = "none";
 }
 
-function actualizarProgreso(actual,total){
+function actualizarProgreso(actual, total) {
 
-const porcentaje=Math.floor((actual/total)*100);
+    const porcentaje = Math.floor((actual / total) * 100);
 
-document.getElementById("barraProgreso").style.width=porcentaje+"%";
-document.getElementById("progresoTexto").innerText=porcentaje+"%";
+    document.getElementById("barraProgreso").style.width = porcentaje + "%";
+    document.getElementById("progresoTexto").innerText = porcentaje + "%";
 
 }
