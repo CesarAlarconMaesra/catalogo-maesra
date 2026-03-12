@@ -865,44 +865,24 @@ ty+=4;
 
 
 /* ===============================
-RESTRICCIONES (CONTROL ABSOLUTO)
+RESTRICCIONES (VERSIÓN ESTABLE)
 =============================== */
 
 if (p.restricciones) {
 
+    doc.setFontSize(6);
     doc.setTextColor(200,0,0);
-    doc.setFontSize(7);
 
-    const maxWidth = cardW - 6;
+    const anchoTexto = cardW - 8;   // margen interno mayor
+    const lineHeight = 2.4;
     const maxLineas = 4;
-    const lineHeight = 2.8;
 
-    let palabras = ("⚠ " + p.restricciones).split(" ");
-    let lineas = [];
-    let lineaActual = "";
+    let lineas = doc.splitTextToSize(
+        "⚠ " + p.restricciones,
+        anchoTexto
+    );
 
-    for (let palabra of palabras) {
-
-        let prueba = lineaActual ? lineaActual + " " + palabra : palabra;
-
-        if (doc.getTextWidth(prueba) < maxWidth) {
-
-            lineaActual = prueba;
-
-        } else {
-
-            lineas.push(lineaActual);
-            lineaActual = palabra;
-
-        }
-
-        if (lineas.length >= maxLineas) break;
-
-    }
-
-    if (lineaActual && lineas.length < maxLineas) {
-        lineas.push(lineaActual);
-    }
+    lineas = lineas.slice(0, maxLineas);
 
     for (let i = 0; i < lineas.length; i++) {
 
@@ -910,14 +890,13 @@ if (p.restricciones) {
 
         if (yLinea > y + cardH - 3) break;
 
-        doc.text(lineas[i], x + 2, yLinea);
+        doc.text(lineas[i], x + 3, yLinea);
 
     }
 
     doc.setTextColor(0);
 
 }
-
 
 /* ===============================
 PROGRESO
