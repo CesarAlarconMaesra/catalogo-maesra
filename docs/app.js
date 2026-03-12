@@ -865,61 +865,34 @@ ty+=4;
 
 
 /* ===============================
-RESTRICCIONES (DIVISIÓN POR ANCHO REAL)
+RESTRICCIONES (ANCLADAS AL FONDO)
 =============================== */
 
-if (p.restricciones) {
+if (p.restricciones && p.restricciones.trim() !== "") {
 
-    doc.setFontSize(6.2);
+    doc.setFontSize(6);
     doc.setTextColor(200,0,0);
 
-    const margenInterno = 4;
-    const anchoDisponible = cardW - margenInterno;
+    const anchoDisponible = cardW - 6;
 
-    const lineHeight = 2.6;
-    const maxLineas = 4;
+    // dividir texto
+    let texto = doc.splitTextToSize("⚠ " + p.restricciones, anchoDisponible);
 
-    let texto = "⚠ " + p.restricciones;
+    // máximo 4 líneas
+    texto = texto.slice(0,4);
 
-    let palabras = texto.split(" ");
+    const lineHeight = 2.8;
 
-    let lineas = [];
-    let lineaActual = "";
+    // calcular altura total del bloque
+    const alturaBloque = texto.length * lineHeight;
 
-    for (let palabra of palabras) {
+    // posición fija desde el fondo del card
+    const yBase = y + cardH - 4;
 
-        let prueba = lineaActual ? lineaActual + " " + palabra : palabra;
+    // dibujar hacia arriba
+    const yInicio = yBase - alturaBloque;
 
-        let anchoPrueba = doc.getTextWidth(prueba);
-
-        if (anchoPrueba <= anchoDisponible) {
-
-            lineaActual = prueba;
-
-        } else {
-
-            lineas.push(lineaActual);
-            lineaActual = palabra;
-
-        }
-
-        if (lineas.length >= maxLineas) break;
-
-    }
-
-    if (lineaActual && lineas.length < maxLineas) {
-        lineas.push(lineaActual);
-    }
-
-    for (let i = 0; i < lineas.length; i++) {
-
-        let yLinea = ty + (i * lineHeight);
-
-        if (yLinea > y + cardH - 3) break;
-
-        doc.text(lineas[i], x + 2, yLinea);
-
-    }
+    doc.text(texto, x + 3, yInicio);
 
     doc.setTextColor(0);
 
