@@ -744,7 +744,7 @@ DIBUJAR TARJETA
 
 async function dibujarProducto(p){
 
-let ty = y + 6;
+let ty = y + 3;
 
 /* detectar promo */
 
@@ -774,8 +774,8 @@ img.src = base64;
 
 /* tamaño máximo imagen */
 
-const maxW = cardW - 8;
-const maxH = 20;
+const maxW = cardW - 6;
+const maxH = 24;
 
 let w = img.width;
 let h = img.height;
@@ -853,21 +853,35 @@ if(p.restricciones){
 
 doc.setTextColor(200,0,0);
 
-let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
+let r = doc.splitTextToSize("⚠ " + p.restricciones, cardW-4);
 
 /* máximo 3 líneas */
+r = r.slice(0,3);
 
-r = r.slice(0,2);
+/* espacio disponible en tarjeta */
+const limiteInferior = y + cardH - 4;
 
-doc.text(r,x+2,ty);
-ty += r.length * 3;
+/* altura del bloque de texto */
+const alturaTexto = r.length * 3;
+
+/* si se sale del card, recortar */
+if(ty + alturaTexto > limiteInferior){
+
+    const lineasPermitidas = Math.floor((limiteInferior - ty) / 3);
+
+    r = r.slice(0, lineasPermitidas);
+}
+
+doc.text(r, x+2, ty);
 
 doc.setTextColor(0);
 
 }
-
 contadorGlobal++;
+if(contadorGlobal % 2 === 0){
 actualizarProgreso(contadorGlobal, totalProductos);
+await new Promise(r=>setTimeout(r,0));
+}
 
 // Permitir que el navegador respire
 if (contadorGlobal % 5 === 0) {
@@ -1044,14 +1058,19 @@ function ocultarProgreso() {
     document.getElementById("progresoContainer").style.display = "none";
 }
 
-function actualizarProgreso(actual, total) {
+async function mostrarProgreso(){
 
-    const porcentaje = Math.floor((actual / total) * 100);
+const cont = document.getElementById("progresoContainer");
 
-    const barra = document.getElementById("barraProgreso");
-    const texto = document.getElementById("progresoTexto");
+cont.style.display = "block";
 
-    if (barra) barra.style.width = porcentaje + "%";
-    if (texto) texto.innerText = porcentaje + "%";
+document.getElementById("barraProgreso").style.width = "0%";
+document.getElementById("progresoTexto").innerText = "0%";
+
+/* permitir que el DOM se renderice */
+
+await new Promise(resolve => requestAnimationFrame(resolve));
+
+await new Promise(resolve => setTimeout(resolve,50));
 
 }
