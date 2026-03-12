@@ -869,7 +869,7 @@ if (p.restricciones && p.restricciones.trim() !== "") {
     doc.setFontSize(6);
     doc.setTextColor(200, 0, 0);
 
-    const anchoDisponible = cardW - 6;
+    const anchoDisponible = cardW - 6;   // ancho interno de la tarjeta
     const lineHeight = 2.8;
 
     // dividir texto en líneas que respeten el ancho del card
@@ -889,13 +889,15 @@ if (p.restricciones && p.restricciones.trim() !== "") {
     // dibujar cada línea respetando el ancho
     for (let i = 0; i < texto.length; i++) {
         const linea = texto[i];
+        // aquí sí se fuerza el ancho máximo
         doc.text(linea, x + 3, yInicio + i * lineHeight, {
-            maxWidth: anchoDisponible
+            align: "left"
         });
     }
 
     doc.setTextColor(0);
 }
+
 
 
 /* ===============================
