@@ -864,33 +864,42 @@ ty+=4;
 
 
 
-/* ===============================
-RESTRICCIONES (VERSIÓN ESTABLE)
-=============================== */
+/* =========================
+RESTRICCIONES (CONTROL TOTAL)
+========================= */
 
 if (p.restricciones) {
 
     doc.setFontSize(6);
     doc.setTextColor(200,0,0);
 
-    const anchoTexto = cardW - 8;   // margen interno mayor
-    const lineHeight = 2.4;
-    const maxLineas = 4;
+    const margenInterno = 4;
+    const anchoTexto = cardW - margenInterno;
+    const lineHeight = 2.6;
 
-    let lineas = doc.splitTextToSize(
-        "⚠ " + p.restricciones,
-        anchoTexto
-    );
+    // límite inferior de la tarjeta
+    const limiteCard = y + cardH - 4;
 
-    lineas = lineas.slice(0, maxLineas);
+    // calcular espacio disponible
+    const espacioDisponible = limiteCard - ty;
 
-    for (let i = 0; i < lineas.length; i++) {
+    // máximo de líneas que caben físicamente
+    const maxLineasFisicas = Math.floor(espacioDisponible / lineHeight);
 
-        let yLinea = ty + (i * lineHeight);
+    if (maxLineasFisicas > 0) {
 
-        if (yLinea > y + cardH - 3) break;
+        let lineas = doc.splitTextToSize(
+            "⚠ " + p.restricciones,
+            anchoTexto
+        );
 
-        doc.text(lineas[i], x + 3, yLinea);
+        // limitar a espacio disponible
+        lineas = lineas.slice(0, maxLineasFisicas);
+
+        doc.text(lineas, x + 2, ty);
+
+        // actualizar posición vertical
+        ty += lineas.length * lineHeight;
 
     }
 
