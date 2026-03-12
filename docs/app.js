@@ -887,15 +887,15 @@ if (p.restricciones && p.restricciones.trim() !== "") {
     const yInicio = yBase - alturaBloque;
 
     // dibujar cada línea respetando el ancho
-    texto.forEach((linea, idx) => {
-        doc.text(linea, x + 3, yInicio + idx * lineHeight, {
+    for (let i = 0; i < texto.length; i++) {
+        const linea = texto[i];
+        doc.text(linea, x + 3, yInicio + i * lineHeight, {
             maxWidth: anchoDisponible
         });
-    });
+    }
 
     doc.setTextColor(0);
 }
-
 
 
 /* ===============================
