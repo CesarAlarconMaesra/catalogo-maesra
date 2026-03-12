@@ -752,8 +752,8 @@ async function dibujarProducto(p){
 
 /* ZONAS DEL CARD */
 
-const zonaImagenTop = y + 4;
-const zonaImagenHeight = 24;
+const zonaImagenTop = y + 2;
+const zonaImagenHeight = 28;
 
 let ty = zonaImagenTop + zonaImagenHeight + 2;
 
@@ -843,7 +843,7 @@ if(p.inner) linea.push(`Inner:${p.inner}`);
 
 if(linea.length){
 
-doc.text(linea.join("  "),x+2,ty);
+doc.text(linea.join(" | "),x+2,ty);
 ty+=3;
 
 }
@@ -868,31 +868,36 @@ ty+=4;
 RESTRICCIONES
 =============================== */
 
-if(p.restricciones){
 
-doc.setTextColor(200,0,0);
+if (p.restricciones) {
 
-let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
+    doc.setTextColor(200,0,0);
+    doc.setFontSize(7);
 
-r = r.slice(0,3);
+    const maxLineas = 4;              // ahora permitimos 4
+    const anchoMax = cardW - 6;       // margen seguro
 
-const limite = y + cardH - 3;
+    let lineas = doc.splitTextToSize("⚠ " + p.restricciones, anchoMax);
 
-const altura = r.length*3;
+    // limitar a máximo 4 líneas
+    lineas = lineas.slice(0, maxLineas);
 
-if(ty + altura > limite){
+    const lineHeight = 2.8;
 
-const permitidas = Math.floor((limite - ty)/3);
-r = r.slice(0,permitidas);
+    for (let i = 0; i < lineas.length; i++) {
+
+        let yLinea = ty + (i * lineHeight);
+
+        // evitar que salga del card
+        if (yLinea > y + cardH - 3) break;
+
+        doc.text(lineas[i], x + 2, yLinea);
+
+    }
+
+    doc.setTextColor(0);
 
 }
-
-doc.text(r,x+2,ty);
-
-doc.setTextColor(0);
-
-}
-
 
 
 /* ===============================
