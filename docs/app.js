@@ -862,41 +862,41 @@ ty+=4;
 
 }
 
-
-
 /* ===============================
 RESTRICCIONES (ANCLADAS AL FONDO)
 =============================== */
-
 if (p.restricciones && p.restricciones.trim() !== "") {
-
     doc.setFontSize(6);
-    doc.setTextColor(200,0,0);
+    doc.setTextColor(200, 0, 0);
 
     const anchoDisponible = cardW - 6;
+    const lineHeight = 2.8;
 
-    // dividir texto
+    // dividir texto en líneas que respeten el ancho del card
     let texto = doc.splitTextToSize("⚠ " + p.restricciones, anchoDisponible);
 
     // máximo 4 líneas
-    texto = texto.slice(0,4);
-
-    const lineHeight = 2.8;
+    texto = texto.slice(0, 4);
 
     // calcular altura total del bloque
     const alturaBloque = texto.length * lineHeight;
 
-    // posición fija desde el fondo del card
-    const yBase = y + cardH - 4;
-
-    // dibujar hacia arriba
+    // posición fija desde el fondo del card con margen de seguridad
+    const margenInferior = 5;
+    const yBase = y + cardH - margenInferior;
     const yInicio = yBase - alturaBloque;
 
-    doc.text(texto, x + 3, yInicio);
+    // dibujar cada línea respetando el ancho
+    texto.forEach((linea, idx) => {
+        doc.text(linea, x + 3, yInicio + idx * lineHeight, {
+            maxWidth: anchoDisponible
+        });
+    });
 
     doc.setTextColor(0);
-
 }
+
+
 
 /* ===============================
 PROGRESO
