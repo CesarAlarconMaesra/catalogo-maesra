@@ -864,42 +864,60 @@ ty+=4;
 
 
 
-/* =========================
-RESTRICCIONES (CONTROL TOTAL)
-========================= */
+/* ===============================
+RESTRICCIONES (DIVISIÓN POR ANCHO REAL)
+=============================== */
 
 if (p.restricciones) {
 
-    doc.setFontSize(6);
+    doc.setFontSize(6.2);
     doc.setTextColor(200,0,0);
 
     const margenInterno = 4;
-    const anchoTexto = cardW - margenInterno;
+    const anchoDisponible = cardW - margenInterno;
+
     const lineHeight = 2.6;
+    const maxLineas = 4;
 
-    // límite inferior de la tarjeta
-    const limiteCard = y + cardH - 4;
+    let texto = "⚠ " + p.restricciones;
 
-    // calcular espacio disponible
-    const espacioDisponible = limiteCard - ty;
+    let palabras = texto.split(" ");
 
-    // máximo de líneas que caben físicamente
-    const maxLineasFisicas = Math.floor(espacioDisponible / lineHeight);
+    let lineas = [];
+    let lineaActual = "";
 
-    if (maxLineasFisicas > 0) {
+    for (let palabra of palabras) {
 
-        let lineas = doc.splitTextToSize(
-            "⚠ " + p.restricciones,
-            anchoTexto
-        );
+        let prueba = lineaActual ? lineaActual + " " + palabra : palabra;
 
-        // limitar a espacio disponible
-        lineas = lineas.slice(0, maxLineasFisicas);
+        let anchoPrueba = doc.getTextWidth(prueba);
 
-        doc.text(lineas, x + 2, ty);
+        if (anchoPrueba <= anchoDisponible) {
 
-        // actualizar posición vertical
-        ty += lineas.length * lineHeight;
+            lineaActual = prueba;
+
+        } else {
+
+            lineas.push(lineaActual);
+            lineaActual = palabra;
+
+        }
+
+        if (lineas.length >= maxLineas) break;
+
+    }
+
+    if (lineaActual && lineas.length < maxLineas) {
+        lineas.push(lineaActual);
+    }
+
+    for (let i = 0; i < lineas.length; i++) {
+
+        let yLinea = ty + (i * lineHeight);
+
+        if (yLinea > y + cardH - 3) break;
+
+        doc.text(lineas[i], x + 2, yLinea);
 
     }
 
