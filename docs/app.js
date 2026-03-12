@@ -518,28 +518,38 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 }
 
-
-
 // ===============================
 // CARGAR LOGO
 // ===============================
 
 async function cargarLogo() {
+
     try {
+
         const res = await fetch("img/MAESRA.jpg");
         const blob = await res.blob();
 
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
+
             const reader = new FileReader();
+
             reader.onloadend = () => {
+
                 logoBase64 = reader.result;
                 resolve();
+
             };
+
             reader.readAsDataURL(blob);
+
         });
-    } catch (e) {
+
+    } catch(e){
+
         console.warn("No se pudo cargar logo");
+
     }
+
 }
 
 
@@ -547,115 +557,121 @@ async function cargarLogo() {
 // OPTIMIZADOR DE IMÁGENES
 // ===============================
 
-async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200) {
+async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200){
 
-    if (!rutaImagen) return null;
+    if(!rutaImagen) return null;
 
-    if (cacheImagenes[rutaImagen]) {
+    if(cacheImagenes[rutaImagen]){
         return cacheImagenes[rutaImagen];
     }
 
-    try {
+    try{
 
-        // 🔥 IMPORTANTE: usar la constante global correctamente
-    const url = rutaImagen.startsWith("http")
-    ? rutaImagen
-    : URL_BASE_IMAGENES + rutaImagen;
+        const url = rutaImagen.startsWith("http")
+            ? rutaImagen
+            : URL_BASE_IMAGENES + rutaImagen;
 
         const response = await fetch(url);
 
-        if (!response.ok) {
-            console.warn("No se pudo cargar:", url);
+        if(!response.ok){
+            console.warn("Imagen no encontrada:", url);
             return null;
         }
 
         const blob = await response.blob();
 
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
 
             const img = new Image();
 
-            img.onload = function () {
+            img.onload = function(){
 
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
 
-                let width = img.width;
-                let height = img.height;
+                let w = img.width;
+                let h = img.height;
 
-                if (width > height) {
-                    if (width > tamañoMax) {
-                        height *= tamañoMax / width;
-                        width = tamañoMax;
+                if(w > h){
+
+                    if(w > tamañoMax){
+                        h *= tamañoMax / w;
+                        w = tamañoMax;
                     }
-                } else {
-                    if (height > tamañoMax) {
-                        width *= tamañoMax / height;
-                        height = tamañoMax;
+
+                }else{
+
+                    if(h > tamañoMax){
+                        w *= tamañoMax / h;
+                        h = tamañoMax;
                     }
+
                 }
 
-                canvas.width = width;
-                canvas.height = height;
+                canvas.width = w;
+                canvas.height = h;
 
-                ctx.drawImage(img, 0, 0, width, height);
+                ctx.drawImage(img,0,0,w,h);
 
-                const base64 = canvas.toDataURL("image/jpeg", 0.75);
+                const base64 = canvas.toDataURL("image/jpeg",0.75);
 
                 cacheImagenes[rutaImagen] = base64;
 
-                URL.revokeObjectURL(img.src);
-
                 resolve(base64);
+
             };
 
-            img.onerror = function () {
-                console.warn("Error cargando imagen:", url);
-                resolve(null);
-            };
+            img.onerror = () => resolve(null);
 
             img.src = URL.createObjectURL(blob);
+
         });
 
-    } catch (error) {
-        console.warn("Error general imagen:", rutaImagen);
+    }catch(e){
+
+        console.warn("Error cargando imagen", rutaImagen);
         return null;
+
     }
+
 }
+
 
 // ===============================
 // PRECARGA MASIVA DE IMÁGENES
 // ===============================
 
-async function precargarImagenes(productos, lote = 20) {
+async function precargarImagenes(productos, lote = 20){
 
-    const imagenes = productos
-        .map(p => p.imagen)
-        .filter(Boolean);
+    const imagenes = productos.map(p=>p.imagen).filter(Boolean);
 
     let index = 0;
 
-    async function worker() {
+    async function worker(){
 
-        while (index < imagenes.length) {
+        while(index < imagenes.length){
 
             const actual = imagenes[index++];
 
-            if (!cacheImagenes[actual]) {
-                await cargarImagenOptimizada(actual, 200);
+            if(!cacheImagenes[actual]){
+                await cargarImagenOptimizada(actual,200);
             }
 
         }
+
     }
 
     const workers = [];
 
-    for (let i = 0; i < lote; i++) {
+    for(let i=0;i<lote;i++){
         workers.push(worker());
     }
 
     await Promise.all(workers);
+
 }
+
+
 
 // ===============================
 // GENERADOR PDF COMPLETO
@@ -668,23 +684,19 @@ await mostrarProgreso();
 const totalProductos = productos.length;
 let contadorGlobal = 0;
 
-/* permitir que el navegador pinte la barra */
-await new Promise(r => requestAnimationFrame(r));
+await new Promise(r=>requestAnimationFrame(r));
 
-/* ===============================
-PRECARGAR IMÁGENES (OPTIMIZACIÓN)
-=============================== */
+document.getElementById("progresoTexto").innerText="Cargando imágenes...";
 
-document.getElementById("progresoTexto").innerText = "Cargando imágenes...";
+await precargarImagenes(productos,20);
 
-await precargarImagenes(productos, 20);
-
-document.getElementById("progresoTexto").innerText = "Generando catálogo...";
+document.getElementById("progresoTexto").innerText="Generando catálogo...";
 
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
 const margen = 10;
+
 const pageW = doc.internal.pageSize.getWidth();
 const pageH = doc.internal.pageSize.getHeight();
 
@@ -694,74 +706,77 @@ let y = 35;
 let cols = 3;
 let filas = 4;
 
-let cardW = (pageW - margen*2) / cols;
-let cardH = 55;
+let cardW = (pageW - margen*2)/cols;
+let cardH = (pageH - 40)/filas;
 
 let col = 0;
 let fila = 0;
 
 
 
-/* ==============================
-ETIQUETA PROMO
-============================== */
+// ===============================
+// ETIQUETAS
+// ===============================
 
 function etiquetaPromo(){
 
 doc.setFillColor(220,0,0);
-doc.rect(x+cardW-12,y,12,5,"F");
+doc.rect(x+1,y+1,12,4,"F");
 
-doc.setTextColor(255);
 doc.setFontSize(6);
-
-doc.text("PROMO",x+cardW-6,y+3.5,{align:"center"});
-
+doc.setTextColor(255);
+doc.text("PROMO",x+2,y+3.5);
 doc.setTextColor(0);
 
 }
-
-/* ==============================
-ETIQUETA TOP
-============================== */
 
 function etiquetaTop(){
 
 doc.setFillColor(255,140,0);
-doc.rect(x,y,12,5,"F");
+doc.rect(x+14,y+1,10,4,"F");
 
-doc.setTextColor(255);
 doc.setFontSize(6);
-
-doc.text("TOP",x+6,y+3.5,{align:"center"});
-
+doc.setTextColor(255);
+doc.text("TOP",x+15,y+3.5);
 doc.setTextColor(0);
 
 }
 
-/* ==============================
-DIBUJAR TARJETA
-============================== */
+
+
+// ===============================
+// DIBUJAR PRODUCTO
+// ===============================
 
 async function dibujarProducto(p){
 
-let ty = y + 3;
+/* ZONAS DEL CARD */
 
-/* detectar promo */
+const zonaImagenTop = y + 4;
+const zonaImagenHeight = 24;
+
+let ty = zonaImagenTop + zonaImagenHeight + 2;
+
+
+/* DETECTAR PROMO */
 
 const enPromo =
 Number(p.precioPromocion) > 0 &&
 Number(p.precioPromocion) < Number(p.precioLP4);
 
-/* etiquetas */
+
+/* ETIQUETAS */
 
 if(enPromo) etiquetaPromo();
 if(p.top) etiquetaTop();
 
-/* =========================
-IMAGEN PROPORCIONAL
-========================= */
 
-const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen,200);
+
+/* ===============================
+IMAGEN
+=============================== */
+
+const base64 = cacheImagenes[p.imagen];
 
 if(base64){
 
@@ -772,32 +787,29 @@ img.onload = resolve;
 img.src = base64;
 });
 
-/* tamaño máximo imagen */
-
 const maxW = cardW - 6;
-const maxH = 24;
+const maxH = zonaImagenHeight;
 
 let w = img.width;
 let h = img.height;
 
-const ratio = Math.min(maxW / w, maxH / h);
+const ratio = Math.min(maxW/w,maxH/h);
 
 w *= ratio;
 h *= ratio;
 
-/* centrado */
+const imgX = x + (cardW - w)/2;
+const imgY = zonaImagenTop + (maxH - h)/2;
 
-const imgX = x + (cardW - w) / 2;
-
-doc.addImage(base64,"JPEG",imgX,ty,w,h);
+doc.addImage(base64,"JPEG",imgX,imgY,w,h,null,"FAST");
 
 }
 
-ty += 18;
 
-/* =========================
+
+/* ===============================
 TEXTO PRODUCTO
-========================= */
+=============================== */
 
 doc.setFontSize(7);
 
@@ -805,94 +817,105 @@ doc.text(`Código: ${p.codigo}`,x+2,ty);
 ty += 3;
 
 let nombre = doc.splitTextToSize(p.producto,cardW-4);
+nombre = nombre.slice(0,2);
+
 doc.text(nombre,x+2,ty);
 ty += nombre.length*3;
 
-/* marca */
-
 if(p.marca){
+
 doc.text(`Marca: ${p.marca}`,x+2,ty);
 ty += 3;
-}
-
-/* =========================
-UNIDAD MASTER INNER EN UNA LÍNEA
-========================= */
-
-let lineaEmpaque = [];
-
-if(p.unidad) lineaEmpaque.push(`Unidad:${p.unidad}`);
-if(p.master) lineaEmpaque.push(`Master:${p.master}`);
-if(p.inner) lineaEmpaque.push(`Inner:${p.inner}`);
-
-if(lineaEmpaque.length){
-
-doc.text(lineaEmpaque.join("  "),x+2,ty);
-ty += 3;
 
 }
 
-/* =========================
-PRECIO SOLO LP1
-========================= */
+
+
+/* ===============================
+EMPAQUE
+=============================== */
+
+let linea=[];
+
+if(p.unidad) linea.push(`Unidad:${p.unidad}`);
+if(p.master) linea.push(`Master:${p.master}`);
+if(p.inner) linea.push(`Inner:${p.inner}`);
+
+if(linea.length){
+
+doc.text(linea.join("  "),x+2,ty);
+ty+=3;
+
+}
+
+
+
+/* ===============================
+PRECIO
+=============================== */
 
 if(listaPrecioActiva==="LP1" && p.precioLP1){
 
 doc.setFontSize(8);
 doc.text(`$${Number(p.precioLP1).toFixed(2)}`,x+2,ty);
-ty += 4;
+ty+=4;
 
 }
 
-/* =========================
+
+
+/* ===============================
 RESTRICCIONES
-MAXIMO 3 LINEAS
-========================= */
+=============================== */
 
 if(p.restricciones){
 
 doc.setTextColor(200,0,0);
 
-let r = doc.splitTextToSize("⚠ " + p.restricciones, cardW-4);
+let r = doc.splitTextToSize("⚠ "+p.restricciones,cardW-4);
 
-/* máximo 3 líneas */
 r = r.slice(0,3);
 
-/* espacio disponible en tarjeta */
-const limiteInferior = y + cardH - 4;
+const limite = y + cardH - 3;
 
-/* altura del bloque de texto */
-const alturaTexto = r.length * 3;
+const altura = r.length*3;
 
-/* si se sale del card, recortar */
-if(ty + alturaTexto > limiteInferior){
+if(ty + altura > limite){
 
-    const lineasPermitidas = Math.floor((limiteInferior - ty) / 3);
+const permitidas = Math.floor((limite - ty)/3);
+r = r.slice(0,permitidas);
 
-    r = r.slice(0, lineasPermitidas);
 }
 
-doc.text(r, x+2, ty);
+doc.text(r,x+2,ty);
 
 doc.setTextColor(0);
 
 }
+
+
+
+/* ===============================
+PROGRESO
+=============================== */
+
 contadorGlobal++;
-if(contadorGlobal % 2 === 0){
-actualizarProgreso(contadorGlobal, totalProductos);
+
+if(contadorGlobal%3===0){
+
+actualizarProgreso(contadorGlobal,totalProductos);
+
 await new Promise(r=>setTimeout(r,0));
-}
 
-// Permitir que el navegador respire
-if (contadorGlobal % 5 === 0) {
-    await new Promise(r => setTimeout(r, 0));
 }
 
 }
 
-/* ==============================
-SIGUIENTE POSICION
-============================== */
+
+
+// ===============================
+// SIGUIENTE POSICION
+// ===============================
 
 function siguiente(){
 
@@ -902,6 +925,7 @@ if(col>=cols){
 
 col=0;
 fila++;
+
 x=margen;
 y+=cardH;
 
@@ -913,9 +937,11 @@ x+=cardW;
 
 }
 
-/* ==============================
-NUEVA PAGINA
-============================== */
+
+
+// ===============================
+// NUEVA PAGINA
+// ===============================
 
 function nuevaPagina(titulo){
 
@@ -932,13 +958,15 @@ fila=0;
 
 }
 
-/* ==============================
-PROMOCIONES
-============================== */
+
+
+// ===============================
+// PROMOCIONES
+// ===============================
 
 let promos = productos.filter(p =>
-Number(p.precioPromocion) > 0 &&
-Number(p.precioPromocion) < Number(p.precioLP4)
+Number(p.precioPromocion)>0 &&
+Number(p.precioPromocion)<Number(p.precioLP4)
 );
 
 if(promos.length){
@@ -946,11 +974,11 @@ if(promos.length){
 doc.setFontSize(18);
 doc.text("PROMOCIONES",pageW/2,20,{align:"center"});
 
-cols = 3;
-filas = 4;
+cols=3;
+filas=4;
 
-cardW = (pageW - margen*2) / cols;
-cardH = (pageH - 40) / filas;
+cardW=(pageW-margen*2)/cols;
+cardH=(pageH-40)/filas;
 
 for(let p of promos){
 
@@ -959,18 +987,18 @@ await dibujarProducto(p);
 siguiente();
 
 if(fila>=filas){
-
 nuevaPagina("PROMOCIONES");
-
 }
 
 }
 
 }
 
-/* ==============================
-TOP PRODUCTOS
-============================== */
+
+
+// ===============================
+// TOP PRODUCTOS
+// ===============================
 
 let tops = productos.filter(p=>p.top);
 
@@ -981,8 +1009,8 @@ nuevaPagina("PRODUCTOS TOP");
 cols=4;
 filas=4;
 
-cardW = (pageW - margen*2) / cols;
-cardH = (pageH - 40) / filas;
+cardW=(pageW-margen*2)/cols;
+cardH=(pageH-40)/filas;
 
 for(let p of tops){
 
@@ -991,24 +1019,24 @@ await dibujarProducto(p);
 siguiente();
 
 if(fila>=filas){
-
 nuevaPagina("PRODUCTOS TOP");
-
 }
 
 }
 
 }
 
-/* ==============================
-RESTO PRODUCTOS
-============================== */
 
-let resto = productos.filter(p => {
+
+// ===============================
+// RESTO PRODUCTOS
+// ===============================
+
+let resto = productos.filter(p=>{
 
 const enPromo =
-Number(p.precioPromocion) > 0 &&
-Number(p.precioPromocion) < Number(p.precioLP4);
+Number(p.precioPromocion)>0 &&
+Number(p.precioPromocion)<Number(p.precioLP4);
 
 return !enPromo && !p.top;
 
@@ -1021,8 +1049,8 @@ nuevaPagina("PRODUCTOS");
 cols=4;
 filas=5;
 
-cardW = (pageW - margen*2) / cols;
-cardH = (pageH - 40) / filas;
+cardW=(pageW-margen*2)/cols;
+cardH=(pageH-40)/filas;
 
 for(let p of resto){
 
@@ -1031,60 +1059,57 @@ await dibujarProducto(p);
 siguiente();
 
 if(fila>=filas){
-
 nuevaPagina("PRODUCTOS");
-
 }
 
 }
 
 }
+
+
 
 doc.save("Catalogo MAESRA 2026.pdf");
 
 ocultarProgreso();
 
 }
-async function mostrarProgreso() {
 
-    const cont = document.getElementById("progresoContainer");
-    cont.style.display = "block";
 
-    // permitir render del DOM
-    await new Promise(r => setTimeout(r, 50));
-}
 
-function ocultarProgreso() {
-    document.getElementById("progresoContainer").style.display = "none";
-}
+// ===============================
+// PROGRESO
+// ===============================
 
 async function mostrarProgreso(){
 
-const cont = document.getElementById("progresoContainer");
+const cont=document.getElementById("progresoContainer");
 
-cont.style.display = "block";
+cont.style.display="block";
 
-document.getElementById("barraProgreso").style.width = "0%";
-document.getElementById("progresoTexto").innerText = "0%";
+document.getElementById("barraProgreso").style.width="0%";
+document.getElementById("progresoTexto").innerText="0%";
 
-/* permitir que el DOM se renderice */
-
-await new Promise(resolve => requestAnimationFrame(resolve));
-
-await new Promise(resolve => setTimeout(resolve,50));
+await new Promise(r=>requestAnimationFrame(r));
+await new Promise(r=>setTimeout(r,50));
 
 }
 
-function actualizarProgreso(actual, total){
+function ocultarProgreso(){
 
-    const barra = document.getElementById("barraProgreso");
-    const texto = document.getElementById("progresoTexto");
+document.getElementById("progresoContainer").style.display="none";
 
-    if(!barra || !texto) return;
+}
 
-    const porcentaje = Math.floor((actual / total) * 100);
+function actualizarProgreso(actual,total){
 
-    barra.style.width = porcentaje + "%";
-    texto.innerText = porcentaje + "%";
+const barra=document.getElementById("barraProgreso");
+const texto=document.getElementById("progresoTexto");
+
+if(!barra||!texto) return;
+
+const porcentaje=Math.floor((actual/total)*100);
+
+barra.style.width=porcentaje+"%";
+texto.innerText=porcentaje+"%";
 
 }
