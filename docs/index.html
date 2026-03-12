@@ -140,28 +140,15 @@
 <!-- Librerías PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<div id="progresoContainer" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #f4f4f4;
-    padding: 10px;
-    display: none;
-    z-index: 9999;
-">
+<div id="progresoContainer" style="display:none;width:100%;margin-top:10px;">
+    
+    <div style="width:100%;background:#ddd;height:18px;border-radius:4px;">
+        <div id="barraProgreso" style="width:0%;height:18px;background:#4caf50;border-radius:4px;"></div>
+    </div>
 
-    <div id="progresoContainer" style="display:none">
-
-<div style="width:100%;background:#ddd;height:20px">
-
-<div id="barraProgreso" style="width:0%;height:100%;background:#4caf50"></div>
-
-</div>
-
-<div id="progresoTexto">0%</div>
-
-</div>
+    <div id="progresoTexto" style="font-size:12px;margin-top:4px;text-align:center;">
+        0%
+    </div>
 
 </div>
 </body>

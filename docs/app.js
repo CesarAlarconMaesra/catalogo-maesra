@@ -1074,3 +1074,17 @@ await new Promise(resolve => requestAnimationFrame(resolve));
 await new Promise(resolve => setTimeout(resolve,50));
 
 }
+
+function actualizarProgreso(actual, total){
+
+    const barra = document.getElementById("barraProgreso");
+    const texto = document.getElementById("progresoTexto");
+
+    if(!barra || !texto) return;
+
+    const porcentaje = Math.floor((actual / total) * 100);
+
+    barra.style.width = porcentaje + "%";
+    texto.innerText = porcentaje + "%";
+
+}
