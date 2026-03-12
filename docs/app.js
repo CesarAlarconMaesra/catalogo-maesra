@@ -865,30 +865,49 @@ ty+=4;
 
 
 /* ===============================
-RESTRICCIONES
+RESTRICCIONES (CONTROL ABSOLUTO)
 =============================== */
-
 
 if (p.restricciones) {
 
     doc.setTextColor(200,0,0);
     doc.setFontSize(7);
 
-    const maxLineas = 4;              // ahora permitimos 4
-    const anchoMax = cardW - 6;       // margen seguro
-
-    let lineas = doc.splitTextToSize("⚠ " + p.restricciones, anchoMax);
-
-    // limitar a máximo 4 líneas
-    lineas = lineas.slice(0, maxLineas);
-
+    const maxWidth = cardW - 6;
+    const maxLineas = 4;
     const lineHeight = 2.8;
+
+    let palabras = ("⚠ " + p.restricciones).split(" ");
+    let lineas = [];
+    let lineaActual = "";
+
+    for (let palabra of palabras) {
+
+        let prueba = lineaActual ? lineaActual + " " + palabra : palabra;
+
+        if (doc.getTextWidth(prueba) < maxWidth) {
+
+            lineaActual = prueba;
+
+        } else {
+
+            lineas.push(lineaActual);
+            lineaActual = palabra;
+
+        }
+
+        if (lineas.length >= maxLineas) break;
+
+    }
+
+    if (lineaActual && lineas.length < maxLineas) {
+        lineas.push(lineaActual);
+    }
 
     for (let i = 0; i < lineas.length; i++) {
 
         let yLinea = ty + (i * lineHeight);
 
-        // evitar que salga del card
         if (yLinea > y + cardH - 3) break;
 
         doc.text(lineas[i], x + 2, yLinea);
