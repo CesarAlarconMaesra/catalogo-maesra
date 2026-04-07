@@ -720,13 +720,24 @@ let fila = 0;
 
 async function dibujarProducto(p){
 
-    let ty = y + 4;
+    const padding = 3;
+
+    // 🔲 BORDE TENUE (estilo catálogo)
+    doc.setDrawColor(220);
+    doc.rect(x, y, cardW, cardH);
+
+    let ty = y + padding;
 
     /* =========================
-    IMAGEN
+    ETIQUETAS (OPCIONAL FUTURO)
+    ========================= */
+    // (las dejamos fuera para mantener limpio estilo Home Depot)
+
+    /* =========================
+    IMAGEN PROTAGONISTA
     ========================= */
 
-    const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen, 250);
+    const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen, 300);
 
     if(base64){
 
@@ -738,7 +749,7 @@ async function dibujarProducto(p){
         });
 
         const maxW = cardW - 8;
-        const maxH = 24; // 👈 ligeramente más grande
+        const maxH = cardH * 0.38; // 🔥 proporción tipo catálogo
 
         let w = img.width;
         let h = img.height;
@@ -751,27 +762,53 @@ async function dibujarProducto(p){
         const imgX = x + (cardW - w) / 2;
 
         doc.addImage(base64, "JPEG", imgX, ty, w, h);
+
+        ty += h + 3;
+
+    } else {
+        ty += 20; // fallback
     }
 
-    ty += 26; // 👈 más espacio para evitar encimado
+    /* =========================
+    CÓDIGO (CHICO Y LIMPIO)
+    ========================= */
+
+    doc.setFontSize(6);
+    doc.setTextColor(100);
+
+    doc.text(`Código: ${p.codigo}`, x + padding, ty);
+    ty += 3;
 
     /* =========================
-    TEXTO
+    NOMBRE (PROTAGONISTA)
     ========================= */
 
     doc.setFontSize(7);
+    doc.setTextColor(0);
 
-    doc.text(`Código: ${p.codigo}`, x + 2, ty);
-    ty += 3;
+    let nombre = doc.splitTextToSize(p.producto, cardW - (padding * 2));
 
-    let nombre = doc.splitTextToSize(p.producto, cardW - 4);
-    doc.text(nombre, x + 2, ty);
+    // limitar a 2 líneas estilo catálogo
+    nombre = nombre.slice(0, 2);
+
+    doc.text(nombre, x + padding, ty);
     ty += nombre.length * 3;
 
+    /* =========================
+    MARCA
+    ========================= */
+
     if(p.marca){
-        doc.text(`Marca: ${p.marca}`, x + 2, ty);
+        doc.setFontSize(6);
+        doc.setTextColor(80);
+
+        doc.text(`Marca: ${p.marca}`, x + padding, ty);
         ty += 3;
     }
+
+    /* =========================
+    EMPAQUE
+    ========================= */
 
     let empaque = [];
 
@@ -780,12 +817,15 @@ async function dibujarProducto(p){
     if(p.inner) empaque.push(`Inner:${p.inner}`);
 
     if(empaque.length){
-        doc.text(empaque.join(" | "), x + 2, ty);
+        doc.setFontSize(6);
+        doc.setTextColor(120);
+
+        doc.text(empaque.join("  "), x + padding, ty);
     }
 
-    /* ===============================
-    PROGRESO (AHORA SÍ EN SU LUGAR)
-    =============================== */
+    /* =========================
+    PROGRESO
+    ========================= */
 
     contadorGlobal++;
 
@@ -793,8 +833,8 @@ async function dibujarProducto(p){
         actualizarProgreso(contadorGlobal, totalProductos);
         await new Promise(r => setTimeout(r, 0));
     }
-}
 
+}
 
 // ===============================
 // SIGUIENTE POSICION
@@ -854,7 +894,7 @@ cols = 4;
 filas = 5;
 
 cardW = (pageW - margen*2) / cols;
-cardH = (pageH - 40) / filas;
+cardH = (pageH - 45) / filas;
 
 for (let p of productos) {
 
