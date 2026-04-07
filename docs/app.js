@@ -715,189 +715,76 @@ let fila = 0;
 
 
 // ===============================
-// ETIQUETAS
-// ===============================
-
-function etiquetaPromo(){
-
-doc.setFillColor(220,0,0);
-doc.rect(x+1,y+1,12,4,"F");
-
-doc.setFontSize(6);
-doc.setTextColor(255);
-doc.text("PROMO",x+2,y+3.5);
-doc.setTextColor(0);
-
-}
-
-function etiquetaTop(){
-
-doc.setFillColor(255,140,0);
-doc.rect(x+14,y+1,10,4,"F");
-
-doc.setFontSize(6);
-doc.setTextColor(255);
-doc.text("TOP",x+15,y+3.5);
-doc.setTextColor(0);
-
-}
-
-
-
-// ===============================
 // DIBUJAR PRODUCTO
 // ===============================
 
 async function dibujarProducto(p){
 
-/* ZONAS DEL CARD */
+    let ty = y + 4;
 
-const zonaImagenTop = y + 2;
-const zonaImagenHeight = 28;
+    /* =========================
+    IMAGEN GRANDE
+    ========================= */
 
-let ty = zonaImagenTop + zonaImagenHeight + 2;
+    const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen, 250);
 
+    if(base64){
 
-/* DETECTAR PROMO */
+        const img = new Image();
 
-const enPromo =
-Number(p.precioPromocion) > 0 &&
-Number(p.precioPromocion) < Number(p.precioLP4);
-
-
-/* ETIQUETAS */
-
-if(enPromo) etiquetaPromo();
-if(p.top) etiquetaTop();
-
-
-
-/* ===============================
-IMAGEN
-=============================== */
-
-const base64 = cacheImagenes[p.imagen];
-
-if(base64){
-
-const img = new Image();
-
-await new Promise(resolve=>{
-img.onload = resolve;
-img.src = base64;
-});
-
-const maxW = cardW - 6;
-const maxH = zonaImagenHeight;
-
-let w = img.width;
-let h = img.height;
-
-const ratio = Math.min(maxW/w,maxH/h);
-
-w *= ratio;
-h *= ratio;
-
-const imgX = x + (cardW - w)/2;
-const imgY = zonaImagenTop + (maxH - h)/2;
-
-doc.addImage(base64,"JPEG",imgX,imgY,w,h,null,"FAST");
-
-}
-
-
-
-/* ===============================
-TEXTO PRODUCTO
-=============================== */
-
-doc.setFontSize(7);
-
-doc.text(`Código: ${p.codigo}`,x+2,ty);
-ty += 3;
-
-let nombre = doc.splitTextToSize(p.producto,cardW-4);
-nombre = nombre.slice(0,2);
-
-doc.text(nombre,x+2,ty);
-ty += nombre.length*3;
-
-if(p.marca){
-
-doc.text(`Marca: ${p.marca}`,x+2,ty);
-ty += 3;
-
-}
-
-
-
-/* ===============================
-EMPAQUE
-=============================== */
-
-let linea=[];
-
-if(p.unidad) linea.push(`Unidad:${p.unidad}`);
-if(p.master) linea.push(`Master:${p.master}`);
-if(p.inner) linea.push(`Inner:${p.inner}`);
-
-if(linea.length){
-
-doc.text(linea.join(" | "),x+2,ty);
-ty+=3;
-
-}
-
-
-
-/* ===============================
-PRECIO
-=============================== */
-
-if(listaPrecioActiva==="LP1" && p.precioLP1){
-
-doc.setFontSize(8);
-doc.text(`$${Number(p.precioLP1).toFixed(2)}`,x+2,ty);
-ty+=4;
-
-}
-
-/* ===============================
-RESTRICCIONES (ANCLADAS AL FONDO)
-=============================== */
-if (p.restricciones && p.restricciones.trim() !== "") {
-    doc.setFontSize(6);
-    doc.setTextColor(200, 0, 0);
-
-    const anchoDisponible = cardW - 6;   // ancho interno de la tarjeta
-    const lineHeight = 2.8;
-
-    // dividir texto en líneas que respeten el ancho del card
-    let texto = doc.splitTextToSize("⚠ " + p.restricciones, anchoDisponible);
-
-    // máximo 4 líneas
-    texto = texto.slice(0, 4);
-
-    // calcular altura total del bloque
-    const alturaBloque = texto.length * lineHeight;
-
-    // posición fija desde el fondo del card con margen de seguridad
-    const margenInferior = 5;
-    const yBase = y + cardH - margenInferior;
-    const yInicio = yBase - alturaBloque;
-
-    // dibujar cada línea respetando el ancho
-    for (let i = 0; i < texto.length; i++) {
-        const linea = texto[i];
-        // aquí sí se fuerza el ancho máximo
-        doc.text(linea, x + 3, yInicio + i * lineHeight, {
-            align: "left"
+        await new Promise(resolve=>{
+            img.onload = resolve;
+            img.src = base64;
         });
+
+        const maxW = cardW - 8;
+        const maxH = 22;
+
+        let w = img.width;
+        let h = img.height;
+
+        const ratio = Math.min(maxW / w, maxH / h);
+
+        w *= ratio;
+        h *= ratio;
+
+        const imgX = x + (cardW - w) / 2;
+
+        doc.addImage(base64, "JPEG", imgX, ty, w, h);
+
     }
 
-    doc.setTextColor(0);
-}
+    ty += 24;
 
+    /* =========================
+    TEXTO
+    ========================= */
+
+    doc.setFontSize(7);
+
+    doc.text(`Código: ${p.codigo}`, x + 2, ty);
+    ty += 3;
+
+    let nombre = doc.splitTextToSize(p.producto, cardW - 4);
+    doc.text(nombre, x + 2, ty);
+    ty += nombre.length * 3;
+
+    if(p.marca){
+        doc.text(`Marca: ${p.marca}`, x + 2, ty);
+        ty += 3;
+    }
+
+    let empaque = [];
+
+    if(p.unidad) empaque.push(`Unidad:${p.unidad}`);
+    if(p.master) empaque.push(`Master:${p.master}`);
+    if(p.inner) empaque.push(`Inner:${p.inner}`);
+
+    if(empaque.length){
+        doc.text(empaque.join(" | "), x + 2, ty);
+    }
+
+}
 
 
 /* ===============================
@@ -965,109 +852,28 @@ fila=0;
 
 
 
-// ===============================
-// PROMOCIONES
-// ===============================
-
-let promos = productos.filter(p =>
-Number(p.precioPromocion)>0 &&
-Number(p.precioPromocion)<Number(p.precioLP4)
-);
-
-if(promos.length){
+/* ==============================
+CATÁLOGO GENERAL (SIN FILTROS)
+============================== */
 
 doc.setFontSize(18);
-doc.text("PROMOCIONES",pageW/2,20,{align:"center"});
+doc.text("PRODUCTOS", pageW/2, 20, {align:"center"});
 
-cols=3;
-filas=4;
+cols = 4;
+filas = 5;
 
-cardW=(pageW-margen*2)/cols;
-cardH=(pageH-40)/filas;
+cardW = (pageW - margen*2) / cols;
+cardH = (pageH - 40) / filas;
 
-for(let p of promos){
+for (let p of productos) {
 
-await dibujarProducto(p);
+    await dibujarProducto(p);
 
-siguiente();
+    siguiente();
 
-if(fila>=filas){
-nuevaPagina("PROMOCIONES");
-}
-
-}
-
-}
-
-
-
-// ===============================
-// TOP PRODUCTOS
-// ===============================
-
-let tops = productos.filter(p=>p.top);
-
-if(tops.length){
-
-nuevaPagina("PRODUCTOS TOP");
-
-cols=4;
-filas=4;
-
-cardW=(pageW-margen*2)/cols;
-cardH=(pageH-40)/filas;
-
-for(let p of tops){
-
-await dibujarProducto(p);
-
-siguiente();
-
-if(fila>=filas){
-nuevaPagina("PRODUCTOS TOP");
-}
-
-}
-
-}
-
-
-
-// ===============================
-// RESTO PRODUCTOS
-// ===============================
-
-let resto = productos.filter(p=>{
-
-const enPromo =
-Number(p.precioPromocion)>0 &&
-Number(p.precioPromocion)<Number(p.precioLP4);
-
-return !enPromo && !p.top;
-
-});
-
-if(resto.length){
-
-nuevaPagina("PRODUCTOS");
-
-cols=4;
-filas=5;
-
-cardW=(pageW-margen*2)/cols;
-cardH=(pageH-40)/filas;
-
-for(let p of resto){
-
-await dibujarProducto(p);
-
-siguiente();
-
-if(fila>=filas){
-nuevaPagina("PRODUCTOS");
-}
-
-}
+    if (fila >= filas) {
+        nuevaPagina("PRODUCTOS");
+    }
 
 }
 
