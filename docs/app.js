@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formPassword.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      if (inputPassword.value === "MaesraFebrero2026") {
+      if (inputPassword.value === "MaesraAbril2026") {
 
         listaPrecioActiva = "LP1";
         localStorage.setItem("listaPrecio", "LP1");
