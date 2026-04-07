@@ -707,7 +707,7 @@ let cols = 3;
 let filas = 4;
 
 let cardW = (pageW - margen*2)/cols;
-let cardH = (pageH - 40)/filas;
+let cardH = (pageH - 45)/filas;
 
 let col = 0;
 let fila = 0;
@@ -723,7 +723,7 @@ async function dibujarProducto(p){
     let ty = y + 4;
 
     /* =========================
-    IMAGEN GRANDE
+    IMAGEN
     ========================= */
 
     const base64 = cacheImagenes[p.imagen] || await cargarImagenOptimizada(p.imagen, 250);
@@ -738,7 +738,7 @@ async function dibujarProducto(p){
         });
 
         const maxW = cardW - 8;
-        const maxH = 22;
+        const maxH = 24; // 👈 ligeramente más grande
 
         let w = img.width;
         let h = img.height;
@@ -751,10 +751,9 @@ async function dibujarProducto(p){
         const imgX = x + (cardW - w) / 2;
 
         doc.addImage(base64, "JPEG", imgX, ty, w, h);
-
     }
 
-    ty += 24;
+    ty += 26; // 👈 más espacio para evitar encimado
 
     /* =========================
     TEXTO
@@ -784,25 +783,17 @@ async function dibujarProducto(p){
         doc.text(empaque.join(" | "), x + 2, ty);
     }
 
+    /* ===============================
+    PROGRESO (AHORA SÍ EN SU LUGAR)
+    =============================== */
+
+    contadorGlobal++;
+
+    if(contadorGlobal % 3 === 0){
+        actualizarProgreso(contadorGlobal, totalProductos);
+        await new Promise(r => setTimeout(r, 0));
+    }
 }
-
-
-/* ===============================
-PROGRESO
-=============================== */
-
-contadorGlobal++;
-
-if(contadorGlobal%3===0){
-
-actualizarProgreso(contadorGlobal,totalProductos);
-
-await new Promise(r=>setTimeout(r,0));
-
-}
-
-}
-
 
 
 // ===============================
