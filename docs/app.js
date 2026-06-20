@@ -127,29 +127,29 @@ CARGAR PRODUCTOS
 
 function cargarProductos() {
 
-  fetch("productos.json")
-    .then(r => r.json())
-  productosFamilias = await fetch("productos_familias.json")
-    .then(r => r.json());
-    .then(data => {
+  Promise.all([
+    fetch("productos.json").then(r => r.json()),
+    fetch("productos_familias.json").then(r => r.json())
+  ])
+  .then(([productosData, familiasData]) => {
 
-      productos = data;
+    productos = productosData;
+    productosFamilias = familiasData;
 
-      productos.sort((a, b) => {
-        const ap = Number(a.precioPromocion) > 0;
-        const bp = Number(b.precioPromocion) > 0;
-        return bp - ap;
-      });
-
-      mostrarPromociones(productos);
-      mostrarTopProductos(productos);
-      mostrarProductos(productos);
-
-      activarCarruselAutomatico("promoTrack");
-      activarCarruselAutomatico("topProductos");
+    productos.sort((a, b) => {
+      const ap = Number(a.precioPromocion) > 0;
+      const bp = Number(b.precioPromocion) > 0;
+      return bp - ap;
     });
-}
 
+    mostrarPromociones(productos);
+    mostrarTopProductos(productos);
+    mostrarProductos(productos);
+
+    activarCarruselAutomatico("promoTrack");
+    activarCarruselAutomatico("topProductos");
+  });
+}
 /* ===============================
 PROMOCIONES
 =============================== */
@@ -691,19 +691,10 @@ await new Promise(r=>requestAnimationFrame(r));
 
 document.getElementById("progresoTexto").innerText="Cargando imágenes...";
 
-const listaImagenes = [];
-
-for(const item of productosFamilias){
-
-    listaImagenes.push({
-        imagen:item.imagen
-    });
-
-}
-
-await precargarImagenes(listaImagenes,20);
+await precargarImagenes(productos,20);
 
 document.getElementById("progresoTexto").innerText="Generando catálogo...";
+
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
@@ -849,152 +840,6 @@ async function dibujarProducto(p){
 }
 
 // ===============================
-// DIBUJAR FAMILIA
-// ===============================
-
-async function dibujarFamilia(f){
-
-    if(doc.getNumberOfPages() > 0){
-
-    doc.addPage();
-
-}
-
-    const margenTabla = 12;
-
-    doc.setFontSize(16);
-    doc.setTextColor(0);
-
-    doc.text(
-        f.familia,
-        pageW / 2,
-        20,
-        { align: "center" }
-    );
-
-    // ==========================
-    // IMAGEN
-    // ==========================
-
-    const base64 =
-        cacheImagenes[f.imagen] ||
-        await cargarImagenOptimizada(f.imagen, 500);
-
-    let yTabla = 90;
-
-    if(base64){
-
-        const img = new Image();
-
-        await new Promise(resolve=>{
-            img.onload = resolve;
-            img.src = base64;
-        });
-
-        let w = img.width;
-        let h = img.height;
-
-        const maxW = 80;
-        const maxH = 55;
-
-        const ratio = Math.min(maxW / w, maxH / h);
-
-        w *= ratio;
-        h *= ratio;
-
-        doc.addImage(
-            base64,
-            "JPEG",
-            (pageW - w) / 2,
-            28,
-            w,
-            h
-        );
-
-        yTabla = 95;
-    }
-
-    // ==========================
-    // TABLA
-    // ==========================
-
-    const xCodigo = 12;
-    const xProducto = 40;
-    const xUnidad = 145;
-    const xMaster = 165;
-    const xInner = 185;
-
-    doc.setFontSize(8);
-    doc.setFont(undefined,"bold");
-
-    doc.text("Código", xCodigo, yTabla);
-    doc.text("Descripción", xProducto, yTabla);
-    doc.text("UM", xUnidad, yTabla);
-    doc.text("Master", xMaster, yTabla);
-    doc.text("Inner", xInner, yTabla);
-
-    yTabla += 3;
-
-    doc.line(
-        margenTabla,
-        yTabla,
-        pageW - margenTabla,
-        yTabla
-    );
-
-    yTabla += 5;
-
-    doc.setFont(undefined,"normal");
-
-    for(const art of f.articulos){
-
-        doc.setFontSize(7);
-
-        doc.text(
-            String(art.codigo || ""),
-            xCodigo,
-            yTabla
-        );
-
-        let desc = art.producto || "";
-
-        if(desc.length > 60){
-            desc = desc.substring(0,60);
-        }
-
-        doc.text(
-            desc,
-            xProducto,
-            yTabla
-        );
-
-        doc.text(
-            String(art.unidad || ""),
-            xUnidad,
-            yTabla
-        );
-
-        doc.text(
-            String(art.master || ""),
-            xMaster,
-            yTabla
-        );
-
-        doc.text(
-            String(art.inner || ""),
-            xInner,
-            yTabla
-        );
-
-        yTabla += 5;
-
-        if(yTabla > 265){
-            break;
-        }
-    }
-}
-
-// ===============================
 // SIGUIENTE POSICION
 // ===============================
 
@@ -1042,7 +887,7 @@ fila=0;
 
 
 /* ==============================
-CATÁLOGO GENERAL (SIN FILTROS)
+CATÁLOGO GENERAL CON FAMILIAS
 ============================== */
 
 doc.setFontSize(18);
@@ -1054,58 +899,49 @@ filas = 5;
 cardW = (pageW - margen*2) / cols;
 cardH = (pageH - 45) / filas;
 
-for(const item of productosFamilias){
+for (const grupo of productosFamilias) {
 
-    // ==================================
-    // FAMILIAS (1 página completa)
-    // ==================================
+    // ----------------------------------
+    // ENCABEZADO DE FAMILIA
+    // ----------------------------------
 
-    if(item.esFamilia === true){
+    if (grupo.esFamilia) {
 
-        await dibujarFamilia(item);
+        if (col !== 0 || fila !== 0) {
+            nuevaPagina(grupo.familia);
+        }
 
-        contadorGlobal++;
-
-        actualizarProgreso(
-            contadorGlobal,
-            productosFamilias.length
-        );
-
-        continue;
+        doc.setFontSize(18);
+        doc.text(grupo.familia, pageW / 2, 20, {
+            align: "center"
+        });
     }
 
-    // ==================================
-    // PRODUCTOS INDIVIDUALES
-    // ==================================
+    // ----------------------------------
+    // PRODUCTOS DE LA FAMILIA
+    // ----------------------------------
 
-    const p = {
+    for (const p of grupo.articulos) {
 
-        codigo: item.articulos[0].codigo,
-        producto: item.articulos[0].producto,
-        unidad: item.articulos[0].unidad,
-        master: item.articulos[0].master,
-        inner: item.articulos[0].inner,
+        p.marca = grupo.marca;
+        p.imagen = grupo.imagen;
 
-        marca: item.marca,
-        imagen: item.imagen
+        await dibujarProducto(p);
 
-    };
+        siguiente();
 
-    await dibujarProducto(p);
+        if (fila >= filas) {
 
-    siguiente();
-
-    if(fila >= filas){
-
-        nuevaPagina("PRODUCTOS");
-
+            nuevaPagina(
+                grupo.esFamilia
+                    ? grupo.familia
+                    : "PRODUCTOS"
+            );
+        }
     }
-
 }
 
-
 doc.save("Catalogo MAESRA 2026.pdf");
-
 ocultarProgreso();
 
 }
