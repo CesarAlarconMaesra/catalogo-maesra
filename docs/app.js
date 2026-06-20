@@ -1,4 +1,5 @@
 let productos = [];
+let productosFamilias = [];
 let listaPrecioActiva = localStorage.getItem("listaPrecio") || "LP4";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
@@ -128,6 +129,8 @@ function cargarProductos() {
 
   fetch("productos.json")
     .then(r => r.json())
+  productosFamilias = await fetch("productos_familias.json")
+    .then(r => r.json());
     .then(data => {
 
       productos = data;
@@ -688,10 +691,19 @@ await new Promise(r=>requestAnimationFrame(r));
 
 document.getElementById("progresoTexto").innerText="Cargando imágenes...";
 
-await precargarImagenes(productos,20);
+const listaImagenes = [];
+
+for(const item of productosFamilias){
+
+    listaImagenes.push({
+        imagen:item.imagen
+    });
+
+}
+
+await precargarImagenes(listaImagenes,20);
 
 document.getElementById("progresoTexto").innerText="Generando catálogo...";
-
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF("p","mm","letter");
 
@@ -837,6 +849,152 @@ async function dibujarProducto(p){
 }
 
 // ===============================
+// DIBUJAR FAMILIA
+// ===============================
+
+async function dibujarFamilia(f){
+
+    if(doc.getNumberOfPages() > 0){
+
+    doc.addPage();
+
+}
+
+    const margenTabla = 12;
+
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+
+    doc.text(
+        f.familia,
+        pageW / 2,
+        20,
+        { align: "center" }
+    );
+
+    // ==========================
+    // IMAGEN
+    // ==========================
+
+    const base64 =
+        cacheImagenes[f.imagen] ||
+        await cargarImagenOptimizada(f.imagen, 500);
+
+    let yTabla = 90;
+
+    if(base64){
+
+        const img = new Image();
+
+        await new Promise(resolve=>{
+            img.onload = resolve;
+            img.src = base64;
+        });
+
+        let w = img.width;
+        let h = img.height;
+
+        const maxW = 80;
+        const maxH = 55;
+
+        const ratio = Math.min(maxW / w, maxH / h);
+
+        w *= ratio;
+        h *= ratio;
+
+        doc.addImage(
+            base64,
+            "JPEG",
+            (pageW - w) / 2,
+            28,
+            w,
+            h
+        );
+
+        yTabla = 95;
+    }
+
+    // ==========================
+    // TABLA
+    // ==========================
+
+    const xCodigo = 12;
+    const xProducto = 40;
+    const xUnidad = 145;
+    const xMaster = 165;
+    const xInner = 185;
+
+    doc.setFontSize(8);
+    doc.setFont(undefined,"bold");
+
+    doc.text("Código", xCodigo, yTabla);
+    doc.text("Descripción", xProducto, yTabla);
+    doc.text("UM", xUnidad, yTabla);
+    doc.text("Master", xMaster, yTabla);
+    doc.text("Inner", xInner, yTabla);
+
+    yTabla += 3;
+
+    doc.line(
+        margenTabla,
+        yTabla,
+        pageW - margenTabla,
+        yTabla
+    );
+
+    yTabla += 5;
+
+    doc.setFont(undefined,"normal");
+
+    for(const art of f.articulos){
+
+        doc.setFontSize(7);
+
+        doc.text(
+            String(art.codigo || ""),
+            xCodigo,
+            yTabla
+        );
+
+        let desc = art.producto || "";
+
+        if(desc.length > 60){
+            desc = desc.substring(0,60);
+        }
+
+        doc.text(
+            desc,
+            xProducto,
+            yTabla
+        );
+
+        doc.text(
+            String(art.unidad || ""),
+            xUnidad,
+            yTabla
+        );
+
+        doc.text(
+            String(art.master || ""),
+            xMaster,
+            yTabla
+        );
+
+        doc.text(
+            String(art.inner || ""),
+            xInner,
+            yTabla
+        );
+
+        yTabla += 5;
+
+        if(yTabla > 265){
+            break;
+        }
+    }
+}
+
+// ===============================
 // SIGUIENTE POSICION
 // ===============================
 
@@ -896,18 +1054,54 @@ filas = 5;
 cardW = (pageW - margen*2) / cols;
 cardH = (pageH - 45) / filas;
 
-for (let p of productos) {
+for(const item of productosFamilias){
+
+    // ==================================
+    // FAMILIAS (1 página completa)
+    // ==================================
+
+    if(item.esFamilia === true){
+
+        await dibujarFamilia(item);
+
+        contadorGlobal++;
+
+        actualizarProgreso(
+            contadorGlobal,
+            productosFamilias.length
+        );
+
+        continue;
+    }
+
+    // ==================================
+    // PRODUCTOS INDIVIDUALES
+    // ==================================
+
+    const p = {
+
+        codigo: item.articulos[0].codigo,
+        producto: item.articulos[0].producto,
+        unidad: item.articulos[0].unidad,
+        master: item.articulos[0].master,
+        inner: item.articulos[0].inner,
+
+        marca: item.marca,
+        imagen: item.imagen
+
+    };
 
     await dibujarProducto(p);
 
     siguiente();
 
-    if (fila >= filas) {
+    if(fila >= filas){
+
         nuevaPagina("PRODUCTOS");
+
     }
 
 }
-
 
 
 doc.save("Catalogo MAESRA 2026.pdf");
