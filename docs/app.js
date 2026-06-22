@@ -1006,7 +1006,7 @@ async function generarCatalogoCompletoPDF(){
             doc.setFontSize(7);
 
             doc.text(
-                familia.marca || "",
+                a.marca || "",
                 inicioTablaX,
                 filaY
             );
