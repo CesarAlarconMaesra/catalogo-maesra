@@ -899,44 +899,144 @@ filas = 5;
 cardW = (pageW - margen*2) / cols;
 cardH = (pageH - 45) / filas;
 
-for (const grupo of productosFamilias) {
+// =====================================
+// PRIMERO PRODUCTOS INDIVIDUALES
+// =====================================
 
-    // ----------------------------------
-    // ENCABEZADO DE FAMILIA
-    // ----------------------------------
+const individuales =
+    productosFamilias.filter(g => !g.esFamilia);
 
-    if (grupo.esFamilia) {
+for (const grupo of individuales) {
 
-        if (col !== 0 || fila !== 0) {
-            nuevaPagina(grupo.familia);
-        }
+    const p = grupo.articulos[0];
 
-        doc.setFontSize(18);
-        doc.text(grupo.familia, pageW / 2, 20, {
-            align: "center"
-        });
+    p.marca = grupo.marca;
+    p.imagen = grupo.imagen;
+
+    await dibujarProducto(p);
+
+    siguiente();
+
+    if (fila >= filas) {
+        nuevaPagina("PRODUCTOS");
+    }
+}
+
+
+// =====================================
+// DESPUÉS LAS FAMILIAS
+// =====================================
+
+for (const grupo of productosFamilias.filter(g => g.esFamilia)) {
+
+    doc.addPage();
+
+    doc.setFontSize(18);
+    doc.text(
+        grupo.familia,
+        pageW / 2,
+        20,
+        { align: "center" }
+    );
+
+    // -------------------------
+    // IMAGEN PRINCIPAL
+    // -------------------------
+
+    const base64 =
+        cacheImagenes[grupo.imagen] ||
+        await cargarImagenOptimizada(grupo.imagen, 400);
+
+    if (base64) {
+
+        doc.addImage(
+            base64,
+            "JPEG",
+            15,
+            30,
+            45,
+            45
+        );
+
     }
 
-    // ----------------------------------
-    // PRODUCTOS DE LA FAMILIA
-    // ----------------------------------
+    // -------------------------
+    // TABLA DE VARIANTES
+    // -------------------------
 
-    for (const p of grupo.articulos) {
+    let yTabla = 35;
 
-        p.marca = grupo.marca;
-        p.imagen = grupo.imagen;
+    doc.setFontSize(8);
 
-        await dibujarProducto(p);
+    doc.text("Marca",65,yTabla);
+    doc.text("Código",90,yTabla);
+    doc.text("Producto",120,yTabla);
+    doc.text("Unidad",175,yTabla);
+    doc.text("M",195,yTabla);
+    doc.text("I",205,yTabla);
 
-        siguiente();
+    yTabla += 5;
 
-        if (fila >= filas) {
+    doc.line(65,yTabla-2,210,yTabla-2);
 
-            nuevaPagina(
-                grupo.esFamilia
-                    ? grupo.familia
-                    : "PRODUCTOS"
+    for (const art of grupo.articulos) {
+
+        doc.text(
+            grupo.marca || "",
+            65,
+            yTabla
+        );
+
+        doc.text(
+            art.codigo || "",
+            90,
+            yTabla
+        );
+
+        const nombre =
+            (art.producto || "")
+            .substring(0,35);
+
+        doc.text(
+            nombre,
+            120,
+            yTabla
+        );
+
+        doc.text(
+            art.unidad || "",
+            175,
+            yTabla
+        );
+
+        doc.text(
+            String(art.master || ""),
+            195,
+            yTabla
+        );
+
+        doc.text(
+            String(art.inner || ""),
+            205,
+            yTabla
+        );
+
+        yTabla += 5;
+
+        if (yTabla > 250) {
+
+            doc.addPage();
+
+            doc.setFontSize(16);
+
+            doc.text(
+                grupo.familia,
+                pageW/2,
+                20,
+                {align:"center"}
             );
+
+            yTabla = 35;
         }
     }
 }
