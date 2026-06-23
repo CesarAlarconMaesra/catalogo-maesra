@@ -946,12 +946,16 @@ async function generarCatalogoCompletoPDF(){
 
         doc.setFontSize(14);
 
-        doc.text(
-            familia.familia,
-            45,
-            yActual + 5
-        );
+doc.setFontSize(14);
+doc.setFont(undefined,"bold");
 
+doc.text(
+    familia.familia,
+    45,
+    yActual + 5
+);
+
+doc.setFont(undefined,"normal");
         const base64 =
             cacheImagenes[familia.imagen] ||
             await cargarImagenOptimizada(
@@ -978,16 +982,44 @@ async function generarCatalogoCompletoPDF(){
         let inicioTablaX = 45;
         let filaY = yActual + 15;
 
-        doc.setFontSize(8);
+// ======================================
+// ENCABEZADO NEGRO
+// ======================================
 
-        doc.text("Marca",inicioTablaX,filaY);
-        doc.text("Código",inicioTablaX+25,filaY);
-        doc.text("Producto",inicioTablaX+55,filaY);
-        doc.text("Unidad",inicioTablaX+120,filaY);
-        doc.text("M",inicioTablaX+138,filaY);
-        doc.text("I",inicioTablaX+148,filaY);
+const colMarca = inicioTablaX;
+const colCodigo = inicioTablaX + 25;
+const colProducto = inicioTablaX + 55;
+const colUnidad = inicioTablaX + 120;
+const colMaster = inicioTablaX + 138;
+const colInner = inicioTablaX + 148;
 
-        filaY += 4;
+const anchoTabla = 115;
+const altoEncabezado = 6;
+
+doc.setFillColor(0,0,0);
+
+doc.rect(
+    inicioTablaX - 2,
+    filaY - 4,
+    anchoTabla,
+    altoEncabezado,
+    "F"
+);
+
+doc.setTextColor(255,255,255);
+doc.setFont(undefined,"bold");
+doc.setFontSize(8);
+
+doc.text("Marca",colMarca,filaY);
+doc.text("Código",colCodigo,filaY);
+doc.text("Producto",colProducto,filaY);
+doc.text("Unidad",colUnidad,filaY);
+doc.text("M",colMaster,filaY);
+doc.text("I",colInner,filaY);
+
+doc.setFont(undefined,"normal");
+
+filaY += 6;
 
         for(const a of familia.articulos){
 
@@ -1002,6 +1034,30 @@ async function generarCatalogoCompletoPDF(){
                     4,
                     productoLineas.length * 4
                 );
+
+const indice =
+    familia.articulos.indexOf(a);
+
+if(indice % 2 === 0){
+
+    doc.setFillColor(245,245,245);
+
+}else{
+
+    doc.setFillColor(225,225,225);
+
+}
+
+doc.rect(
+    inicioTablaX - 2,
+    filaY - 3,
+    anchoTabla,
+    altoFila + 2,
+    "F"
+);
+
+doc.setDrawColor(220);
+doc.setLineWidth(0.1);
 
             doc.setFontSize(7);
 
@@ -1041,6 +1097,12 @@ async function generarCatalogoCompletoPDF(){
                 filaY
             );
 
+doc.rect(
+    inicioTablaX - 2,
+    filaY - 3,
+    anchoTabla,
+    altoFila + 2
+);
             filaY += altoFila;
         }
 
