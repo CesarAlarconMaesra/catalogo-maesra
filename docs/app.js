@@ -986,14 +986,14 @@ doc.setFont(undefined,"normal");
 // ENCABEZADO NEGRO
 // ======================================
 
-const colMarca = inicioTablaX;
-const colCodigo = inicioTablaX + 25;
-const colProducto = inicioTablaX + 55;
-const colUnidad = inicioTablaX + 120;
-const colMaster = inicioTablaX + 138;
-const colInner = inicioTablaX + 148;
+const colMarca    = inicioTablaX;
+const colCodigo   = inicioTablaX + 22;
+const colProducto = inicioTablaX + 45;
+const colUnidad   = inicioTablaX + 118;
+const colMaster   = inicioTablaX + 135;
+const colInner    = inicioTablaX + 148;
 
-const anchoTabla = 115;
+const anchoTabla = 160;
 const altoEncabezado = 6;
 
 doc.setFillColor(0,0,0);
@@ -1018,93 +1018,144 @@ doc.text("M",colMaster,filaY);
 doc.text("I",colInner,filaY);
 
 doc.setFont(undefined,"normal");
+doc.setTextColor(0,0,0);
 
 filaY += 6;
 
         for(const a of familia.articulos){
 
-            const productoLineas =
-                doc.splitTextToSize(
-                    a.producto,
-                    60
-                );
+    const productoLineas =
+        doc.splitTextToSize(
+            a.producto,
+            55
+        );
 
-            const altoFila =
-                Math.max(
-                    4,
-                    productoLineas.length * 4
-                );
+    const altoFila =
+        Math.max(
+            5,
+            productoLineas.length * 4
+        );
 
-const indice =
-    familia.articulos.indexOf(a);
+    // ==================================
+    // SI NO CABE, CONTINUAR EN OTRA HOJA
+    // ==================================
 
-if(indice % 2 === 0){
+    if(filaY + altoFila > pageH - 15){
 
-    doc.setFillColor(245,245,245);
+        doc.addPage();
 
-}else{
+        doc.setFontSize(18);
 
-    doc.setFillColor(225,225,225);
+        doc.text(
+            "FAMILIAS DE PRODUCTOS",
+            pageW/2,
+            20,
+            {align:"center"}
+        );
 
+        filaY = 35;
+
+        // repetir encabezado
+
+        doc.setFillColor(0,0,0);
+
+        doc.rect(
+            inicioTablaX - 2,
+            filaY - 4,
+            anchoTabla,
+            altoEncabezado,
+            "F"
+        );
+
+        doc.setTextColor(255,255,255);
+        doc.setFont(undefined,"bold");
+        doc.setFontSize(8);
+
+        doc.text("Marca",colMarca,filaY);
+        doc.text("Código",colCodigo,filaY);
+        doc.text("Producto",colProducto,filaY);
+        doc.text("Unidad",colUnidad,filaY);
+        doc.text("M",colMaster,filaY);
+        doc.text("I",colInner,filaY);
+
+        doc.setFont(undefined,"normal");
+        doc.setTextColor(0,0,0);
+
+        filaY += 6;
+    }
+
+    const indice =
+        familia.articulos.indexOf(a);
+
+    if(indice % 2 === 0){
+
+        doc.setFillColor(245,245,245);
+
+    }else{
+
+        doc.setFillColor(225,225,225);
+
+    }
+
+    doc.rect(
+        inicioTablaX - 2,
+        filaY - 3,
+        anchoTabla,
+        altoFila + 2,
+        "F"
+    );
+
+    doc.setDrawColor(220);
+    doc.setLineWidth(0.1);
+
+    doc.setFontSize(7);
+    doc.setTextColor(0,0,0);
+
+    doc.text(
+        a.marca || "",
+        colMarca,
+        filaY
+    );
+
+    doc.text(
+        a.codigo || "",
+        colCodigo,
+        filaY
+    );
+
+    doc.text(
+        productoLineas,
+        colProducto,
+        filaY
+    );
+
+    doc.text(
+        a.unidad || "",
+        colUnidad,
+        filaY
+    );
+
+    doc.text(
+        String(a.master || ""),
+        colMaster,
+        filaY
+    );
+
+    doc.text(
+        String(a.inner || ""),
+        colInner,
+        filaY
+    );
+
+    doc.rect(
+        inicioTablaX - 2,
+        filaY - 3,
+        anchoTabla,
+        altoFila + 2
+    );
+
+    filaY += altoFila;
 }
-
-doc.rect(
-    inicioTablaX - 2,
-    filaY - 3,
-    anchoTabla,
-    altoFila + 2,
-    "F"
-);
-
-doc.setDrawColor(220);
-doc.setLineWidth(0.1);
-
-            doc.setFontSize(7);
-
-            doc.text(
-                a.marca || "",
-                inicioTablaX,
-                filaY
-            );
-
-            doc.text(
-                a.codigo,
-                inicioTablaX+25,
-                filaY
-            );
-
-            doc.text(
-                productoLineas,
-                inicioTablaX+55,
-                filaY
-            );
-
-            doc.text(
-                a.unidad || "",
-                inicioTablaX+120,
-                filaY
-            );
-
-            doc.text(
-                String(a.master || ""),
-                inicioTablaX+138,
-                filaY
-            );
-
-            doc.text(
-                String(a.inner || ""),
-                inicioTablaX+148,
-                filaY
-            );
-
-doc.rect(
-    inicioTablaX - 2,
-    filaY - 3,
-    anchoTabla,
-    altoFila + 2
-);
-            filaY += altoFila;
-        }
 
         yActual = filaY + 10;
 
