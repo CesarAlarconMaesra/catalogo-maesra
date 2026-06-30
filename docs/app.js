@@ -713,196 +713,6 @@ async function generarCatalogoCompletoPDF(){
         productosFamilias.filter(g => !g.esFamilia);
 
     // ==================================================
-    // PORTADA PRODUCTOS INDIVIDUALES
-    // ==================================================
-
-    doc.setFontSize(18);
-    doc.text("PRODUCTOS", pageW/2, 20, {align:"center"});
-
-    let cols = 4;
-    let filas = 5;
-
-    let cardW = (pageW - margen*2)/cols;
-    let cardH = (pageH - 45)/filas;
-
-    let x = margen;
-    let y = 35;
-
-    let col = 0;
-    let fila = 0;
-
-    // ==================================================
-    // DIBUJAR FICHA INDIVIDUAL
-    // ==================================================
-
-    async function dibujarProducto(p){
-
-        const padding = 3;
-
-        doc.setDrawColor(220);
-        doc.rect(x,y,cardW,cardH);
-
-        let ty = y + padding;
-
-        const base64 =
-            cacheImagenes[p.imagen] ||
-            await cargarImagenOptimizada(p.imagen,300);
-
-        if(base64){
-
-            const img = new Image();
-
-            await new Promise(resolve=>{
-                img.onload = resolve;
-                img.src = base64;
-            });
-
-            const maxW = cardW - 8;
-            const maxH = cardH * 0.38;
-
-            let w = img.width;
-            let h = img.height;
-
-            const ratio =
-                Math.min(maxW/w,maxH/h);
-
-            w*=ratio;
-            h*=ratio;
-
-            const imgX =
-                x + (cardW-w)/2;
-
-            doc.addImage(
-                base64,
-                "JPEG",
-                imgX,
-                ty,
-                w,
-                h
-            );
-
-            ty += h + 3;
-        }
-
-        doc.setFontSize(6);
-        doc.setTextColor(100);
-
-        doc.text(
-            `Código: ${p.codigo}`,
-            x+padding,
-            ty
-        );
-
-        ty += 3;
-
-        doc.setFontSize(7);
-        doc.setTextColor(0);
-
-        let nombre =
-            doc.splitTextToSize(
-                p.producto,
-                cardW - 6
-            );
-
-        nombre = nombre.slice(0,3);
-
-        doc.text(nombre,x+padding,ty);
-
-        ty += nombre.length*3;
-
-        doc.setFontSize(6);
-
-        doc.text(
-            `Marca: ${p.marca || ""}`,
-            x+padding,
-            ty
-        );
-
-        ty += 3;
-
-        doc.text(
-            `Unidad:${p.unidad || ""}`,
-            x+padding,
-            ty
-        );
-
-        ty += 3;
-
-        doc.text(
-            `Master:${p.master || ""}`,
-            x+padding,
-            ty
-        );
-
-        ty += 3;
-
-        doc.text(
-            `Inner:${p.inner || ""}`,
-            x+padding,
-            ty
-        );
-    }
-
-    function siguiente(){
-
-        col++;
-
-        if(col>=cols){
-
-            col=0;
-            fila++;
-
-            x=margen;
-            y+=cardH;
-
-        }else{
-
-            x+=cardW;
-
-        }
-    }
-
-    function nuevaPaginaProductos(){
-
-        doc.addPage();
-
-        doc.setFontSize(18);
-
-        doc.text(
-            "PRODUCTOS",
-            pageW/2,
-            20,
-            {align:"center"}
-        );
-
-        x=margen;
-        y=35;
-
-        col=0;
-        fila=0;
-    }
-
-    // ==================================================
-    // PRODUCTOS INDIVIDUALES
-    // ==================================================
-
-    for(const grupo of individuales){
-
-        const p = grupo.articulos[0];
-
-        p.imagen = grupo.imagen;
-        p.marca = grupo.marca;
-
-        await dibujarProducto(p);
-
-        siguiente();
-
-        if(fila>=filas){
-            nuevaPaginaProductos();
-        }
-    }
-
-    // ==================================================
     // INICIO SECCIÓN FAMILIAS
     // ==================================================
 
@@ -1170,6 +980,196 @@ filaY += 6;
         await new Promise(
             r=>setTimeout(r,0)
         );
+    }
+
+    // ==================================================
+    // PORTADA PRODUCTOS INDIVIDUALES
+    // ==================================================
+
+    doc.setFontSize(18);
+    doc.text("PRODUCTOS", pageW/2, 20, {align:"center"});
+
+    let cols = 4;
+    let filas = 5;
+
+    let cardW = (pageW - margen*2)/cols;
+    let cardH = (pageH - 45)/filas;
+
+    let x = margen;
+    let y = 35;
+
+    let col = 0;
+    let fila = 0;
+
+    // ==================================================
+    // DIBUJAR FICHA INDIVIDUAL
+    // ==================================================
+
+    async function dibujarProducto(p){
+
+        const padding = 3;
+
+        doc.setDrawColor(220);
+        doc.rect(x,y,cardW,cardH);
+
+        let ty = y + padding;
+
+        const base64 =
+            cacheImagenes[p.imagen] ||
+            await cargarImagenOptimizada(p.imagen,300);
+
+        if(base64){
+
+            const img = new Image();
+
+            await new Promise(resolve=>{
+                img.onload = resolve;
+                img.src = base64;
+            });
+
+            const maxW = cardW - 8;
+            const maxH = cardH * 0.38;
+
+            let w = img.width;
+            let h = img.height;
+
+            const ratio =
+                Math.min(maxW/w,maxH/h);
+
+            w*=ratio;
+            h*=ratio;
+
+            const imgX =
+                x + (cardW-w)/2;
+
+            doc.addImage(
+                base64,
+                "JPEG",
+                imgX,
+                ty,
+                w,
+                h
+            );
+
+            ty += h + 3;
+        }
+
+        doc.setFontSize(6);
+        doc.setTextColor(100);
+
+        doc.text(
+            `Código: ${p.codigo}`,
+            x+padding,
+            ty
+        );
+
+        ty += 3;
+
+        doc.setFontSize(7);
+        doc.setTextColor(0);
+
+        let nombre =
+            doc.splitTextToSize(
+                p.producto,
+                cardW - 6
+            );
+
+        nombre = nombre.slice(0,3);
+
+        doc.text(nombre,x+padding,ty);
+
+        ty += nombre.length*3;
+
+        doc.setFontSize(6);
+
+        doc.text(
+            `Marca: ${p.marca || ""}`,
+            x+padding,
+            ty
+        );
+
+        ty += 3;
+
+        doc.text(
+            `Unidad:${p.unidad || ""}`,
+            x+padding,
+            ty
+        );
+
+        ty += 3;
+
+        doc.text(
+            `Master:${p.master || ""}`,
+            x+padding,
+            ty
+        );
+
+        ty += 3;
+
+        doc.text(
+            `Inner:${p.inner || ""}`,
+            x+padding,
+            ty
+        );
+    }
+
+    function siguiente(){
+
+        col++;
+
+        if(col>=cols){
+
+            col=0;
+            fila++;
+
+            x=margen;
+            y+=cardH;
+
+        }else{
+
+            x+=cardW;
+
+        }
+    }
+
+    function nuevaPaginaProductos(){
+
+        doc.addPage();
+
+        doc.setFontSize(18);
+
+        doc.text(
+            "PRODUCTOS",
+            pageW/2,
+            20,
+            {align:"center"}
+        );
+
+        x=margen;
+        y=35;
+
+        col=0;
+        fila=0;
+    }
+
+    // ==================================================
+    // PRODUCTOS INDIVIDUALES
+    // ==================================================
+
+    for(const grupo of individuales){
+
+        const p = grupo.articulos[0];
+
+        p.imagen = grupo.imagen;
+        p.marca = grupo.marca;
+
+        await dibujarProducto(p);
+
+        siguiente();
+
+        if(fila>=filas){
+            nuevaPaginaProductos();
+        }
     }
 
     // ==================================================
