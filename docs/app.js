@@ -705,11 +705,12 @@ async function generarCatalogoCompletoPDF(){
     // SEPARAR INDIVIDUALES Y FAMILIAS
     // ==================================================
 
-    const individuales =
-        productosFamilias.filter(g => !g.esFamilia);
-
-    const familias =
+  
+  const familias =
         productosFamilias.filter(g => g.esFamilia);
+
+  const individuales =
+        productosFamilias.filter(g => !g.esFamilia);
 
     // ==================================================
     // PORTADA PRODUCTOS INDIVIDUALES
