@@ -9,16 +9,6 @@ const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/catalogo-maesra/
 const cacheImagenes = {};
 
 
-fetch("img/MAESRA.jpg")
-    .then(res => res.blob())
-    .then(blob => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            logoBase64 = reader.result;
-        };
-        reader.readAsDataURL(blob);
-    });
-
 /* ===============================
 INICIO
 =============================== */
@@ -129,17 +119,18 @@ function cargarProductos() {
 
   Promise.all([
     fetch("productos.json").then(r => r.json()),
-    fetch("productos_familias.json").then(r => r.json())
-  ])
-  .then(([productosData, familiasData]) => {
+    fetch("productos_familias.json").then(r => r.json()),
+    cargarLogo()
+])
+.then(([productosData, familiasData]) => {
 
     productos = productosData;
     productosFamilias = familiasData;
 
-    productos.sort((a, b) => {
-      const ap = Number(a.precioPromocion) > 0;
-      const bp = Number(b.precioPromocion) > 0;
-      return bp - ap;
+    productos.sort((a,b)=>{
+        const ap = Number(a.precioPromocion)>0;
+        const bp = Number(b.precioPromocion)>0;
+        return bp-ap;
     });
 
     mostrarPromociones(productos);
@@ -148,7 +139,8 @@ function cargarProductos() {
 
     activarCarruselAutomatico("promoTrack");
     activarCarruselAutomatico("topProductos");
-  });
+});
+
 }
 /* ===============================
 PROMOCIONES
@@ -646,7 +638,11 @@ async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200){
 
 async function precargarImagenes(productos, lote = 20){
 
-    const imagenes = productos.map(p=>p.imagen).filter(Boolean);
+const imagenes = [
+    ...new Set(
+        productos.map(p => p.imagen).filter(Boolean)
+    )
+];
 
     let index = 0;
 
