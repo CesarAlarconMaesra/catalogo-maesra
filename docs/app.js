@@ -503,4 +503,11 @@ function mostrarProgreso() {
 }
 
 function ocultarProgreso() {
-  document.getElement
+  document.getElementById("progresoContainer").style.display = "none";
+}
+
+function actualizarProgreso(actual, total) {
+  const porcentaje = Math.round((actual / total) * 100);
+  document.getElementById("barraProgreso").style.width = porcentaje + "%";
+  document.getElementById("progresoTexto").innerText = porcentaje + "%";
+}
