@@ -1,180 +1,315 @@
-// ==========================================================
-// MAESRA - MOTOR PDF
-// pdfLayout.js
-// Manejo de páginas, encabezados, pie y estilos generales
-// ==========================================================
+/* ==========================================================
+   MAESRA PDF
+   pdfLayout.js
+   Manejo de diseño general del catálogo
+========================================================== */
 
 const PDFLayout = {
 
-    // ------------------------------------------------------
-    // CONFIGURACIÓN GENERAL
-    // ------------------------------------------------------
+    doc: null,
 
     margen: 10,
 
-    headerHeight: 18,
+    pageW: 0,
 
-    footerHeight: 10,
+    pageH: 0,
 
-    colorPrincipal: [0, 0, 0],
+    headerH: 18,
 
-    grisClaro: [245, 245, 245],
-
-    grisOscuro: [225, 225, 225],
-
-    grisLinea: [215, 215, 215],
-
-    fuente: "helvetica",
-
-    logo: null,
+    footerH: 10,
 
     paginaActual: 1,
 
     totalPaginas: 1,
 
-    tituloActual: "CATÁLOGO",
+    tituloActual: "",
 
-    año: new Date().getFullYear()
+    logoW: 22,
+
+    logoH: 12,
+
+    grisClaro: [245,245,245],
+
+    grisOscuro: [228,228,228],
+
+    grisLinea: [210,210,210],
+
+    negro:[0,0,0],
+
+    blanco:[255,255,255]
 
 };
 
 
-// ==========================================================
+// ======================================================
 // INICIALIZAR
-// ==========================================================
+// ======================================================
 
-function inicializarLayout(doc){
+PDFLayout.inicializar = function(doc){
 
-    PDFLayout.doc = doc;
+    this.doc = doc;
 
-    PDFLayout.pageW = doc.internal.pageSize.getWidth();
-    PDFLayout.pageH = doc.internal.pageSize.getHeight();
+    this.pageW =
+        doc.internal.pageSize.getWidth();
 
-    doc.setFont(PDFLayout.fuente);
+    this.pageH =
+        doc.internal.pageSize.getHeight();
 
-}
+    this.paginaActual = 1;
+
+    doc.setFont("helvetica","normal");
+
+};
 
 
-// ==========================================================
-// CARGAR LOGO
-// ==========================================================
+// ======================================================
+// ÁREA ÚTIL
+// ======================================================
 
-async function cargarLogoPDF(){
+PDFLayout.areaTrabajo=function(){
+
+    return{
+
+        x:this.margen,
+
+        y:this.headerH+6,
+
+        w:this.pageW-(this.margen*2),
+
+        h:this.pageH-
+          this.headerH-
+          this.footerH-
+          8
+
+    };
+
+};
+
+
+// ======================================================
+// CABECERA
+// ======================================================
+
+PDFLayout.cabecera=function(titulo=""){
+
+    this.tituloActual=titulo;
+
+    const doc=this.doc;
 
     if(logoBase64){
-
-        PDFLayout.logo = logoBase64;
-        return;
-
-    }
-
-    try{
-
-        await cargarLogo();
-
-        PDFLayout.logo = logoBase64;
-
-    }catch(e){
-
-        console.warn("No fue posible cargar logo");
-
-    }
-
-}
-
-
-// ==========================================================
-// CABECERA
-// ==========================================================
-
-function dibujarCabecera(titulo="CATÁLOGO"){
-
-    const doc = PDFLayout.doc;
-
-    PDFLayout.tituloActual = titulo;
-
-    // Línea inferior
-
-    doc.setDrawColor(180);
-    doc.setLineWidth(.3);
-
-    doc.line(
-        PDFLayout.margen,
-        PDFLayout.headerHeight,
-        PDFLayout.pageW-PDFLayout.margen,
-        PDFLayout.headerHeight
-    );
-
-    // Logo
-
-    if(PDFLayout.logo){
 
         try{
 
             doc.addImage(
-                PDFLayout.logo,
+
+                logoBase64,
+
                 "JPEG",
-                PDFLayout.margen,
+
+                this.margen,
+
                 4,
-                18,
-                10
+
+                this.logoW,
+
+                this.logoH
+
             );
 
         }catch(e){}
 
     }
 
-    // Título
-
-    doc.setFontSize(14);
+    doc.setFontSize(15);
 
     doc.setFont(undefined,"bold");
 
     doc.setTextColor(20);
 
     doc.text(
+
         titulo,
-        PDFLayout.pageW/2,
+
+        this.pageW/2,
+
         10,
+
         {align:"center"}
+
     );
 
     doc.setFont(undefined,"normal");
 
-    // Año
+    doc.setDrawColor(180);
 
-    doc.setFontSize(8);
+    doc.setLineWidth(.3);
 
-    doc.setTextColor(120);
+    doc.line(
 
-    doc.text(
-        PDFLayout.año.toString(),
-        PDFLayout.pageW-PDFLayout.margen,
-        9,
-        {align:"right"}
+        this.margen,
+
+        this.headerH,
+
+        this.pageW-this.margen,
+
+        this.headerH
+
     );
 
-}
+};
+// ======================================================
+// PORTADA
+// ======================================================
+
+PDFLayout.portada = function(titulo, cliente = ""){
+
+    const doc = this.doc;
+
+    doc.setFillColor(0,0,0);
+
+    doc.rect(
+        0,
+        0,
+        this.pageW,
+        this.pageH,
+        "F"
+    );
+
+    if(logoBase64){
+
+        try{
+
+            doc.addImage(
+                logoBase64,
+                "JPEG",
+                this.pageW/2 - 35,
+                35,
+                70,
+                38
+            );
+
+        }catch(e){}
+
+    }
+
+    doc.setTextColor(255);
+
+    doc.setFontSize(24);
+    doc.setFont(undefined,"bold");
+
+    doc.text(
+        titulo,
+        this.pageW/2,
+        95,
+        {align:"center"}
+    );
+
+    doc.setFontSize(12);
+    doc.setFont(undefined,"normal");
+
+    doc.text(
+        "Catálogo Digital",
+        this.pageW/2,
+        105,
+        {align:"center"}
+    );
+
+    if(cliente){
+
+        doc.setFontSize(11);
+
+        doc.text(
+            "Cliente: " + cliente,
+            this.pageW/2,
+            118,
+            {align:"center"}
+        );
+
+    }
+
+    doc.setFontSize(10);
+
+    doc.text(
+        new Date().toLocaleDateString(),
+        this.pageW/2,
+        this.pageH-25,
+        {align:"center"}
+    );
+
+};
 
 
-// ==========================================================
-// PIE DE PÁGINA
-// ==========================================================
+// ======================================================
+// ÍNDICE
+// ======================================================
 
-function dibujarPiePagina(){
+PDFLayout.indice = function(familias){
 
-    const doc = PDFLayout.doc;
+    this.doc.addPage();
 
-    const y =
-        PDFLayout.pageH-
-        PDFLayout.footerHeight;
+    this.paginaActual++;
+
+    this.cabecera("ÍNDICE");
+
+    this.pie();
+
+    const doc = this.doc;
+
+    let y = 30;
+
+    doc.setFontSize(12);
+
+    doc.setFont(undefined,"bold");
+
+    doc.text(
+        "Familias",
+        this.margen,
+        y
+    );
+
+    y += 10;
+
+    doc.setFont(undefined,"normal");
+
+    familias.forEach((f,i)=>{
+
+        if(y > this.pageH-20){
+
+            this.nuevaPagina("ÍNDICE");
+
+            y = 30;
+
+        }
+
+        doc.text(
+            (i+1)+". "+f,
+            this.margen,
+            y
+        );
+
+        y += 6;
+
+    });
+
+};
+
+
+// ======================================================
+// PIE
+// ======================================================
+
+PDFLayout.pie = function(){
+
+    const doc = this.doc;
+
+    const y = this.pageH - this.footerH;
 
     doc.setDrawColor(180);
 
     doc.line(
-        PDFLayout.margen,
+        this.margen,
         y-2,
-        PDFLayout.pageW-PDFLayout.margen,
+        this.pageW-this.margen,
         y-2
     );
 
@@ -184,144 +319,298 @@ function dibujarPiePagina(){
 
     doc.text(
         "MAESRA",
-        PDFLayout.margen,
+        this.margen,
         y+2
     );
 
     doc.text(
         new Date().toLocaleDateString(),
-        PDFLayout.pageW/2,
+        this.pageW/2,
         y+2,
         {align:"center"}
     );
 
-    doc.text(
-    "Página " +
-    PDFLayout.paginaActual +
-    " de " +
-    PDFLayout.totalPaginas,
-    PDFLayout.pageW-PDFLayout.margen,
-    y+2,
-    {align:"right"}
-);
-
-}
+};
 
 
-// ==========================================================
+// ======================================================
 // NUEVA PÁGINA
-// ==========================================================
+// ======================================================
 
-function nuevaPagina(titulo="CATÁLOGO"){
+PDFLayout.nuevaPagina = function(titulo){
 
-    const doc = PDFLayout.doc;
+    this.doc.addPage();
 
-    doc.addPage();
+    this.paginaActual++;
 
-    PDFLayout.paginaActual++;
+    this.cabecera(titulo);
 
-    dibujarCabecera(titulo);
+    this.pie();
 
-    dibujarPiePagina();
-
-}
+};
 
 
-// ==========================================================
-// PRIMERA PÁGINA
-// ==========================================================
+// ======================================================
+// NUMERAR TODAS LAS PÁGINAS
+// ======================================================
 
-function iniciarDocumento(titulo="CATÁLOGO"){
+PDFLayout.agregarPiePaginas = function(doc){
 
-    PDFLayout.paginaActual = 1;
+    const total = doc.getNumberOfPages();
 
-    dibujarCabecera(titulo);
+    for(let i=1;i<=total;i++){
 
-    dibujarPiePagina();
+        doc.setPage(i);
 
-}
+        doc.setFontSize(8);
+
+        doc.setTextColor(120);
+
+        doc.text(
+
+            "Página " + i + " de " + total,
+
+            this.pageW - this.margen,
+
+            this.pageH - 8,
+
+            {align:"right"}
+
+        );
+
+    }
+
+};
+// ======================================================
+// COLORES DE TEXTO
+// ======================================================
+
+PDFLayout.textoNegro = function(){
+
+    this.doc.setTextColor(0,0,0);
+
+};
+
+PDFLayout.textoGris = function(){
+
+    this.doc.setTextColor(120,120,120);
+
+};
+
+PDFLayout.textoBlanco = function(){
+
+    this.doc.setTextColor(255,255,255);
+
+};
 
 
-// ==========================================================
-// ÁREA ÚTIL
-// ==========================================================
+// ======================================================
+// FONDOS
+// ======================================================
 
-function areaTrabajo(){
+PDFLayout.fondoClaro = function(){
+
+    this.doc.setFillColor(...this.grisClaro);
+
+};
+
+PDFLayout.fondoOscuro = function(){
+
+    this.doc.setFillColor(...this.grisOscuro);
+
+};
+
+PDFLayout.fondoNegro = function(){
+
+    this.doc.setFillColor(0,0,0);
+
+};
+
+
+// ======================================================
+// LÍNEAS
+// ======================================================
+
+PDFLayout.lineaSuave = function(){
+
+    this.doc.setDrawColor(...this.grisLinea);
+
+    this.doc.setLineWidth(.15);
+
+};
+
+PDFLayout.lineaNormal = function(){
+
+    this.doc.setDrawColor(180);
+
+    this.doc.setLineWidth(.3);
+
+};
+
+
+// ======================================================
+// TIPOGRAFÍAS
+// ======================================================
+
+PDFLayout.tituloGrande = function(){
+
+    this.doc.setFont("helvetica","bold");
+
+    this.doc.setFontSize(16);
+
+    this.doc.setTextColor(0);
+
+};
+
+PDFLayout.tituloMediano = function(){
+
+    this.doc.setFont("helvetica","bold");
+
+    this.doc.setFontSize(12);
+
+    this.doc.setTextColor(0);
+
+};
+
+PDFLayout.texto = function(){
+
+    this.doc.setFont("helvetica","normal");
+
+    this.doc.setFontSize(8);
+
+    this.doc.setTextColor(0);
+
+};
+
+PDFLayout.textoPequeño = function(){
+
+    this.doc.setFont("helvetica","normal");
+
+    this.doc.setFontSize(7);
+
+    this.doc.setTextColor(70);
+
+};
+
+
+// ======================================================
+// ENCABEZADO NEGRO PARA TABLAS
+// ======================================================
+
+PDFLayout.estiloEncabezadoTabla = function(){
 
     return{
 
-        x:PDFLayout.margen,
+        fillColor:[0,0,0],
 
-        y:PDFLayout.headerHeight+5,
+        textColor:[255,255,255],
 
-        w:PDFLayout.pageW-(PDFLayout.margen*2),
+        fontStyle:"bold",
 
-        h:PDFLayout.pageH-
-            PDFLayout.headerHeight-
-            PDFLayout.footerHeight-
-            8
+        fontSize:8,
+
+        halign:"left",
+
+        valign:"middle"
 
     };
 
-}
+};
 
 
-// ==========================================================
-// COLORES RÁPIDOS
-// ==========================================================
+// ======================================================
+// ESTILO CUERPO TABLAS
+// ======================================================
 
-function colorTexto(){
+PDFLayout.estiloTabla = function(){
 
-    PDFLayout.doc.setTextColor(0);
+    return{
 
-}
+        fontSize:7,
 
-function colorGris(){
+        cellPadding:1.8,
 
-    PDFLayout.doc.setTextColor(120);
+        lineWidth:.15,
 
-}
+        lineColor:[215,215,215],
 
-function colorBlanco(){
+        textColor:[0,0,0],
 
-    PDFLayout.doc.setTextColor(255);
+        overflow:"linebreak",
 
-}
+        valign:"middle"
+
+    };
+
+};
 
 
-// ==========================================================
-// FONDOS
-// ==========================================================
+// ======================================================
+// FILAS ALTERNADAS
+// ======================================================
 
-function fondoGrisClaro(){
+PDFLayout.estiloAlternado = function(data){
 
-    PDFLayout.doc.setFillColor(
-        ...PDFLayout.grisClaro
-    );
+    if(data.section !== "body") return;
 
-}
+    if(data.row.index % 2 === 0){
 
-function fondoGrisOscuro(){
+        data.cell.styles.fillColor=[245,245,245];
 
-    PDFLayout.doc.setFillColor(
-        ...PDFLayout.grisOscuro
-    );
+    }else{
 
-}
+        data.cell.styles.fillColor=[228,228,228];
 
-function fondoNegro(){
+    }
 
-    PDFLayout.doc.setFillColor(0,0,0);
+};
 
-}
 
-// ==========================================================
-// ACTUALIZAR TOTAL DE PÁGINAS
-// ==========================================================
+// ======================================================
+// MÁRGENES PARA AUTOTABLE
+// ======================================================
 
-function finalizarDocumento(){
+PDFLayout.margenesTabla = function(){
 
-    PDFLayout.totalPaginas =
-        PDFLayout.doc.getNumberOfPages();
+    return{
 
-}
+        left:this.margen,
+
+        right:this.margen,
+
+        top:this.headerH+8,
+
+        bottom:this.footerH+5
+
+    };
+
+};
+
+
+// ======================================================
+// COORDENADA Y INICIAL DE CONTENIDO
+// ======================================================
+
+PDFLayout.inicioContenido = function(){
+
+    return this.headerH + 8;
+
+};
+
+
+// ======================================================
+// FIN DE PÁGINA
+// ======================================================
+
+PDFLayout.finPagina = function(){
+
+    return this.pageH - this.footerH - 6;
+
+};
+
+
+// ======================================================
+// EXPORTAR
+// ======================================================
+
+window.PDFLayout = PDFLayout;

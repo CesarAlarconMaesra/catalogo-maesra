@@ -1,154 +1,397 @@
-/* =====================================================
-   pdf/pdfGenerador.js
-   Generador principal del catálogo MAESRA
-===================================================== */
+/* ==========================================================
+   MAESRA - PDF
+   pdfGenerador.js
+   Generador principal del catálogo
+========================================================== */
 
-async function generarCatalogoCompletoPDF() {
+const PDFGenerador = {
 
-    try {
+//==========================================================
+// GENERAR CATÁLOGO
+//==========================================================
+
+async generar(){
+
+    try{
+
+        //--------------------------------------------------
+        // PROGRESO
+        //--------------------------------------------------
 
         await mostrarProgreso();
 
-        document.getElementById("progresoTexto").innerText =
+        document.getElementById(
+            "progresoTexto"
+        ).innerText =
             "Preparando catálogo...";
 
-        // ---------------------------------------
-        // Precarga de imágenes
-        // ---------------------------------------
+        //--------------------------------------------------
+        // CARGAR LOGO
+        //--------------------------------------------------
 
-        await precargarImagenes(productosFamilias, 20);
+        await cargarLogoPDF();
 
-        // ---------------------------------------
-        // Crear PDF
-        // ---------------------------------------
+        //--------------------------------------------------
+        // PRECARGAR IMÁGENES
+        //--------------------------------------------------
+
+        await PDFImagenes.precargar(
+            productosFamilias,
+            20
+        );
+
+        //--------------------------------------------------
+        // CREAR PDF
+        //--------------------------------------------------
 
         const { jsPDF } = window.jspdf;
 
-        const doc = new jsPDF(
-            "p",
-            "mm",
-            "letter"
-        );
-
-        PDFLayout.inicializar(doc);
-
-        // ---------------------------------------
-        // Portada
-        // ---------------------------------------
-
-        PDFLayout.portada(
-            "CATÁLOGO MAESRA 2026",
-            cliente || ""
-        );
-
-        // ---------------------------------------
-        // Índice
-        // ---------------------------------------
-
-        PDFLayout.indice(
-            productosFamilias
-                .filter(f => f.esFamilia)
-                .map(f => f.familia)
-        );
-
-        // ---------------------------------------
-        // Familias primero
-        // ---------------------------------------
-
-        document.getElementById("progresoTexto").innerText =
-            "Generando familias...";
-
-        const familias =
-            productosFamilias.filter(f => f.esFamilia);
-
-        let progreso = 0;
-        const total =
-            productosFamilias.length;
-
-        for (const familia of familias) {
-
-            await PDFFamilias.dibujarFamilia(
-                doc,
-                familia
+        const doc =
+            new jsPDF(
+                "p",
+                "mm",
+                "letter"
             );
 
-            progreso++;
+        //--------------------------------------------------
+        // INICIALIZAR LAYOUT
+        //--------------------------------------------------
 
-            actualizarProgreso(
-                progreso,
-                total
-            );
+        inicializarLayout(doc);
 
-            await new Promise(r =>
-                setTimeout(r, 0)
-            );
-        }
+        //--------------------------------------------------
+        // PORTADA
+        //--------------------------------------------------
 
-        // ---------------------------------------
-        // Productos individuales
-        // ---------------------------------------
+        this.crearPortada(doc);
 
-        document.getElementById("progresoTexto").innerText =
-            "Generando productos...";
+        //--------------------------------------------------
+        // ÍNDICE
+        //--------------------------------------------------
 
-        const individuales =
-            productosFamilias.filter(f => !f.esFamilia);
+        this.crearIndice(doc);
 
-        PDFProductos.iniciarSeccion(doc);
+        //--------------------------------------------------
+        // FAMILIAS
+        //--------------------------------------------------
 
-        for (const grupo of individuales) {
+        await this.generarFamilias(doc);
 
-            const producto = {
-                ...grupo.articulos[0],
-                imagen: grupo.imagen
-            };
+        //--------------------------------------------------
+        // PRODUCTOS
+        //--------------------------------------------------
 
-            await PDFProductos.dibujarProducto(
-                doc,
-                producto
-            );
+        await this.generarProductos(doc);
 
-            progreso++;
+        //--------------------------------------------------
+        // GUARDAR
+        //--------------------------------------------------
 
-            actualizarProgreso(
-                progreso,
-                total
-            );
-
-            await new Promise(r =>
-                setTimeout(r, 0)
-            );
-        }
-
-        // ---------------------------------------
-        // Numeración
-        // ---------------------------------------
-
-        PDFLayout.agregarPiePaginas(doc);
-
-        // ---------------------------------------
-        // Guardar
-        // ---------------------------------------
-
-        document.getElementById("progresoTexto").innerText =
+        document.getElementById(
+            "progresoTexto"
+        ).innerText =
             "Guardando PDF...";
 
-        doc.save("Catalogo MAESRA 2026.pdf");
+        doc.save(
+            "Catalogo MAESRA 2026.pdf"
+        );
 
     }
-    catch (err) {
 
-        console.error(err);
+    catch(error){
+
+        console.error(error);
 
         alert(
             "Ocurrió un error al generar el catálogo."
         );
 
     }
-    finally {
+
+    finally{
 
         ocultarProgreso();
 
     }
 
+},
+
+//==========================================================
+// PORTADA
+//==========================================================
+
+crearPortada(doc){
+
+    iniciarDocumento(
+        "CATÁLOGO MAESRA"
+    );
+
+    if(PDFLayout.logo){
+
+        try{
+
+            doc.addImage(
+
+                PDFLayout.logo,
+
+                "JPEG",
+
+                45,
+
+                35,
+
+                125,
+
+                65
+
+            );
+
+        }catch(e){}
+
+    }
+
+    doc.setFontSize(24);
+    doc.setFont(undefined,"bold");
+
+    doc.text(
+
+        "CATÁLOGO GENERAL",
+
+        PDFLayout.pageW/2,
+
+        120,
+
+        {align:"center"}
+
+    );
+
+    doc.setFont(undefined,"normal");
+
+    doc.setFontSize(12);
+
+    doc.text(
+
+        "Productos por familias",
+
+        PDFLayout.pageW/2,
+
+        130,
+
+        {align:"center"}
+
+    );
+
+    if(cliente){
+
+        doc.setFontSize(11);
+
+        doc.text(
+
+            "Cliente: " + cliente,
+
+            PDFLayout.pageW/2,
+
+            142,
+
+            {align:"center"}
+
+        );
+
+    }
+
+    doc.setFontSize(10);
+
+    doc.text(
+
+        new Date().toLocaleDateString(),
+
+        PDFLayout.pageW/2,
+
+        154,
+
+        {align:"center"}
+
+    );
+
+},
+
+//==========================================================
+// ÍNDICE
+//==========================================================
+
+crearIndice(doc){
+
+    nuevaPagina("ÍNDICE");
+
+    const familias =
+
+        productosFamilias
+
+        .filter(f=>f.esFamilia)
+
+        .sort((a,b)=>
+
+            a.familia.localeCompare(
+
+                b.familia
+
+            )
+
+        );
+
+    let y = 30;
+
+    doc.setFontSize(11);
+
+    familias.forEach(f=>{
+
+        doc.text(
+
+            "• " + f.familia,
+
+            18,
+
+            y
+
+        );
+
+        y += 6;
+
+        if(y > 265){
+
+            nuevaPagina("ÍNDICE");
+
+            y = 30;
+
+        }
+
+    });
+
+},
+//==========================================================
+// GENERAR FAMILIAS
+//==========================================================
+
+async generarFamilias(doc){
+
+    document.getElementById(
+        "progresoTexto"
+    ).innerText = "Generando familias...";
+
+    const familias = productosFamilias.filter(
+        f => f.esFamilia
+    );
+
+    let progreso = 0;
+
+    const total =
+        productosFamilias.length;
+
+    await PDFFamilias.dibujarTodas(
+        doc,
+        familias
+    );
+
+    progreso += familias.length;
+
+    actualizarProgreso(
+        progreso,
+        total
+    );
+
+},
+
+//==========================================================
+// GENERAR PRODUCTOS INDIVIDUALES
+//==========================================================
+
+async generarProductos(doc){
+
+    document.getElementById(
+        "progresoTexto"
+    ).innerText = "Generando productos...";
+
+    const individuales =
+        productosFamilias.filter(
+            f => !f.esFamilia
+        );
+
+    const lista = [];
+
+    individuales.forEach(grupo=>{
+
+        if(grupo.articulos.length){
+
+            lista.push({
+
+                ...grupo.articulos[0],
+
+                imagen:grupo.imagen
+
+            });
+
+        }
+
+    });
+
+    await PDFProductos.dibujarTodos(
+        doc,
+        lista
+    );
+
+    actualizarProgreso(
+        productosFamilias.length,
+        productosFamilias.length
+    );
+
+},
+
+//==========================================================
+// ESTADÍSTICAS
+//==========================================================
+
+obtenerResumen(){
+
+    return{
+
+        familias:
+
+            productosFamilias.filter(
+                f=>f.esFamilia
+            ).length,
+
+        individuales:
+
+            productosFamilias.filter(
+                f=>!f.esFamilia
+            ).length,
+
+        totalArticulos:
+
+            productos.length
+
+    };
+
+},
+
+//==========================================================
+// DEPURACIÓN
+//==========================================================
+
+mostrarResumen(){
+
+    console.table(
+
+        this.obtenerResumen()
+
+    );
+
 }
+
+};
+
+//==========================================================
+// EXPORTAR
+//==========================================================
+
+window.PDFGenerador = PDFGenerador;

@@ -1,262 +1,441 @@
-/* ============================================
-   PDF PRODUCTOS INDIVIDUALES
-============================================ */
+/* ==========================================================
+   MAESRA - PDF
+   pdfProductos.js
+   Productos individuales (4x5 por página)
+========================================================== */
 
-async function pdfDibujarProducto(doc, producto, x, y, cardW, cardH){
+const PDFProductos = {
 
-    const padding = 3;
+    doc: null,
+    area: null,
+
+    columnas: 4,
+    filas: 5,
+
+    fila: 0,
+    columna: 0,
+
+    x: 0,
+    y: 0,
+
+    anchoFicha: 0,
+    altoFicha: 0,
+
+//==========================================================
+// INICIAR SECCIÓN
+//==========================================================
+
+iniciarSeccion(doc){
+
+    this.doc = doc;
+
+    PDFLayout.nuevaPagina("PRODUCTOS");
+
+    this.area = PDFLayout.areaTrabajo();
+
+    this.anchoFicha =
+        this.area.w / this.columnas;
+
+    this.altoFicha =
+        this.area.h / this.filas;
+
+    this.columna = 0;
+    this.fila = 0;
+
+    this.x = this.area.x;
+    this.y = this.area.y;
+
+},
+
+//==========================================================
+// DIBUJAR PRODUCTO
+//==========================================================
+
+async dibujarProducto(doc,producto){
+
+    this.doc = doc;
+
+    //------------------------------------------------------
+    // BORDE
+    //------------------------------------------------------
 
     doc.setDrawColor(220);
-    doc.setLineWidth(0.2);
-    doc.rect(x,y,cardW,cardH);
+    doc.setLineWidth(.20);
 
-    let ty = y + padding;
+    doc.roundedRect(
 
-    //------------------------------------------------
-    // Imagen
-    //------------------------------------------------
+        this.x,
 
-    const base64 =
-        cacheImagenes[producto.imagen] ||
-        await cargarImagenOptimizada(producto.imagen,300);
+        this.y,
+
+        this.anchoFicha,
+
+        this.altoFicha,
+
+        1.5,
+
+        1.5
+
+    );
+
+    //------------------------------------------------------
+    // IMAGEN
+    //------------------------------------------------------
+
+    let base64 = await PDFImagenes.obtenerImagenPDF(producto.imagen, 350);
+
+    }
+
+    let inicioTexto =
+        this.y + 5;
 
     if(base64){
 
-        const img = new Image();
+        inicioTexto +=
+            await this.dibujarImagen(base64);
 
-        await new Promise(resolve=>{
-            img.onload = resolve;
-            img.src = base64;
-        });
-
-        const maxW = cardW - 8;
-        const maxH = cardH * 0.38;
-
-        let w = img.width;
-        let h = img.height;
-
-        const ratio = Math.min(maxW/w,maxH/h);
-
-        w*=ratio;
-        h*=ratio;
-
-        const imgX = x + (cardW-w)/2;
-
-        doc.addImage(
-            base64,
-            "JPEG",
-            imgX,
-            ty,
-            w,
-            h
-        );
-
-        ty += h + 3;
     }
 
-    //------------------------------------------------
-    // Código
-    //------------------------------------------------
+    //------------------------------------------------------
+    // TEXTO
+    //------------------------------------------------------
 
-    doc.setFontSize(6);
-    doc.setTextColor(90);
-
-    doc.text(
-        "Código: " + producto.codigo,
-        x + padding,
-        ty
+    this.dibujarTexto(
+        producto,
+        inicioTexto
     );
 
-    ty += 3;
+    //------------------------------------------------------
+    // SIGUIENTE POSICIÓN
+    //------------------------------------------------------
 
-    //------------------------------------------------
-    // Producto
-    //------------------------------------------------
+    this.siguiente();
 
-    doc.setFontSize(7);
-    doc.setTextColor(0);
+},
 
-    let nombre =
-        doc.splitTextToSize(
-            producto.producto,
-            cardW - 6
+//==========================================================
+// DIBUJAR IMAGEN
+//==========================================================
+
+async dibujarImagen(base64){
+
+    if(!base64) return 38;
+
+    const img =
+        new Image();
+
+    await new Promise(resolve=>{
+
+        img.onload = resolve;
+
+        img.src = base64;
+
+    });
+
+    let w = img.width;
+    let h = img.height;
+
+    const maxW =
+        this.anchoFicha - 10;
+
+    const maxH = 34;
+
+    const ratio =
+        Math.min(
+            maxW / w,
+            maxH / h
         );
 
-    nombre = nombre.slice(0,3);
+    w *= ratio;
+    h *= ratio;
 
-    doc.text(
-        nombre,
-        x + padding,
-        ty
+    const posX =
+
+        this.x +
+
+        (this.anchoFicha-w)/2;
+
+    this.doc.addImage(
+
+        base64,
+
+        "JPEG",
+
+        posX,
+
+        this.y + 4,
+
+        w,
+
+        h
+
     );
 
-    ty += nombre.length * 3;
+    return h + 8;
 
-    //------------------------------------------------
-    // Marca
-    //------------------------------------------------
+},
+
+//==========================================================
+// DIBUJAR TEXTO
+//==========================================================
+
+dibujarTexto(producto,inicioY){
+
+    const doc = this.doc;
+
+    let y = inicioY;
+
+    //--------------------------------------
+    // Código
+    //--------------------------------------
 
     doc.setFontSize(6);
 
-    doc.text(
-        "Marca: " + (producto.marca || ""),
-        x + padding,
-        ty
-    );
-
-    ty += 3;
-
-    //------------------------------------------------
-    // Unidad
-    //------------------------------------------------
-
-    doc.text(
-        "Unidad: " + (producto.unidad || ""),
-        x + padding,
-        ty
-    );
-
-    ty += 3;
-
-    //------------------------------------------------
-    // Master
-    //------------------------------------------------
-
-    doc.text(
-        "Master: " + (producto.master || ""),
-        x + padding,
-        ty
-    );
-
-    ty += 3;
-
-    //------------------------------------------------
-    // Inner
-    //------------------------------------------------
-
-    doc.text(
-        "Inner: " + (producto.inner || ""),
-        x + padding,
-        ty
-    );
-}
-
-
-
-
-
-
-/* ============================================
-   GENERAR TODA LA SECCIÓN DE PRODUCTOS
-============================================ */
-
-async function pdfProductos(doc, listaProductos){
-
-    const pageW =
-        doc.internal.pageSize.getWidth();
-
-    const pageH =
-        doc.internal.pageSize.getHeight();
-
-    const margen = 10;
-
-    doc.setFontSize(18);
-    doc.setFont(undefined,"bold");
-
-    doc.text(
-        "PRODUCTOS INDIVIDUALES",
-        pageW/2,
-        20,
-        {align:"center"}
-    );
+    doc.setTextColor(120);
 
     doc.setFont(undefined,"normal");
 
-    //------------------------------------------------
+    doc.text(
 
-    const cols = 4;
-    const filas = 5;
+        producto.codigo,
 
-    const cardW =
-        (pageW - margen*2) / cols;
+        this.x+3,
 
-    const cardH =
-        (pageH - 45) / filas;
+        y
 
-    let x = margen;
-    let y = 35;
+    );
 
-    let col = 0;
-    let fila = 0;
+    y += 3.5;
 
-    //------------------------------------------------
+    //--------------------------------------
+    // Marca
+    //--------------------------------------
 
-    function siguiente(){
+    doc.setFontSize(6);
 
-        col++;
+    doc.setFont(undefined,"bold");
 
-        if(col>=cols){
+    doc.setTextColor(30);
 
-            col=0;
-            fila++;
+    doc.text(
 
-            x=margen;
-            y+=cardH;
+        producto.marca || "",
 
-        }else{
+        this.x+3,
 
-            x+=cardW;
+        y
 
-        }
+    );
 
-    }
+    y += 4;
 
-    //------------------------------------------------
+    //--------------------------------------
+    // Producto
+    //--------------------------------------
 
-    function nuevaPagina(){
+    doc.setFont(undefined,"normal");
 
-        doc.addPage();
+    doc.setFontSize(7);
 
-        pdfEncabezadoPagina(
-            doc,
-            "PRODUCTOS INDIVIDUALES"
+    doc.setTextColor(0);
+
+    let nombre =
+
+        doc.splitTextToSize(
+
+            producto.producto,
+
+            this.anchoFicha - 6
+
         );
 
-        x=margen;
-        y=35;
+    if(nombre.length>3){
 
-        col=0;
-        fila=0;
+        nombre = nombre.slice(0,3);
+
     }
 
-    //------------------------------------------------
+    doc.text(
 
-    for(const grupo of listaProductos){
+        nombre,
 
-        const p = grupo.articulos[0];
+        this.x+3,
 
-        p.imagen = grupo.imagen;
+        y
 
-        if(!p.marca)
-            p.marca = grupo.marca;
+    );
 
-        await pdfDibujarProducto(
+    y += nombre.length * 3.3;
+
+    //--------------------------------------
+    // Empaque
+    //--------------------------------------
+
+    doc.setFontSize(6);
+
+    doc.setTextColor(90);
+
+    doc.text(
+
+        "Unidad",
+
+        this.x+3,
+
+        y
+
+    );
+
+    doc.text(
+
+        String(producto.unidad||""),
+
+        this.x+16,
+
+        y
+
+    );
+
+    doc.text(
+
+        "M:",
+
+        this.x+28,
+
+        y
+
+    );
+
+    doc.text(
+
+        String(producto.master||""),
+
+        this.x+34,
+
+        y
+
+    );
+
+    doc.text(
+
+        "I:",
+
+        this.x+46,
+
+        y
+
+    );
+
+    doc.text(
+
+        String(producto.inner||""),
+
+        this.x+50,
+
+        y
+
+    );
+
+},
+//==========================================================
+// SIGUIENTE POSICIÓN
+//==========================================================
+
+siguiente(){
+
+    this.columna++;
+
+    if(this.columna >= this.columnas){
+
+        this.columna = 0;
+        this.fila++;
+
+    }
+
+    if(this.fila >= this.filas){
+
+        this.nuevaPagina();
+        return;
+
+    }
+
+    this.x =
+        this.area.x +
+        (this.columna * this.anchoFicha);
+
+    this.y =
+        this.area.y +
+        (this.fila * this.altoFicha);
+
+},
+
+//==========================================================
+// NUEVA PÁGINA
+//==========================================================
+
+nuevaPagina(){
+
+    PDFLayout.nuevaPagina("PRODUCTOS");
+
+    this.fila = 0;
+    this.columna = 0;
+
+    this.x = this.area.x;
+    this.y = this.area.y;
+
+},
+
+//==========================================================
+// REINICIAR POSICIÓN
+//==========================================================
+
+reiniciar(){
+
+    this.fila = 0;
+    this.columna = 0;
+
+    this.x = this.area.x;
+    this.y = this.area.y;
+
+},
+
+//==========================================================
+// DIBUJAR TODOS LOS PRODUCTOS
+//==========================================================
+
+async dibujarTodos(doc,productos){
+
+    this.iniciarSeccion(doc);
+
+    for(const producto of productos){
+
+        await this.dibujarProducto(
             doc,
-            p,
-            x,
-            y,
-            cardW,
-            cardH
+            producto
         );
 
-        siguiente();
-
-        if(fila>=filas){
-
-            nuevaPagina();
-
-        }
-
     }
+
+},
+
+//==========================================================
+// TOTAL DE PÁGINAS (ESTIMADO)
+//==========================================================
+
+calcularPaginas(totalProductos){
+
+    const porPagina =
+        this.columnas * this.filas;
+
+    return Math.ceil(
+        totalProductos / porPagina
+    );
 
 }
+
+};
+
+//==========================================================
+// EXPORTAR MÓDULO
+//==========================================================
+
+window.PDFProductos = PDFProductos;

@@ -294,7 +294,7 @@ function tituloSeccion(textoTitulo, y){
 
     const doc = PDFLayout.doc;
 
-    fondoNegro();
+    PDFLayout.fondoNegro();
 
     cajaRellena(
 
@@ -308,7 +308,7 @@ function tituloSeccion(textoTitulo, y){
 
     );
 
-    colorBlanco();
+    PDFLayout.textoBlanco();
 
     doc.setFontSize(13);
     doc.setFont(undefined, "bold");
@@ -325,7 +325,7 @@ function tituloSeccion(textoTitulo, y){
 
     );
 
-    colorTexto();
+    PDFLayout.textoNegro();
 
     doc.setFont(undefined, "normal");
 
