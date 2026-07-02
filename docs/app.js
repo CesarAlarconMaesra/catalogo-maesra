@@ -5,10 +5,6 @@ let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let cliente = localStorage.getItem("cliente");
 let logoBase64 = null;
 
-const URL_BASE_IMAGENES = "https://cesaralarconmaesra.github.io/catalogo-maesra/"; // <-- AJUSTAR
-const cacheImagenes = {};
-
-
 /* ===============================
 INICIO
 =============================== */
@@ -27,26 +23,20 @@ document.addEventListener("DOMContentLoaded", () => {
   cargarProductos();
 
   /* ===== BUSCADOR ===== */
-
   const buscador = document.getElementById("buscador");
-
   if (buscador) {
     buscador.addEventListener("input", e => {
-
       const texto = e.target.value.toLowerCase();
-
       const filtrados = productos.filter(p =>
         (p.producto && p.producto.toLowerCase().includes(texto)) ||
         (p.codigo && p.codigo.toLowerCase().includes(texto)) ||
         (p.marca && p.marca.toLowerCase().includes(texto))
       );
-
       mostrarProductos(filtrados);
     });
   }
 
   /* ===== MODAL PASSWORD ===== */
-
   const formPassword = document.getElementById("formPassword");
   const modalPassword = document.getElementById("modalPassword");
   const inputPassword = document.getElementById("inputPassword");
@@ -56,18 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
     formPassword.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      if (inputPassword.value === "MaesraAbril2026") {
-
+      if (inputPassword.value === "MaesraJulio2026") {
         listaPrecioActiva = "LP1";
         localStorage.setItem("listaPrecio", "LP1");
-
         actualizarIndicadorLista();
         mostrarProductos(productos);
-
         modalPassword.classList.add("oculto");
         inputPassword.value = "";
         errorPassword.style.display = "none";
-
       } else {
         errorPassword.style.display = "block";
       }
@@ -75,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const btnCancelarPassword = document.getElementById("btnCancelarPassword");
-
   if (btnCancelarPassword) {
     btnCancelarPassword.addEventListener("click", function () {
       modalPassword.classList.add("oculto");
@@ -91,13 +76,10 @@ BOTONES
 =============================== */
 
 function conectarBotones() {
-
   const btnCarrito = document.getElementById("btnCarrito");
   const btnPrecio = document.getElementById("btnPrecio");
-
   if (btnCarrito) btnCarrito.onclick = abrirCarrito;
   if (btnPrecio) btnPrecio.onclick = toggleListaPrecio;
-
 }
 
 /* ===============================
@@ -116,14 +98,12 @@ CARGAR PRODUCTOS
 =============================== */
 
 function cargarProductos() {
-
   Promise.all([
     fetch("productos.json").then(r => r.json()),
     fetch("productos_familias.json").then(r => r.json()),
     cargarLogo()
-])
-.then(([productosData, familiasData]) => {
-
+  ])
+  .then(([productosData, familiasData]) => {
     productos = productosData;
     productosFamilias = familiasData;
 
@@ -139,18 +119,16 @@ function cargarProductos() {
 
     activarCarruselAutomatico("promoTrack");
     activarCarruselAutomatico("topProductos");
-});
-
+  });
 }
+
 /* ===============================
 PROMOCIONES
 =============================== */
 
 function mostrarPromociones(lista) {
-
   const contenedor = document.getElementById("promoTrack");
   if (!contenedor) return;
-
   contenedor.innerHTML = "";
 
   const promos = lista.filter(p =>
@@ -159,10 +137,8 @@ function mostrarPromociones(lista) {
   );
 
   promos.forEach(p => {
-
     const card = document.createElement("div");
     card.className = "card card-promo";
-
     card.innerHTML = `
       <div class="badge-promo">🔥 PROMOCIÓN</div>
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
@@ -171,7 +147,6 @@ function mostrarPromociones(lista) {
       <div class="precio-anterior">$${Number(p.precioLP4).toFixed(2)}</div>
       <div class="precio-promo">$${Number(p.precioPromocion).toFixed(2)}</div>
     `;
-
     card.onclick = () => abrirDetalle(p);
     contenedor.appendChild(card);
   });
@@ -182,25 +157,19 @@ TOP PRODUCTOS
 =============================== */
 
 function mostrarTopProductos(lista) {
-
   const contenedor = document.getElementById("topProductos");
   if (!contenedor) return;
-
   contenedor.innerHTML = "";
 
   const top = lista.filter(p => p.top === true);
-
   top.forEach(p => {
-
     const card = document.createElement("div");
     card.className = "card-top";
-
     card.innerHTML = `
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
       <h4>${p.producto}</h4>
       <p>${p.codigo}</p>
     `;
-
     card.onclick = () => abrirDetalle(p);
     contenedor.appendChild(card);
   });
@@ -211,45 +180,30 @@ CARRUSEL OPTIMIZADO
 =============================== */
 
 function activarCarruselAutomatico(id) {
-
   const contenedor = document.getElementById(id);
   if (!contenedor) return;
-
   let animando = false;
 
   function moverBloque() {
-
     if (animando) return;
     animando = true;
-
     const cards = contenedor.querySelectorAll(".card, .card-top");
-
     if (cards.length === 0) {
       animando = false;
       return;
     }
-
     const anchoCard = cards[0].offsetWidth;
     const anchoVisible = contenedor.clientWidth;
-
-    // Cuántas tarjetas caben en pantalla
     const tarjetasVisibles = Math.floor(anchoVisible / anchoCard);
-
     const desplazamiento = tarjetasVisibles * anchoCard;
 
-    contenedor.scrollBy({
-      left: desplazamiento,
-      behavior: "smooth"
-    });
+    contenedor.scrollBy({ left: desplazamiento, behavior: "smooth" });
 
     setTimeout(() => {
-
       if (contenedor.scrollLeft + anchoVisible >= contenedor.scrollWidth) {
         contenedor.scrollTo({ left: 0, behavior: "smooth" });
       }
-
       animando = false;
-
     }, 1200);
   }
 
@@ -261,14 +215,11 @@ PRODUCTOS
 =============================== */
 
 function mostrarProductos(lista) {
-
   const contenedor = document.getElementById("listaProductos");
   if (!contenedor) return;
-
   contenedor.innerHTML = "";
 
   lista.forEach(p => {
-
     const enPromo =
       Number(p.precioPromocion) > 0 &&
       Number(p.precioPromocion) < Number(p.precioLP4);
@@ -282,7 +233,6 @@ function mostrarProductos(lista) {
 
     const card = document.createElement("div");
     card.className = "card";
-
     card.innerHTML = `
       ${enPromo ? `<div class="badge-promo">🔥 PROMOCIÓN</div>` : ""}
       <img src="${p.imagen}" onerror="this.src='img/sin_imagen.jpg'">
@@ -290,7 +240,6 @@ function mostrarProductos(lista) {
       <p>${p.codigo}</p>
       <div class="precio-normal">$${precio.toFixed(2)}</div>
     `;
-
     card.onclick = () => abrirDetalle(p);
     contenedor.appendChild(card);
   });
@@ -513,165 +462,45 @@ function enviarWhatsApp(){
   window.open(`https://wa.me/5216565292879?text=${msg}`);
 }
 
-// ===============================
-// CARGAR LOGO
-// ===============================
+
+/* ===============================
+CARGAR LOGO
+=============================== */
 
 async function cargarLogo() {
-
-    try {
-
-        const res = await fetch("img/MAESRA.jpg");
-        const blob = await res.blob();
-
-        return new Promise(resolve => {
-
-            const reader = new FileReader();
-
-            reader.onloadend = () => {
-
-                logoBase64 = reader.result;
-                resolve();
-
-            };
-
-            reader.readAsDataURL(blob);
-
-        });
-
-    } catch(e){
-
-        console.warn("No se pudo cargar logo");
-
-    }
-
+  try {
+    const res = await fetch("img/MAESRA.jpg");
+    const blob = await res.blob();
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        logoBase64 = reader.result;
+        resolve();
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch(e){
+    console.warn("No se pudo cargar logo");
+  }
 }
 
-
-// ===============================
-// OPTIMIZADOR DE IMÁGENES
-// ===============================
-
-async function cargarImagenOptimizada(rutaImagen, tamañoMax = 200){
-
-    if(!rutaImagen) return null;
-
-    if(cacheImagenes[rutaImagen]){
-        return cacheImagenes[rutaImagen];
-    }
-
-    try{
-
-        const url = rutaImagen.startsWith("http")
-            ? rutaImagen
-            : URL_BASE_IMAGENES + rutaImagen;
-
-        const response = await fetch(url);
-
-        if(!response.ok){
-            console.warn("Imagen no encontrada:", url);
-            return null;
-        }
-
-        const blob = await response.blob();
-
-        return new Promise(resolve => {
-
-            const img = new Image();
-
-            img.onload = function(){
-
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-
-                let w = img.width;
-                let h = img.height;
-
-                if(w > h){
-
-                    if(w > tamañoMax){
-                        h *= tamañoMax / w;
-                        w = tamañoMax;
-                    }
-
-                }else{
-
-                    if(h > tamañoMax){
-                        w *= tamañoMax / h;
-                        h = tamañoMax;
-                    }
-
-                }
-
-                canvas.width = w;
-                canvas.height = h;
-
-                ctx.drawImage(img,0,0,w,h);
-
-                const base64 = canvas.toDataURL("image/jpeg",0.75);
-
-                cacheImagenes[rutaImagen] = base64;
-
-                resolve(base64);
-
-            };
-
-            img.onerror = () => resolve(null);
-
-            img.src = URL.createObjectURL(blob);
-
-        });
-
-    }catch(e){
-
-        console.warn("Error cargando imagen", rutaImagen);
-        return null;
-
-    }
-
-}
-
-
-// ===============================
-// PRECARGA MASIVA DE IMÁGENES
-// ===============================
-
-async function precargarImagenes(productos, lote = 20){
-
-const imagenes = [
-    ...new Set(
-        productos.map(p => p.imagen).filter(Boolean)
-    )
-];
-
-    let index = 0;
-
-    async function worker(){
-
-        while(index < imagenes.length){
-
-            const actual = imagenes[index++];
-
-            if(!cacheImagenes[actual]){
-                await cargarImagenOptimizada(actual,200);
-            }
-
-        }
-
-    }
-
-    const workers = [];
-
-    for(let i=0;i<lote;i++){
-        workers.push(worker());
-    }
-
-    await Promise.all(workers);
-
-}
+/* ===============================
+GENERAR CATÁLOGO
+=============================== */
 
 async function generarCatalogoCompletoPDF(){
-
-    await pdfGenerador.generar();
-
+  await PDFGenerador.generar();
 }
+
+/* ===============================
+PROGRESO PDF
+=============================== */
+
+function mostrarProgreso() {
+  document.getElementById("progresoContainer").style.display = "block";
+  document.getElementById("barraProgreso").style.width = "0%";
+  document.getElementById("progresoTexto").innerText = "0%";
+}
+
+function ocultarProgreso() {
+  document.getElement
