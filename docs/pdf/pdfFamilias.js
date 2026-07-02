@@ -1,277 +1,181 @@
-/* ===========================================
-   pdfFamilias.js
-   Dibuja familias completas
-=========================================== */
+// ============================================
+// PDF FAMILIAS
+// ============================================
 
-async function dibujarFamilia(doc, familia, estado) {
+async function dibujarFamilia(doc, familia) {
 
-    const {
-        pageW,
-        pageH,
-        cacheImagenes,
-        cargarImagenOptimizada
-    } = estado;
+    const pageW = doc.internal.pageSize.getWidth();
 
-    let y = estado.y;
-
-    //-------------------------------------------------------
-    // Calcular altura necesaria
-    //-------------------------------------------------------
-
-    let altura = 42;
-
-    familia.articulos.forEach(a=>{
-
-        const lineas =
-            doc.splitTextToSize(a.producto,58);
-
-        altura += Math.max(5,lineas.length*4);
-
-    });
-
-    //-------------------------------------------------------
-    // Nueva página si no cabe
-    //-------------------------------------------------------
-
-    if(y + altura > pageH-15){
-
-        doc.addPage();
-
-        estado.nPagina++;
-
-        y = 20;
-
-        dibujarEncabezadoPagina(doc,estado);
-
-    }
-
-    //-------------------------------------------------------
+    // -----------------------------------
     // Imagen
-    //-------------------------------------------------------
+    // -----------------------------------
 
-    const base64 =
+    const img64 =
         cacheImagenes[familia.imagen] ||
-        await cargarImagenOptimizada(
-            familia.imagen,
-            260
-        );
+        await cargarImagenOptimizada(familia.imagen,250);
 
-    if(base64){
+    if(img64){
 
         try{
 
             doc.addImage(
-                base64,
+                img64,
                 "JPEG",
-                10,
-                y,
-                28,
-                28
+                12,
+                doc.lastAutoTable
+                    ? doc.lastAutoTable.finalY + 10
+                    : 28,
+                26,
+                26
             );
 
         }catch(e){}
 
     }
 
-    //-------------------------------------------------------
-    // Nombre familia
-    //-------------------------------------------------------
+    // -----------------------------------
+    // Título
+    // -----------------------------------
+
+    const inicioY =
+        doc.lastAutoTable
+            ? doc.lastAutoTable.finalY + 10
+            : 28;
 
     doc.setFontSize(15);
-
     doc.setFont(undefined,"bold");
-
-    doc.setTextColor(0);
 
     doc.text(
         familia.familia,
         45,
-        y+6
+        inicioY + 6
     );
 
     doc.setFont(undefined,"normal");
 
-    //-------------------------------------------------------
-    // Posiciones columnas
-    //-------------------------------------------------------
+    // -----------------------------------
+    // Tabla
+    // -----------------------------------
 
-    const xMarca=45;
-    const xCodigo=67;
-    const xProducto=92;
-    const xUnidad=154;
-    const xMaster=171;
-    const xInner=183;
+    const body = [];
 
-    let filaY=y+15;
+    familia.articulos.forEach(a=>{
 
-    //-------------------------------------------------------
-    // Encabezado tabla
-    //-------------------------------------------------------
+        body.push([
 
-    dibujarEncabezadoTabla(
-        doc,
-        filaY
-    );
-
-    filaY+=7;
-
-    //-------------------------------------------------------
-    // Artículos
-    //-------------------------------------------------------
-
-    familia.articulos.forEach((a,index)=>{
-
-        const descripcion =
-            doc.splitTextToSize(
-                a.producto,
-                58
-            );
-
-        const alto =
-            Math.max(
-                5,
-                descripcion.length*4
-            );
-
-        //------------------------------------
-        // Color alternado
-        //------------------------------------
-
-        if(index%2==0){
-
-            doc.setFillColor(245);
-
-        }else{
-
-            doc.setFillColor(232);
-
-        }
-
-        doc.rect(
-            43,
-            filaY-4,
-            145,
-            alto+3,
-            "F"
-        );
-
-        //------------------------------------
-        // Bordes
-        //------------------------------------
-
-        doc.setDrawColor(220);
-
-        doc.setLineWidth(.15);
-
-        doc.rect(
-            43,
-            filaY-4,
-            145,
-            alto+3
-        );
-
-        //------------------------------------
-        // Texto
-        //------------------------------------
-
-        doc.setTextColor(0);
-
-        doc.setFontSize(7);
-
-        doc.text(
             a.marca || "",
-            xMarca,
-            filaY
-        );
 
-        doc.text(
             a.codigo,
-            xCodigo,
-            filaY
-        );
 
-        doc.text(
-            descripcion,
-            xProducto,
-            filaY
-        );
+            a.producto,
 
-        doc.text(
             a.unidad || "",
-            xUnidad,
-            filaY
-        );
 
-        doc.text(
-            String(a.master||""),
-            xMaster,
-            filaY
-        );
+            a.master || "",
 
-        doc.text(
-            String(a.inner||""),
-            xInner,
-            filaY
-        );
+            a.inner || ""
 
-        filaY+=alto;
+        ]);
 
-        //------------------------------------
-        // ¿Cabe siguiente?
-        //------------------------------------
+    });
 
-        if(filaY>pageH-12){
+    doc.autoTable({
 
-            doc.addPage();
+        startY: inicioY + 12,
 
-            estado.nPagina++;
+        margin:{
+            left:45,
+            right:10
+        },
 
-            filaY=20;
+        head:[[
+            "Marca",
+            "Código",
+            "Producto",
+            "Unidad",
+            "Master",
+            "Inner"
+        ]],
 
-            dibujarEncabezadoPagina(doc,estado);
+        body,
 
-            dibujarEncabezadoTabla(
-                doc,
-                filaY
-            );
+        theme:"grid",
 
-            filaY+=7;
+        headStyles:{
+
+            fillColor:[0,0,0],
+
+            textColor:255,
+
+            fontStyle:"bold",
+
+            halign:"center",
+
+            valign:"middle"
+
+        },
+
+        alternateRowStyles:{
+
+            fillColor:[245,245,245]
+
+        },
+
+        styles:{
+
+            fontSize:7,
+
+            cellPadding:1.8,
+
+            lineColor:[220,220,220],
+
+            lineWidth:0.15,
+
+            overflow:"linebreak",
+
+            valign:"middle"
+
+        },
+
+        columnStyles:{
+
+            0:{cellWidth:20},
+
+            1:{cellWidth:24},
+
+            2:{cellWidth:74},
+
+            3:{cellWidth:18},
+
+            4:{cellWidth:14},
+
+            5:{cellWidth:14}
+
+        },
+
+        didDrawPage:function(data){
+
+            // Repite el título de la familia
+            // cuando la tabla ocupa varias páginas.
+
+            if(data.pageNumber>1){
+
+                doc.setFontSize(15);
+
+                doc.setFont(undefined,"bold");
+
+                doc.text(
+                    familia.familia,
+                    45,
+                    20
+                );
+
+                doc.setFont(undefined,"normal");
+
+            }
 
         }
 
     });
-
-    estado.y=filaY+8;
-
-}
-
-function dibujarEncabezadoTabla(doc,y){
-
-    doc.setFillColor(25);
-
-    doc.rect(
-        43,
-        y-5,
-        145,
-        6,
-        "F"
-    );
-
-    doc.setFont(undefined,"bold");
-
-    doc.setFontSize(8);
-
-    doc.setTextColor(255);
-
-    doc.text("Marca",45,y);
-    doc.text("Código",67,y);
-    doc.text("Producto",92,y);
-    doc.text("Unidad",154,y);
-    doc.text("M",171,y);
-    doc.text("I",183,y);
-
-    doc.setFont(undefined,"normal");
-
-    doc.setTextColor(0);
 
 }

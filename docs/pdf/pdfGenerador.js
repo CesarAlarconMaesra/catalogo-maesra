@@ -1,150 +1,154 @@
-/* ==========================================================
-   pdfGenerador.js
-   Generador principal del catálogo PDF MAESRA
-   ========================================================== */
+/* =====================================================
+   pdf/pdfGenerador.js
+   Generador principal del catálogo MAESRA
+===================================================== */
 
-const PDFGenerador = (() => {
+async function generarCatalogoCompletoPDF() {
 
-    // ======================================================
-    // FUNCIÓN PRINCIPAL
-    // ======================================================
+    try {
 
-    async function generar() {
+        await mostrarProgreso();
 
-        try {
+        document.getElementById("progresoTexto").innerText =
+            "Preparando catálogo...";
 
-            await mostrarProgreso();
+        // ---------------------------------------
+        // Precarga de imágenes
+        // ---------------------------------------
 
-            document.getElementById("progresoTexto").innerText =
-                "Preparando catálogo...";
+        await precargarImagenes(productosFamilias, 20);
 
-            //-------------------------------------------------
-            // Precargar imágenes
-            //-------------------------------------------------
+        // ---------------------------------------
+        // Crear PDF
+        // ---------------------------------------
 
-            const todasLasImagenes = [
-                ...productosFamilias
-            ];
+        const { jsPDF } = window.jspdf;
 
-            await PDFImagenes.precargar(
-                todasLasImagenes,
-                20
-            );
+        const doc = new jsPDF(
+            "p",
+            "mm",
+            "letter"
+        );
 
-            //-------------------------------------------------
-            // Crear documento
-            //-------------------------------------------------
+        PDFLayout.inicializar(doc);
 
-            const { jsPDF } = window.jspdf;
+        // ---------------------------------------
+        // Portada
+        // ---------------------------------------
 
-            const doc = new jsPDF(
-                "p",
-                "mm",
-                "letter"
-            );
+        PDFLayout.portada(
+            "CATÁLOGO MAESRA 2026",
+            cliente || ""
+        );
 
-            //-------------------------------------------------
-            // Inicializar Layout
-            //-------------------------------------------------
+        // ---------------------------------------
+        // Índice
+        // ---------------------------------------
 
-            PDFLayout.inicializar(doc);
+        PDFLayout.indice(
+            productosFamilias
+                .filter(f => f.esFamilia)
+                .map(f => f.familia)
+        );
 
-            //-------------------------------------------------
-            // Portada
-            //-------------------------------------------------
+        // ---------------------------------------
+        // Familias primero
+        // ---------------------------------------
 
-            document.getElementById("progresoTexto").innerText =
-                "Creando portada...";
+        document.getElementById("progresoTexto").innerText =
+            "Generando familias...";
 
-            await PDFLayout.dibujarPortada(
+        const familias =
+            productosFamilias.filter(f => f.esFamilia);
+
+        let progreso = 0;
+        const total =
+            productosFamilias.length;
+
+        for (const familia of familias) {
+
+            await PDFFamilias.dibujarFamilia(
                 doc,
-                logoBase64
+                familia
             );
 
-            //-------------------------------------------------
-            // Índice
-            //-------------------------------------------------
+            progreso++;
 
-            document.getElementById("progresoTexto").innerText =
-                "Generando índice...";
-
-            await PDFLayout.dibujarIndice(
-                doc,
-                productosFamilias
-                    .filter(f => f.esFamilia)
+            actualizarProgreso(
+                progreso,
+                total
             );
 
-            //-------------------------------------------------
-            // Familias
-            //-------------------------------------------------
-
-            document.getElementById("progresoTexto").innerText =
-                "Generando familias...";
-
-            await PDFFamilias.generar(
-
-                doc,
-
-                productosFamilias.filter(
-                    f => f.esFamilia
-                )
-
+            await new Promise(r =>
+                setTimeout(r, 0)
             );
-
-            //-------------------------------------------------
-            // Productos individuales
-            //-------------------------------------------------
-
-            document.getElementById("progresoTexto").innerText =
-                "Generando productos individuales...";
-
-            await PDFProductos.generar(
-
-                doc,
-
-                productosFamilias.filter(
-                    f => !f.esFamilia
-                )
-
-            );
-
-            //-------------------------------------------------
-            // Guardar PDF
-            //-------------------------------------------------
-
-            document.getElementById("progresoTexto").innerText =
-                "Guardando PDF...";
-
-            doc.save(
-                "Catalogo MAESRA 2026.pdf"
-            );
-
         }
-        catch (e) {
 
-            console.error(e);
+        // ---------------------------------------
+        // Productos individuales
+        // ---------------------------------------
 
-            alert(
-                "Ocurrió un error al generar el catálogo PDF."
+        document.getElementById("progresoTexto").innerText =
+            "Generando productos...";
+
+        const individuales =
+            productosFamilias.filter(f => !f.esFamilia);
+
+        PDFProductos.iniciarSeccion(doc);
+
+        for (const grupo of individuales) {
+
+            const producto = {
+                ...grupo.articulos[0],
+                imagen: grupo.imagen
+            };
+
+            await PDFProductos.dibujarProducto(
+                doc,
+                producto
             );
 
-        }
-        finally {
+            progreso++;
 
-            ocultarProgreso();
+            actualizarProgreso(
+                progreso,
+                total
+            );
 
+            await new Promise(r =>
+                setTimeout(r, 0)
+            );
         }
+
+        // ---------------------------------------
+        // Numeración
+        // ---------------------------------------
+
+        PDFLayout.agregarPiePaginas(doc);
+
+        // ---------------------------------------
+        // Guardar
+        // ---------------------------------------
+
+        document.getElementById("progresoTexto").innerText =
+            "Guardando PDF...";
+
+        doc.save("Catalogo MAESRA 2026.pdf");
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        alert(
+            "Ocurrió un error al generar el catálogo."
+        );
+
+    }
+    finally {
+
+        ocultarProgreso();
 
     }
 
-    //---------------------------------------------------------
-    // API pública
-    //---------------------------------------------------------
-
-    return {
-
-        generar
-
-    };
-
-})();
+}

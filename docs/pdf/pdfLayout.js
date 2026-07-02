@@ -196,11 +196,14 @@ function dibujarPiePagina(){
     );
 
     doc.text(
-        "Página " + PDFLayout.paginaActual,
-        PDFLayout.pageW-PDFLayout.margen,
-        y+2,
-        {align:"right"}
-    );
+    "Página " +
+    PDFLayout.paginaActual +
+    " de " +
+    PDFLayout.totalPaginas,
+    PDFLayout.pageW-PDFLayout.margen,
+    y+2,
+    {align:"right"}
+);
 
 }
 
@@ -309,5 +312,16 @@ function fondoGrisOscuro(){
 function fondoNegro(){
 
     PDFLayout.doc.setFillColor(0,0,0);
+
+}
+
+// ==========================================================
+// ACTUALIZAR TOTAL DE PÁGINAS
+// ==========================================================
+
+function finalizarDocumento(){
+
+    PDFLayout.totalPaginas =
+        PDFLayout.doc.getNumberOfPages();
 
 }
