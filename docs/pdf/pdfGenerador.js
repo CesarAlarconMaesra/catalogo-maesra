@@ -29,7 +29,7 @@ async generar(){
         // CARGAR LOGO
         //--------------------------------------------------
 
-        await cargarLogoPDF();
+        await cargarLogo();
 
         //--------------------------------------------------
         // PRECARGAR IMÁGENES
