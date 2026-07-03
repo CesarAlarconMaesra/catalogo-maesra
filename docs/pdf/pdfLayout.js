@@ -130,9 +130,7 @@ const PDFLayout = {
 
         return this.doc;
 
-    }
-
-},
+    },
 
     // ======================================================
     // CABECERA
@@ -228,7 +226,7 @@ const PDFLayout = {
         );
 
     },
-
+    
     // ======================================================
     // PIE DE PÁGINA
     // ======================================================
@@ -492,7 +490,7 @@ const PDFLayout = {
             {align:"center"}
 
         );
-
+    },
 
 // ======================================================
     // ÍNDICE
@@ -694,7 +692,6 @@ const PDFLayout = {
 
     }
 
-  },
+  };
 // disponible para todos los módulos
-
 window.PDFLayout = PDFLayout;
