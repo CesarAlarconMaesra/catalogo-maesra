@@ -672,6 +672,6 @@ const imagenes = [
 
 async function generarCatalogoCompletoPDF(){
 
-    await pdfGenerador.generar();
+    await PDFGenerador.generar();
 
 }
