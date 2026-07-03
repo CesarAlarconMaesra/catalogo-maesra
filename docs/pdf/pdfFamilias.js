@@ -1,108 +1,566 @@
 /* ==========================================================
+   MAESRA - MOTOR PDF
    pdfFamilias.js
-   Dibujo de familias utilizando AutoTable
 ========================================================== */
 
 const PDFFamilias = {
 
-    async dibujarFamilia(doc,familia){
+    //========================================================
+    // GENERAR TODAS LAS FAMILIAS
+    //========================================================
 
-        PDFLayout.nuevaPagina(familia.familia);
+    async generar(doc){
 
-        const area = PDFLayout.areaTrabajo();
+        const familias =
+            productosFamilias.filter(f => f.esFamilia);
 
-        //-------------------------------------------------------
-        // IMAGEN
-        //-------------------------------------------------------
+        PDFLayout.nuevaPagina("FAMILIAS");
 
-        let base64 = await PDFImagenes.obtenerImagenPDF(familia.imagen, 300);
+        for(const familia of familias){
 
-        if(base64){
-            try{
-                doc.addImage(
-                    base64,
-                    "JPEG",
-                    area.x,
-                    area.y,
-                    28,
-                    28
-                );
-            }catch(e){}
+            await this.dibujarFamilia(
+                doc,
+                familia
+            );
+
         }
 
-        //-------------------------------------------------------
-        // TÍTULO
-        //-------------------------------------------------------
+    },
+
+    //========================================================
+    // DIBUJAR UNA FAMILIA
+    //========================================================
+
+    async dibujarFamilia(doc,familia){
+
+        PDFLayout.agregarIndice(
+            familia.familia
+        );
+
+        //----------------------------------------------------
+        // Evitar comenzar una familia al final de una página
+        //----------------------------------------------------
+
+        if(doc.lastAutoTable){
+
+            if(
+                doc.lastAutoTable.finalY >
+                PDFLayout.pageH - 70
+            ){
+
+                PDFLayout.nuevaPagina(
+                    "FAMILIAS"
+                );
+
+            }
+
+        }
+
+        const area =
+            PDFLayout.areaTrabajo();
+
+        let y =
+            doc.lastAutoTable
+            ? doc.lastAutoTable.finalY + 12
+            : area.y;
+
+        //----------------------------------------------------
+        // TARJETA DEL ENCABEZADO
+        //----------------------------------------------------
+
+        doc.setFillColor(
+            ...PDFConfig.colores.grisMuyClaro
+        );
+
+        doc.roundedRect(
+
+            area.x,
+
+            y,
+
+            area.w,
+
+            30,
+
+            2,
+
+            2,
+
+            "F"
+
+        );
+
+        doc.setDrawColor(
+            ...PDFConfig.colores.linea
+        );
+
+        doc.setLineWidth(.25);
+
+        doc.roundedRect(
+
+            area.x,
+
+            y,
+
+            area.w,
+
+            30,
+
+            2,
+
+            2
+
+        );
+
+        //----------------------------------------------------
+        // IMAGEN
+        //----------------------------------------------------
+
+        const base64 =
+            cacheImagenes[familia.imagen] ||
+            await cargarImagenOptimizada(
+                familia.imagen,
+                260
+            );
+
+        if(base64){
+
+            try{
+
+                doc.addImage(
+
+                    base64,
+
+                    "JPEG",
+
+                    area.x + 3,
+
+                    y + 3,
+
+                    24,
+
+                    24
+
+                );
+
+            }catch(e){}
+
+        }
+
+        //----------------------------------------------------
+        // NOMBRE DE LA FAMILIA
+        //----------------------------------------------------
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "bold"
+        );
+
         doc.setFontSize(15);
-        doc.setFont(undefined,"bold");
-        doc.setTextColor(0);
-        doc.text(familia.familia, area.x+35, area.y+8);
-        doc.setFont(undefined,"normal");
 
-        //-------------------------------------------------------
-        // TABLA
-        //-------------------------------------------------------
-        const columnas = [
-            {header:"Marca",dataKey:"marca"},
-            {header:"Código",dataKey:"codigo"},
-            {header:"Producto",dataKey:"producto"},
-            {header:"Unidad",dataKey:"unidad"},
-            {header:"Master",dataKey:"master"},
-            {header:"Inner",dataKey:"inner"}
-        ];
+        doc.setTextColor(
+            ...PDFConfig.colores.negro
+        );
 
-        const filas = familia.articulos.map(a=>({
-            marca:a.marca || "",
-            codigo:a.codigo,
-            producto:a.producto,
-            unidad:a.unidad,
-            master:a.master,
-            inner:a.inner
+        doc.text(
+
+            familia.familia,
+
+            area.x + 32,
+
+            y + 8
+
+        );
+
+        //----------------------------------------------------
+        // MARCA
+        //----------------------------------------------------
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "normal"
+        );
+
+        doc.setFontSize(8);
+
+        doc.setTextColor(
+            ...PDFConfig.colores.grisOscuro
+        );
+
+        doc.text(
+
+            "Marca: " +
+            (familia.marca || "Varias"),
+
+            area.x + 32,
+
+            y + 15
+
+        );
+
+        //----------------------------------------------------
+        // CANTIDAD DE PRODUCTOS
+        //----------------------------------------------------
+
+        doc.text(
+
+            familia.articulos.length +
+            " artículos",
+
+            area.x + 32,
+
+            y + 21
+
+        );
+
+        //----------------------------------------------------
+        // LÍNEA DECORATIVA
+        //----------------------------------------------------
+
+        doc.setDrawColor(
+            ...PDFConfig.colores.linea
+        );
+
+        doc.line(
+
+            area.x,
+
+            y + 34,
+
+            area.x + area.w,
+
+            y + 34
+
+        );
+
+        //----------------------------------------------------
+        // INICIO DE LA TABLA
+        //----------------------------------------------------
+
+        y += 38;
+
+        await this.dibujarTabla(
+
+            doc,
+
+            familia,
+
+            y
+
+        );
+
+    },
+//========================================================
+    // TABLA DE ARTÍCULOS
+    //========================================================
+
+    async dibujarTabla(doc,familia,startY){
+
+        const body = familia.articulos.map(a => ({
+
+            marca: a.marca || "",
+
+            codigo: a.codigo || "",
+
+            producto: a.producto || "",
+
+            unidad: a.unidad || "",
+
+            master: String(a.master || ""),
+
+            inner: String(a.inner || "")
+
         }));
 
         doc.autoTable({
-            startY: area.y + 18,
-            columns: columnas,
-            body: filas,
-            margin: PDFLayout.margenesTabla(),
+
+            startY,
+
             theme: "grid",
-            styles: {
-                ...PDFLayout.estiloTabla(),
+
+            margin:{
+
+                left: PDFConfig.margen.izquierdo,
+
+                right: PDFConfig.margen.derecho
+
+            },
+
+            head:[[
+                "Marca",
+                "Código",
+                "Producto",
+                "Unidad",
+                "Master",
+                "Inner"
+            ]],
+
+            body: body.map(r => [
+
+                r.marca,
+
+                r.codigo,
+
+                r.producto,
+
+                r.unidad,
+
+                r.master,
+
+                r.inner
+
+            ]),
+
+            styles:{
+
+                font: PDFConfig.fuente,
+
+                fontSize: PDFConfig.tamaño.pequeño,
+
+                cellPadding: 2,
+
                 overflow: "linebreak",
-                cellPadding: 1.5,
-                valign: "middle"
+
+                valign: "middle",
+
+                lineColor: PDFConfig.colores.linea,
+
+                lineWidth: 0.15,
+
+                textColor: PDFConfig.colores.negro
+
             },
-            headStyles: PDFLayout.estiloEncabezadoTabla(),
-            alternateRowStyles: { fillColor: [242,242,242] },
+
+            headStyles:{
+
+                fillColor: PDFConfig.colores.negro,
+
+                textColor: PDFConfig.colores.blanco,
+
+                fontStyle:"bold",
+
+                halign:"center",
+
+                valign:"middle"
+
+            },
+
+            alternateRowStyles:{
+
+                fillColor: PDFConfig.colores.grisClaro
+
+            },
+
+            bodyStyles:{
+
+                textColor: PDFConfig.colores.negro
+
+            },
+
             columnStyles:{
-                marca:{ cellWidth:22 },
-                codigo:{ cellWidth:24 },
-                producto:{ cellWidth:72 },
-                unidad:{ cellWidth:18, halign:"center" },
-                master:{ cellWidth:15, halign:"center" },
-                inner:{ cellWidth:15, halign:"center" }
+
+                0:{
+                    cellWidth:18
+                },
+
+                1:{
+                    cellWidth:24
+                },
+
+                2:{
+                    cellWidth:82
+                },
+
+                3:{
+                    cellWidth:15,
+                    halign:"center"
+                },
+
+                4:{
+                    cellWidth:14,
+                    halign:"center"
+                },
+
+                5:{
+                    cellWidth:14,
+                    halign:"center"
+                }
+
             },
-            didParseCell:function(data){
-                PDFLayout.estiloAlternado(data);
-            },
-            didDrawPage:function(){
-                PDFLayout.cabecera(familia.familia);
-                PDFLayout.pie();
+
+            pageBreak:"auto",
+
+            rowPageBreak:"avoid",
+
+            showHead:"everyPage",
+
+            didDrawPage:(data)=>{
+
+                PDFLayout.dibujarCabecera("FAMILIAS");
+
+                PDFLayout.dibujarPie();
+
+                // Si la tabla continúa en otra página,
+                // mostrar nuevamente el nombre de la familia.
+
+                if(data.pageNumber>1){
+
+                    doc.setFont(
+                        PDFConfig.fuente,
+                        "bold"
+                    );
+
+                    doc.setFontSize(12);
+
+                    doc.setTextColor(
+                        ...PDFConfig.colores.negro
+                    );
+
+                    doc.text(
+
+                        familia.familia,
+
+                        PDFConfig.margen.izquierdo,
+
+                        PDFLayout.headerHeight + 8
+
+                    );
+
+                }
+
             }
+
         });
+
+    }
+
+    //========================================================
+    // DIBUJAR INSIGNIA DE FAMILIA
+    //========================================================
+
+    dibujarInsignia(doc, x, y) {
+
+        doc.setFillColor(
+            ...PDFConfig.colores.negro
+        );
+
+        doc.roundedRect(
+            x,
+            y,
+            28,
+            7,
+            1.5,
+            1.5,
+            "F"
+        );
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "bold"
+        );
+
+        doc.setFontSize(7);
+
+        doc.setTextColor(
+            ...PDFConfig.colores.blanco
+        );
+
+        doc.text(
+            "FAMILIA",
+            x + 14,
+            y + 4.5,
+            {
+                align: "center"
+            }
+        );
+
     },
 
-    //---------------------------------------------------------
-    // DIBUJAR TODAS LAS FAMILIAS
-    //---------------------------------------------------------
-    async dibujarTodas(doc,familias){
-        for(const familia of familias){
-            await this.dibujarFamilia(doc, familia);
-        }
+    //========================================================
+    // DIBUJAR TOTAL DE ARTÍCULOS
+    //========================================================
+
+    dibujarTotalArticulos(doc, total, x, y) {
+
+        doc.setFillColor(
+            ...PDFConfig.colores.grisOscuro
+        );
+
+        doc.roundedRect(
+            x,
+            y,
+            24,
+            18,
+            2,
+            2,
+            "F"
+        );
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "bold"
+        );
+
+        doc.setFontSize(14);
+
+        doc.setTextColor(
+            ...PDFConfig.colores.blanco
+        );
+
+        doc.text(
+            String(total),
+            x + 12,
+            y + 8,
+            {
+                align: "center"
+            }
+        );
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "normal"
+        );
+
+        doc.setFontSize(6);
+
+        doc.text(
+            "ARTÍCULOS",
+            x + 12,
+            y + 14,
+            {
+                align: "center"
+            }
+        );
+
+    },
+
+    //========================================================
+    // DIBUJAR LOGO PEQUEÑO
+    //========================================================
+
+    dibujarLogo(doc, x, y) {
+
+        if (!logoBase64) return;
+
+        try {
+
+            doc.addImage(
+                logoBase64,
+                "JPEG",
+                x,
+                y,
+                16,
+                9
+            );
+
+        } catch (e) {}
+
     }
+
 };
 
-//---------------------------------------------------------
-// EXPORTAR
-//---------------------------------------------------------
+//==========================================================
+// EXPORTAR MÓDULO
+//==========================================================
+
 window.PDFFamilias = PDFFamilias;

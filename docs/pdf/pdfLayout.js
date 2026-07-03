@@ -1,616 +1,699 @@
 /* ==========================================================
-   MAESRA PDF
+   MAESRA - MOTOR PDF
    pdfLayout.js
-   Manejo de diseño general del catálogo
+   Manejo de páginas, portada, índice y estilos generales
 ========================================================== */
 
 const PDFLayout = {
 
     doc: null,
 
-    margen: 10,
-
     pageW: 0,
 
     pageH: 0,
 
-    headerH: 18,
-
-    footerH: 10,
-
     paginaActual: 1,
 
-    totalPaginas: 1,
+    cliente: "",
 
-    tituloActual: "",
+    logo: null,
 
-    logoW: 22,
+    tituloActual: "CATÁLOGO",
 
-    logoH: 12,
+    indice: [],
 
-    grisClaro: [245,245,245],
+    // ======================================================
+    // INICIALIZAR
+    // ======================================================
 
-    grisOscuro: [228,228,228],
+    async inicializar(doc, cliente = "") {
 
-    grisLinea: [210,210,210],
+        this.doc = doc;
+        this.cliente = cliente;
 
-    negro:[0,0,0],
+        this.pageW = doc.internal.pageSize.getWidth();
+        this.pageH = doc.internal.pageSize.getHeight();
 
-    blanco:[255,255,255]
+        this.paginaActual = 1;
 
-};
+        doc.setFont(PDFConfig.fuente);
 
+        // cargar logo si aún no existe
 
-// ======================================================
-// INICIALIZAR
-// ======================================================
+        if (!logoBase64) {
 
-PDFLayout.inicializar = function(doc){
-
-    this.doc = doc;
-
-    this.pageW =
-        doc.internal.pageSize.getWidth();
-
-    this.pageH =
-        doc.internal.pageSize.getHeight();
-
-    this.paginaActual = 1;
-
-    doc.setFont("helvetica","normal");
-
-};
-
-
-// ======================================================
-// ÁREA ÚTIL
-// ======================================================
-
-PDFLayout.areaTrabajo=function(){
-
-    return{
-
-        x:this.margen,
-
-        y:this.headerH+6,
-
-        w:this.pageW-(this.margen*2),
-
-        h:this.pageH-
-          this.headerH-
-          this.footerH-
-          8
-
-    };
-
-};
-
-
-// ======================================================
-// CABECERA
-// ======================================================
-
-PDFLayout.cabecera=function(titulo=""){
-
-    this.tituloActual=titulo;
-
-    const doc=this.doc;
-
-    if(logoBase64){
-
-        try{
-
-            doc.addImage(
-
-                logoBase64,
-
-                "JPEG",
-
-                this.margen,
-
-                4,
-
-                this.logoW,
-
-                this.logoH
-
-            );
-
-        }catch(e){}
-
-    }
-
-    doc.setFontSize(15);
-
-    doc.setFont(undefined,"bold");
-
-    doc.setTextColor(20);
-
-    doc.text(
-
-        titulo,
-
-        this.pageW/2,
-
-        10,
-
-        {align:"center"}
-
-    );
-
-    doc.setFont(undefined,"normal");
-
-    doc.setDrawColor(180);
-
-    doc.setLineWidth(.3);
-
-    doc.line(
-
-        this.margen,
-
-        this.headerH,
-
-        this.pageW-this.margen,
-
-        this.headerH
-
-    );
-
-};
-// ======================================================
-// PORTADA
-// ======================================================
-
-PDFLayout.portada = function(titulo, cliente = ""){
-
-    const doc = this.doc;
-
-    doc.setFillColor(0,0,0);
-
-    doc.rect(
-        0,
-        0,
-        this.pageW,
-        this.pageH,
-        "F"
-    );
-
-    if(logoBase64){
-
-        try{
-
-            doc.addImage(
-                logoBase64,
-                "JPEG",
-                this.pageW/2 - 35,
-                35,
-                70,
-                38
-            );
-
-        }catch(e){}
-
-    }
-
-    doc.setTextColor(255);
-
-    doc.setFontSize(24);
-    doc.setFont(undefined,"bold");
-
-    doc.text(
-        titulo,
-        this.pageW/2,
-        95,
-        {align:"center"}
-    );
-
-    doc.setFontSize(12);
-    doc.setFont(undefined,"normal");
-
-    doc.text(
-        "Catálogo Digital",
-        this.pageW/2,
-        105,
-        {align:"center"}
-    );
-
-    if(cliente){
-
-        doc.setFontSize(11);
-
-        doc.text(
-            "Cliente: " + cliente,
-            this.pageW/2,
-            118,
-            {align:"center"}
-        );
-
-    }
-
-    doc.setFontSize(10);
-
-    doc.text(
-        new Date().toLocaleDateString(),
-        this.pageW/2,
-        this.pageH-25,
-        {align:"center"}
-    );
-
-};
-
-
-// ======================================================
-// ÍNDICE
-// ======================================================
-
-PDFLayout.indice = function(familias){
-
-    this.doc.addPage();
-
-    this.paginaActual++;
-
-    this.cabecera("ÍNDICE");
-
-    this.pie();
-
-    const doc = this.doc;
-
-    let y = 30;
-
-    doc.setFontSize(12);
-
-    doc.setFont(undefined,"bold");
-
-    doc.text(
-        "Familias",
-        this.margen,
-        y
-    );
-
-    y += 10;
-
-    doc.setFont(undefined,"normal");
-
-    familias.forEach((f,i)=>{
-
-        if(y > this.pageH-20){
-
-            this.nuevaPagina("ÍNDICE");
-
-            y = 30;
+            await cargarLogo();
 
         }
 
-        doc.text(
-            (i+1)+". "+f,
-            this.margen,
-            y
+        this.logo = logoBase64;
+
+    },
+
+    // ======================================================
+    // AGREGAR ENTRADA AL ÍNDICE
+    // ======================================================
+
+    agregarIndice(nombre) {
+
+        this.indice.push({
+
+            nombre,
+
+            pagina: this.paginaActual
+
+        });
+
+    },
+
+    // ======================================================
+    // NUEVA PÁGINA
+    // ======================================================
+
+    nuevaPagina(titulo = this.tituloActual) {
+
+        this.doc.addPage();
+
+        this.paginaActual++;
+
+        this.tituloActual = titulo;
+
+        this.dibujarCabecera();
+
+        this.dibujarPie();
+
+    },
+
+    // ======================================================
+    // ÁREA DE TRABAJO
+    // ======================================================
+
+    areaTrabajo() {
+
+        return {
+
+            x: PDFConfig.margen.izquierdo,
+
+            y:
+                PDFConfig.header.alto + 6,
+
+            w:
+                this.pageW -
+                PDFConfig.margen.izquierdo -
+                PDFConfig.margen.derecho,
+
+            h:
+                this.pageH -
+                PDFConfig.header.alto -
+                PDFConfig.footer.alto -
+                10
+
+        };
+
+    },
+
+    // ======================================================
+    // CAMBIAR TÍTULO
+    // ======================================================
+
+    setTitulo(titulo) {
+
+        this.tituloActual = titulo;
+
+    },
+
+    // ======================================================
+    // OBTENER DOCUMENTO
+    // ======================================================
+
+    getDoc() {
+
+        return this.doc;
+
+    }
+
+};
+
+    // ======================================================
+    // CABECERA
+    // ======================================================
+
+    dibujarCabecera() {
+
+        const doc = this.doc;
+
+        const margen = PDFConfig.margen.izquierdo;
+
+        // Fondo blanco
+
+        doc.setFillColor(255,255,255);
+
+        doc.rect(
+            0,
+            0,
+            this.pageW,
+            PDFConfig.header.alto,
+            "F"
         );
 
-        y += 6;
+        // Línea inferior
 
-    });
+        doc.setDrawColor(...PDFConfig.colores.linea);
+        doc.setLineWidth(PDFConfig.lineas.normal);
 
-};
+        doc.line(
+            margen,
+            PDFConfig.header.alto,
+            this.pageW - margen,
+            PDFConfig.header.alto
+        );
 
+        // Logo
 
-// ======================================================
-// PIE
-// ======================================================
+        if(this.logo){
 
-PDFLayout.pie = function(){
+            try{
 
-    const doc = this.doc;
+                doc.addImage(
+                    this.logo,
+                    "JPEG",
+                    margen,
+                    4,
+                    PDFConfig.logo.anchoCabecera,
+                    PDFConfig.logo.altoCabecera
+                );
 
-    const y = this.pageH - this.footerH;
+            }catch(e){}
 
-    doc.setDrawColor(180);
+        }
 
-    doc.line(
-        this.margen,
-        y-2,
-        this.pageW-this.margen,
-        y-2
-    );
+        // Título
 
-    doc.setFontSize(8);
+        doc.setFont(PDFConfig.fuente,"bold");
 
-    doc.setTextColor(120);
+        doc.setFontSize(PDFConfig.tamaño.subtitulo);
 
-    doc.text(
-        "MAESRA",
-        this.margen,
-        y+2
-    );
-
-    doc.text(
-        new Date().toLocaleDateString(),
-        this.pageW/2,
-        y+2,
-        {align:"center"}
-    );
-
-};
-
-
-// ======================================================
-// NUEVA PÁGINA
-// ======================================================
-
-PDFLayout.nuevaPagina = function(titulo){
-
-    this.doc.addPage();
-
-    this.paginaActual++;
-
-    this.cabecera(titulo);
-
-    this.pie();
-
-};
-
-
-// ======================================================
-// NUMERAR TODAS LAS PÁGINAS
-// ======================================================
-
-PDFLayout.agregarPiePaginas = function(doc){
-
-    const total = doc.getNumberOfPages();
-
-    for(let i=1;i<=total;i++){
-
-        doc.setPage(i);
-
-        doc.setFontSize(8);
-
-        doc.setTextColor(120);
+        doc.setTextColor(...PDFConfig.colores.negro);
 
         doc.text(
 
-            "Página " + i + " de " + total,
+            this.tituloActual,
 
-            this.pageW - this.margen,
+            this.pageW/2,
 
-            this.pageH - 8,
+            10,
+
+            {align:"center"}
+
+        );
+
+        // Año
+
+        doc.setFont(PDFConfig.fuente,"normal");
+
+        doc.setFontSize(PDFConfig.tamaño.pequeño);
+
+        doc.setTextColor(...PDFConfig.colores.grisOscuro);
+
+        doc.text(
+
+            PDFConfig.version,
+
+            this.pageW - margen,
+
+            9,
 
             {align:"right"}
 
         );
 
+    },
+
+    // ======================================================
+    // PIE DE PÁGINA
+    // ======================================================
+
+    dibujarPie() {
+
+        const doc = this.doc;
+
+        const margen = PDFConfig.margen.izquierdo;
+
+        const y =
+            this.pageH -
+            PDFConfig.footer.alto;
+
+        // Línea superior
+
+        doc.setDrawColor(...PDFConfig.colores.linea);
+
+        doc.setLineWidth(PDFConfig.lineas.normal);
+
+        doc.line(
+
+            margen,
+
+            y-2,
+
+            this.pageW-margen,
+
+            y-2
+
+        );
+
+        doc.setFont(PDFConfig.fuente,"normal");
+
+        doc.setFontSize(PDFConfig.tamaño.pequeño);
+
+        doc.setTextColor(...PDFConfig.colores.grisOscuro);
+
+        // Empresa
+
+        doc.text(
+
+            PDFConfig.empresa,
+
+            margen,
+
+            y+2
+
+        );
+
+        // Fecha
+
+        doc.text(
+
+            new Date().toLocaleDateString("es-MX"),
+
+            this.pageW/2,
+
+            y+2,
+
+            {align:"center"}
+
+        );
+
+        // Página
+
+        doc.text(
+
+            "Página " + this.paginaActual,
+
+            this.pageW-margen,
+
+            y+2,
+
+            {align:"right"}
+
+        );
+
+    },
+
+    // ======================================================
+    // PORTADA
+    // ======================================================
+
+    portada(cliente=""){
+
+        const doc = this.doc;
+
+        doc.setFillColor(255,255,255);
+
+        doc.rect(
+
+            0,
+
+            0,
+
+            this.pageW,
+
+            this.pageH,
+
+            "F"
+
+        );
+
+        // Logo grande
+
+        if(this.logo){
+
+            try{
+
+                doc.addImage(
+
+                    this.logo,
+
+                    "JPEG",
+
+                    (this.pageW-PDFConfig.portada.logoAncho)/2,
+
+                    35,
+
+                    PDFConfig.portada.logoAncho,
+
+                    PDFConfig.portada.logoAlto
+
+                );
+
+            }catch(e){}
+
+        }
+
+        // Título
+
+        doc.setFont(
+
+            PDFConfig.fuente,
+
+            "bold"
+
+        );
+
+        doc.setFontSize(
+
+            PDFConfig.tamaño.portada
+
+        );
+
+        doc.setTextColor(
+
+            ...PDFConfig.colores.negro
+
+        );
+
+        doc.text(
+
+            PDFConfig.catalogo,
+
+            this.pageW/2,
+
+            PDFConfig.portada.tituloY,
+
+            {align:"center"}
+
+        );
+
+        // Versión
+
+        doc.setFont(
+
+            PDFConfig.fuente,
+
+            "normal"
+
+        );
+
+        doc.setFontSize(
+
+            PDFConfig.tamaño.subtitulo
+
+        );
+
+        doc.text(
+
+            "Versión " + PDFConfig.version,
+
+            this.pageW/2,
+
+            PDFConfig.portada.tituloY+10,
+
+            {align:"center"}
+
+        );
+
+        // Cliente
+
+        if(cliente){
+
+            doc.setFontSize(
+
+                PDFConfig.tamaño.encabezado
+
+            );
+
+            doc.text(
+
+                "Cliente:",
+
+                this.pageW/2,
+
+                PDFConfig.portada.clienteY,
+
+                {align:"center"}
+
+            );
+
+            doc.setFont(
+
+                PDFConfig.fuente,
+
+                "bold"
+
+            );
+
+            doc.text(
+
+                cliente,
+
+                this.pageW/2,
+
+                PDFConfig.portada.clienteY+8,
+
+                {align:"center"}
+
+            );
+
+        }
+
+        // Fecha
+
+        doc.setFont(
+
+            PDFConfig.fuente,
+
+            "normal"
+
+        );
+
+        doc.setFontSize(
+
+            PDFConfig.tamaño.normal
+
+        );
+
+        doc.text(
+
+            new Date().toLocaleDateString("es-MX"),
+
+            this.pageW/2,
+
+            PDFConfig.portada.fechaY,
+
+            {align:"center"}
+
+        );
+
+    },
+// ======================================================
+    // ÍNDICE
+    // ======================================================
+
+    dibujarIndice() {
+
+        const doc = this.doc;
+
+        this.nuevaPagina("ÍNDICE");
+
+        const area = this.areaTrabajo();
+
+        let y = area.y;
+
+        doc.setFont(PDFConfig.fuente, "bold");
+        doc.setFontSize(PDFConfig.tamaño.titulo);
+
+        doc.text(
+            "ÍNDICE",
+            this.pageW / 2,
+            y,
+            { align: "center" }
+        );
+
+        y += 12;
+
+        doc.setFont(PDFConfig.fuente, "normal");
+        doc.setFontSize(PDFConfig.tamaño.normal);
+
+        this.indice.forEach(item => {
+
+            if (y > this.pageH - 25) {
+
+                this.nuevaPagina("ÍNDICE");
+                y = area.y;
+
+            }
+
+            doc.setTextColor(...PDFConfig.colores.negro);
+
+            doc.text(
+                item.nombre,
+                PDFConfig.indice.margenIzquierdo,
+                y
+            );
+
+            doc.text(
+                String(item.pagina),
+                this.pageW - PDFConfig.margen.derecho,
+                y,
+                { align: "right" }
+            );
+
+            // línea punteada
+
+            doc.setDrawColor(...PDFConfig.colores.linea);
+
+            for (let x = 60; x < this.pageW - 25; x += 3) {
+
+                doc.line(
+                    x,
+                    y - 1,
+                    x + 1,
+                    y - 1
+                );
+
+            }
+
+            y += PDFConfig.indice.saltoLinea;
+
+        });
+
+    },
+
+    // ======================================================
+    // TÍTULO DE SECCIÓN
+    // ======================================================
+
+    tituloSeccion(texto) {
+
+        const doc = this.doc;
+
+        const area = this.areaTrabajo();
+
+        doc.setFillColor(...PDFConfig.colores.negro);
+
+        doc.rect(
+            area.x,
+            area.y,
+            area.w,
+            8,
+            "F"
+        );
+
+        doc.setFont(PDFConfig.fuente, "bold");
+
+        doc.setFontSize(PDFConfig.tamaño.subtitulo);
+
+        doc.setTextColor(...PDFConfig.colores.blanco);
+
+        doc.text(
+            texto,
+            area.x + 4,
+            area.y + 5.5
+        );
+
+        doc.setTextColor(...PDFConfig.colores.negro);
+
+    },
+
+    // ======================================================
+    // CAJA DE TÍTULO
+    // ======================================================
+
+    cajaTitulo(texto, y) {
+
+        const doc = this.doc;
+
+        const area = this.areaTrabajo();
+
+        doc.setFillColor(...PDFConfig.colores.grisClaro);
+
+        doc.roundedRect(
+            area.x,
+            y,
+            area.w,
+            8,
+            1,
+            1,
+            "F"
+        );
+
+        doc.setDrawColor(...PDFConfig.colores.linea);
+
+        doc.roundedRect(
+            area.x,
+            y,
+            area.w,
+            8,
+            1,
+            1
+        );
+
+        doc.setFont(PDFConfig.fuente, "bold");
+
+        doc.setFontSize(PDFConfig.tamaño.encabezado);
+
+        doc.text(
+            texto,
+            area.x + 3,
+            y + 5
+        );
+
+    },
+
+    // ======================================================
+    // TEXTO CENTRADO
+    // ======================================================
+
+    centrarTexto(texto, y, tamaño = PDFConfig.tamaño.normal) {
+
+        const doc = this.doc;
+
+        doc.setFontSize(tamaño);
+
+        doc.text(
+            texto,
+            this.pageW / 2,
+            y,
+            { align: "center" }
+        );
+
+    },
+
+    // ======================================================
+    // FINALIZAR DOCUMENTO
+    // ======================================================
+
+    finalizar() {
+
+        const paginas = this.doc.getNumberOfPages();
+
+        for (let i = 1; i <= paginas; i++) {
+
+            this.doc.setPage(i);
+
+            this.paginaActual = i;
+
+            // No dibujar cabecera en portada
+
+            if (i > 1) {
+
+                this.dibujarPie();
+
+            }
+
+        }
+
     }
 
-};
-// ======================================================
-// COLORES DE TEXTO
-// ======================================================
-
-PDFLayout.textoNegro = function(){
-
-    this.doc.setTextColor(0,0,0);
-
-};
-
-PDFLayout.textoGris = function(){
-
-    this.doc.setTextColor(120,120,120);
-
-};
-
-PDFLayout.textoBlanco = function(){
-
-    this.doc.setTextColor(255,255,255);
-
-};
-
-
-// ======================================================
-// FONDOS
-// ======================================================
-
-PDFLayout.fondoClaro = function(){
-
-    this.doc.setFillColor(...this.grisClaro);
-
-};
-
-PDFLayout.fondoOscuro = function(){
-
-    this.doc.setFillColor(...this.grisOscuro);
-
-};
-
-PDFLayout.fondoNegro = function(){
-
-    this.doc.setFillColor(0,0,0);
-
-};
-
-
-// ======================================================
-// LÍNEAS
-// ======================================================
-
-PDFLayout.lineaSuave = function(){
-
-    this.doc.setDrawColor(...this.grisLinea);
-
-    this.doc.setLineWidth(.15);
-
-};
-
-PDFLayout.lineaNormal = function(){
-
-    this.doc.setDrawColor(180);
-
-    this.doc.setLineWidth(.3);
-
-};
-
-
-// ======================================================
-// TIPOGRAFÍAS
-// ======================================================
-
-PDFLayout.tituloGrande = function(){
-
-    this.doc.setFont("helvetica","bold");
-
-    this.doc.setFontSize(16);
-
-    this.doc.setTextColor(0);
-
-};
-
-PDFLayout.tituloMediano = function(){
-
-    this.doc.setFont("helvetica","bold");
-
-    this.doc.setFontSize(12);
-
-    this.doc.setTextColor(0);
-
-};
-
-PDFLayout.texto = function(){
-
-    this.doc.setFont("helvetica","normal");
-
-    this.doc.setFontSize(8);
-
-    this.doc.setTextColor(0);
-
-};
-
-PDFLayout.textoPequeño = function(){
-
-    this.doc.setFont("helvetica","normal");
-
-    this.doc.setFontSize(7);
-
-    this.doc.setTextColor(70);
-
-};
-
-
-// ======================================================
-// ENCABEZADO NEGRO PARA TABLAS
-// ======================================================
-
-PDFLayout.estiloEncabezadoTabla = function(){
-
-    return{
-
-        fillColor:[0,0,0],
-
-        textColor:[255,255,255],
-
-        fontStyle:"bold",
-
-        fontSize:8,
-
-        halign:"left",
-
-        valign:"middle"
-
-    };
-
-};
-
-
-// ======================================================
-// ESTILO CUERPO TABLAS
-// ======================================================
-
-PDFLayout.estiloTabla = function(){
-
-    return{
-
-        fontSize:7,
-
-        cellPadding:1.8,
-
-        lineWidth:.15,
-
-        lineColor:[215,215,215],
-
-        textColor:[0,0,0],
-
-        overflow:"linebreak",
-
-        valign:"middle"
-
-    };
-
-};
-
-
-// ======================================================
-// FILAS ALTERNADAS
-// ======================================================
-
-PDFLayout.estiloAlternado = function(data){
-
-    if(data.section !== "body") return;
-
-    if(data.row.index % 2 === 0){
-
-        data.cell.styles.fillColor=[245,245,245];
-
-    }else{
-
-        data.cell.styles.fillColor=[228,228,228];
-
-    }
-
-};
-
-
-// ======================================================
-// MÁRGENES PARA AUTOTABLE
-// ======================================================
-
-PDFLayout.margenesTabla = function(){
-
-    return{
-
-        left:this.margen,
-
-        right:this.margen,
-
-        top:this.headerH+8,
-
-        bottom:this.footerH+5
-
-    };
-
-};
-
-
-// ======================================================
-// COORDENADA Y INICIAL DE CONTENIDO
-// ======================================================
-
-PDFLayout.inicioContenido = function(){
-
-    return this.headerH + 8;
-
-};
-
-
-// ======================================================
-// FIN DE PÁGINA
-// ======================================================
-
-PDFLayout.finPagina = function(){
-
-    return this.pageH - this.footerH - 6;
-
-};
-
-
-// ======================================================
-// EXPORTAR
-// ======================================================
+// disponible para todos los módulos
 
 window.PDFLayout = PDFLayout;
