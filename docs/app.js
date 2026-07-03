@@ -675,3 +675,40 @@ async function generarCatalogoCompletoPDF(){
     await PDFGenerador.generar();
 
 }
+// ======================================
+// BARRA DE PROGRESO PDF
+// ======================================
+
+function mostrarProgreso() {
+
+    const cont = document.getElementById("progresoContainer");
+
+    if (cont) {
+        cont.style.display = "block";
+    }
+
+    actualizarProgreso(0, 100);
+}
+
+function actualizarProgreso(actual, total) {
+
+    const barra = document.getElementById("barraProgreso");
+    const texto = document.getElementById("progresoTexto");
+
+    if (!barra || !texto) return;
+
+    const porcentaje = Math.round((actual / total) * 100);
+
+    barra.style.width = porcentaje + "%";
+    texto.innerText = porcentaje + "%";
+}
+
+function ocultarProgreso() {
+
+    const cont = document.getElementById("progresoContainer");
+
+    if (cont) {
+        cont.style.display = "none";
+    }
+
+}
