@@ -432,7 +432,7 @@ const PDFFamilias = {
 
         });
 
-    }
+    },
 
     //========================================================
     // DIBUJAR INSIGNIA DE FAMILIA
