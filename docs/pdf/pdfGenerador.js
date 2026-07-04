@@ -85,29 +85,38 @@ const PDFGenerador = {
             );
 
             //------------------------------------------
-            // Productos individuales
-            //------------------------------------------
+           // Productos individuales
+           //------------------------------------------
 
-            document.getElementById(
-                "progresoTexto"
-            ).innerText =
-                "Generando productos...";
+           document.getElementById(
+           "progresoTexto"
+          ).innerText =
+            "Generando productos...";
 
-            await PDFProductos.generar(
-                doc
+          // Obtener solamente los productos individuales
+           const productosIndividuales = productosFamilias
+          .filter(g => !g.esFamilia)
+            .map(g => ({
+             ...g.articulos[0],
+           imagen: g.imagen
+           }));
+
+            await PDFProductos.dibujarTodos(
+               doc,
+            productosIndividuales 
             );
             //------------------------------------------
-// Construir índice
-//------------------------------------------
+         // Construir índice
+        //------------------------------------------
 
-document.getElementById(
-    "progresoTexto"
-).innerText =
-    "Construyendo índice...";
+        document.getElementById(
+         "progresoTexto"
+         ).innerText =
+            "Construyendo índice...";
 
-PDFLayout.dibujarIndice();
+         PDFLayout.dibujarIndice();
 
-            //------------------------------------------
+         //------------------------------------------
 // Numeración y pie de páginas
 //------------------------------------------
 
