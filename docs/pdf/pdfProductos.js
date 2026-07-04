@@ -31,7 +31,7 @@ iniciarSeccion(doc){
 
     PDFLayout.nuevaPagina("PRODUCTOS");
 
-    this.area = areaTrabajo();
+    this.area = PDFLayout.areaTrabajo();
 
     this.anchoFicha =
         this.area.w / this.columnas;
