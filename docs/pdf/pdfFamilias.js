@@ -396,7 +396,9 @@ const PDFFamilias = {
 
             didDrawPage:(data)=>{
 
-                PDFLayout.dibujarCabecera("FAMILIAS");
+                PDFLayout.setTitulo("FAMILIAS");
+
+		PDFLayout.dibujarCabecera();
 
                 PDFLayout.dibujarPie();
 
@@ -416,15 +418,17 @@ const PDFFamilias = {
                         ...PDFConfig.colores.negro
                     );
 
-                    doc.text(
+                    const area = PDFLayout.areaTrabajo();
 
-                        familia.familia,
+		doc.text(
 
-                        PDFConfig.margen.izquierdo,
+    		familia.familia,
 
-                        PDFLayout.headerHeight + 8
+    		area.x,
 
-                    );
+    		area.y - 2
+
+		);
 
                 }
 
