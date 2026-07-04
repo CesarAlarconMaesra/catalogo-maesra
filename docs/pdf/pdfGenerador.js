@@ -56,7 +56,8 @@ const PDFGenerador = {
             // Inicializar Layout
             //------------------------------------------
 
-            await PDFLayout.inicializar(doc);
+            await PDFLayout.inicializar(doc, cliente || ""
+	    );
 
             //------------------------------------------
             // Portada
@@ -107,19 +108,16 @@ document.getElementById(
 PDFLayout.dibujarIndice();
 
             //------------------------------------------
-            // Numeración de páginas
-            //------------------------------------------
+// Numeración y pie de páginas
+//------------------------------------------
 
-            document.getElementById(
-                "progresoTexto"
-            ).innerText =
-                "Numerando páginas...";
+document.getElementById(
+    "progresoTexto"
+).innerText =
+    "Numerando páginas...";
 
-            if(typeof PDFLayout.actualizarNumeracion === "function"){
+PDFLayout.finalizar();
 
-                PDFLayout.actualizarNumeracion(doc);
-
-            }
 
             //------------------------------------------
             // Guardar PDF
