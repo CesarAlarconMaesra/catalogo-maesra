@@ -71,16 +71,6 @@ const PDFGenerador = {
             );
 
             //------------------------------------------
-            // Índice (se llena después)
-            //------------------------------------------
-
-            PDFLayout.nuevaPagina(
-                "ÍNDICE"
-            );
-
-            PDFLayout.iniciarIndice();
-
-            //------------------------------------------
             // Familias
             //------------------------------------------
 
@@ -106,19 +96,15 @@ const PDFGenerador = {
                 doc
             );
             //------------------------------------------
-            // Actualizar índice
-            //------------------------------------------
+// Construir índice
+//------------------------------------------
 
-            document.getElementById(
-                "progresoTexto"
-            ).innerText =
-                "Construyendo índice...";
+document.getElementById(
+    "progresoTexto"
+).innerText =
+    "Construyendo índice...";
 
-            if(typeof PDFLayout.generarIndice === "function"){
-
-                PDFLayout.generarIndice(doc);
-
-            }
+PDFLayout.dibujarIndice();
 
             //------------------------------------------
             // Numeración de páginas
