@@ -118,7 +118,7 @@ async dibujarFamilia(doc,familia){
     //----------------------------------------------------
 
     const base64 =
-        cacheImagenes[familia.imagen) ||
+        cacheImagenes[familia.imagen] ||
         await cargarImagenOptimizada(
             familia.imagen,
             220
