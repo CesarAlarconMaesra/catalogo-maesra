@@ -276,7 +276,7 @@ doc.text(
 
 y += 3.5;
 
-oc.setFontSize(5.8);
+doc.setFontSize(5.8);
 
 doc.setTextColor(90);
 
