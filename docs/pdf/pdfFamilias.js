@@ -27,229 +27,142 @@ const PDFFamilias = {
 
     },
 
-    //========================================================
-    // DIBUJAR UNA FAMILIA
-    //========================================================
+//========================================================
+// DIBUJAR UNA FAMILIA
+//========================================================
 
-    async dibujarFamilia(doc,familia){
+async dibujarFamilia(doc,familia){
 
-        PDFLayout.agregarIndice(
-            familia.familia
-        );
+    PDFLayout.agregarIndice(
+        familia.familia
+    );
 
-        //----------------------------------------------------
-        // Evitar comenzar una familia al final de una página
-        //----------------------------------------------------
+    //----------------------------------------------------
+    // Evitar comenzar una familia al final de una página
+    //----------------------------------------------------
 
-        if(doc.lastAutoTable){
+    if(doc.lastAutoTable){
 
-            if(
-                doc.lastAutoTable.finalY >
-                PDFLayout.pageH - 70
-            ){
+        if(
+            doc.lastAutoTable.finalY >
+            PDFLayout.pageH - 55
+        ){
 
-                PDFLayout.nuevaPagina(
-                    "FAMILIAS"
-                );
-
-            }
-
-        }
-
-        const area =
-            PDFLayout.areaTrabajo();
-
-        let y =
-            doc.lastAutoTable
-            ? doc.lastAutoTable.finalY + 12
-            : area.y;
-
-        //----------------------------------------------------
-        // TARJETA DEL ENCABEZADO
-        //----------------------------------------------------
-
-        doc.setFillColor(
-            ...PDFConfig.colores.grisMuyClaro
-        );
-
-        doc.roundedRect(
-
-            area.x,
-
-            y,
-
-            area.w,
-
-            30,
-
-            2,
-
-            2,
-
-            "F"
-
-        );
-
-        doc.setDrawColor(
-            ...PDFConfig.colores.linea
-        );
-
-        doc.setLineWidth(.25);
-
-        doc.roundedRect(
-
-            area.x,
-
-            y,
-
-            area.w,
-
-            30,
-
-            2,
-
-            2
-
-        );
-
-        //----------------------------------------------------
-        // IMAGEN
-        //----------------------------------------------------
-
-        const base64 =
-            cacheImagenes[familia.imagen] ||
-            await cargarImagenOptimizada(
-                familia.imagen,
-                260
+            PDFLayout.nuevaPagina(
+                "FAMILIAS"
             );
 
-        if(base64){
-
-            try{
-
-                doc.addImage(
-
-                    base64,
-
-                    "JPEG",
-
-                    area.x + 3,
-
-                    y + 3,
-
-                    24,
-
-                    24
-
-                );
-
-            }catch(e){}
-
         }
 
-        //----------------------------------------------------
-        // NOMBRE DE LA FAMILIA
-        //----------------------------------------------------
+    }
 
-        doc.setFont(
-            PDFConfig.fuente,
-            "bold"
+    const area =
+        PDFLayout.areaTrabajo();
+
+    let y =
+        doc.lastAutoTable
+        ? doc.lastAutoTable.finalY + 6
+        : area.y;
+
+    //----------------------------------------------------
+    // TÍTULO
+    //----------------------------------------------------
+
+    doc.setFont(
+        PDFConfig.fuente,
+        "bold"
+    );
+
+    doc.setFontSize(11);
+
+    doc.setTextColor(
+        ...PDFConfig.colores.negro
+    );
+
+    doc.text(
+
+        familia.familia,
+
+        area.x + area.w / 2,
+
+        y + 4,
+
+        { align:"center" }
+
+    );
+
+    //----------------------------------------------------
+    // LÍNEA
+    //----------------------------------------------------
+
+    doc.setDrawColor(
+        ...PDFConfig.colores.linea
+    );
+
+    doc.setLineWidth(.2);
+
+    doc.line(
+
+        area.x,
+
+        y + 7,
+
+        area.x + area.w,
+
+        y + 7
+
+    );
+
+    //----------------------------------------------------
+    // IMAGEN
+    //----------------------------------------------------
+
+    const base64 =
+        cacheImagenes[familia.imagen) ||
+        await cargarImagenOptimizada(
+            familia.imagen,
+            220
         );
 
-        doc.setFontSize(15);
+    if(base64){
 
-        doc.setTextColor(
-            ...PDFConfig.colores.negro
-        );
+        try{
 
-        doc.text(
+            doc.addImage(
 
-            familia.familia,
+                base64,
 
-            area.x + 32,
+                "JPEG",
 
-            y + 8
+                area.x,
 
-        );
+                y + 9,
 
-        //----------------------------------------------------
-        // MARCA
-        //----------------------------------------------------
+                PDFConfig.familias.imagen.ancho,
 
-        doc.setFont(
-            PDFConfig.fuente,
-            "normal"
-        );
+                PDFConfig.familias.imagen.alto
 
-        doc.setFontSize(8);
+            );
 
-        doc.setTextColor(
-            ...PDFConfig.colores.grisOscuro
-        );
+        }catch(e){}
 
-        doc.text(
+    }
 
-            "Marca: " +
-            (familia.marca || "Varias"),
+    //----------------------------------------------------
+    // TABLA
+    //----------------------------------------------------
 
-            area.x + 32,
+    await this.dibujarTabla(
 
-            y + 15
+        doc,
 
-        );
+        familia,
 
-        //----------------------------------------------------
-        // CANTIDAD DE PRODUCTOS
-        //----------------------------------------------------
+        y + 8
 
-        doc.text(
+    );
 
-            familia.articulos.length +
-            " artículos",
-
-            area.x + 32,
-
-            y + 21
-
-        );
-
-        //----------------------------------------------------
-        // LÍNEA DECORATIVA
-        //----------------------------------------------------
-
-        doc.setDrawColor(
-            ...PDFConfig.colores.linea
-        );
-
-        doc.line(
-
-            area.x,
-
-            y + 34,
-
-            area.x + area.w,
-
-            y + 34
-
-        );
-
-        //----------------------------------------------------
-        // INICIO DE LA TABLA
-        //----------------------------------------------------
-
-        y += 38;
-
-        await this.dibujarTabla(
-
-            doc,
-
-            familia,
-
-            y
-
-        );
-
-    },
+},
 //========================================================
     // TABLA DE ARTÍCULOS
     //========================================================
