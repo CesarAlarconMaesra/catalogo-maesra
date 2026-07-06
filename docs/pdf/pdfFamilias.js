@@ -456,3 +456,134 @@ const PDFFamilias = {
         });
 
     },
+    //========================================================
+    // CALCULAR ALTURA APROXIMADA DE UNA TABLA
+    //========================================================
+
+    calcularAlturaTabla(familia){
+
+        const filas =
+            familia.articulos
+            ? familia.articulos.length
+            : 0;
+
+        // Encabezado + filas
+        return 6 + (filas * 4.2);
+
+    },
+
+    //========================================================
+    // DIBUJAR INSIGNIA DE MARCA
+    //========================================================
+
+    dibujarInsignia(doc,texto,x,y){
+
+        if(!texto) return;
+
+        doc.setFillColor(
+            ...PDFConfig.colores.grisClaro
+        );
+
+        doc.roundedRect(
+
+            x,
+
+            y,
+
+            18,
+
+            5,
+
+            1,
+
+            1,
+
+            "F"
+
+        );
+
+        doc.setDrawColor(
+            ...PDFConfig.colores.linea
+        );
+
+        doc.roundedRect(
+
+            x,
+
+            y,
+
+            18,
+
+            5,
+
+            1,
+
+            1
+
+        );
+
+        doc.setFont(
+            PDFConfig.fuente,
+            "bold"
+        );
+
+        doc.setFontSize(5);
+
+        doc.setTextColor(
+            ...PDFConfig.colores.negro
+        );
+
+        doc.text(
+
+            texto,
+
+            x + 9,
+
+            y + 3.3,
+
+            {align:"center"}
+
+        );
+
+    },
+
+    //========================================================
+    // TOTAL DE PÁGINAS (ESTIMADO)
+    //========================================================
+
+    calcularPaginas(){
+
+        let paginas = 0;
+
+        const familias =
+            productosFamilias.filter(
+                f => f.esFamilia
+            );
+
+        familias.forEach(f=>{
+
+            paginas += Math.max(
+
+                1,
+
+                Math.ceil(
+
+                    this.calcularAlturaTabla(f) / 220
+
+                )
+
+            );
+
+        });
+
+        return paginas;
+
+    }
+
+};
+
+//==========================================================
+// EXPORTAR MÓDULO
+//==========================================================
+
+window.PDFFamilias = PDFFamilias;
