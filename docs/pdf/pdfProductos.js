@@ -279,69 +279,63 @@ dibujarTexto(producto,inicioY){
     // Empaque
     //--------------------------------------
 
-    doc.setFontSize(6);
+doc.setFontSize(6);
 
-    doc.setTextColor(90);
+doc.setTextColor(90);
 
-    doc.text(
+doc.text(
+    "Marca:",
+    this.x+3,
+    y
+);
 
-        "Unidad",
+doc.text(
+    producto.marca || "",
+    this.x+16,
+    y
+);
 
-        this.x+3,
+y += 3;
 
-        y
+doc.text(
+    "Unidad:",
+    this.x+3,
+    y
+);
 
-    );
+doc.text(
+    producto.unidad || "",
+    this.x+16,
+    y
+);
 
-    doc.text(
+y += 3;
 
-        String(producto.unidad||""),
+doc.text(
+    "Master:",
+    this.x+3,
+    y
+);
 
-        this.x+16,
+doc.text(
+    String(producto.master || ""),
+    this.x+16,
+    y
+);
 
-        y
+y += 3;
 
-    );
+doc.text(
+    "Inner:",
+    this.x+3,
+    y
+);
 
-    doc.text(
-
-        "Master:",
-
-        this.x+3,
-
-        y
-
-    );
-
-    doc.text(
-
-        String(producto.master||""),
-
-        this.x+34,
-
-        y
-
-    );
-
-    doc.text(
-
-        "Inner:",
-
-        this.x+3,
-
-        y
-
-    );
-
-    doc.text(
-
-        String(producto.inner||""),
-
-        this.x+16,
-
-        y
-
-    );
+doc.text(
+    String(producto.inner || ""),
+    this.x+16,
+    y
+);
 
 },
 //==========================================================
