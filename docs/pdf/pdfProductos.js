@@ -95,15 +95,14 @@ async dibujarProducto(doc,producto){
 
     }
 
-    let inicioTexto =
-        this.y + 5;
+	if(base64){
 
-    if(base64){
+	    await this.dibujarImagen(base64);
 
-        inicioTexto +=
-            await this.dibujarImagen(base64);
+	}
 
-    }
+	const inicioTexto =
+	    this.y + 34;
 
     //------------------------------------------------------
     // TEXTO
@@ -145,9 +144,9 @@ async dibujarImagen(base64){
     let h = img.height;
 
     const maxW =
-        this.anchoFicha - 10;
+        this.anchoFicha - 14;
 
-    const maxH = 34;
+    const maxH = 24;
 
     const ratio =
         Math.min(
@@ -198,11 +197,11 @@ dibujarTexto(producto,inicioY){
     // Código
     //--------------------------------------
 
-    doc.setFontSize(6);
+    doc.setFontSize(7);
 
-    doc.setTextColor(120);
+    doc.setTextColor(0);
 
-    doc.setFont(undefined,"normal");
+    doc.setFont(undefined,"bold");
 
     doc.text(
 
@@ -258,9 +257,9 @@ dibujarTexto(producto,inicioY){
 
         );
 
-    if(nombre.length>3){
+    if(nombre.length>2){
 
-        nombre = nombre.slice(0,3);
+        nombre = nombre.slice(0,2);
 
     }
 
@@ -306,9 +305,9 @@ dibujarTexto(producto,inicioY){
 
     doc.text(
 
-        "M:",
+        "Master:",
 
-        this.x+28,
+        this.x+3,
 
         y
 
@@ -326,9 +325,9 @@ dibujarTexto(producto,inicioY){
 
     doc.text(
 
-        "I:",
+        "Inner:",
 
-        this.x+46,
+        this.x+3,
 
         y
 
@@ -338,7 +337,7 @@ dibujarTexto(producto,inicioY){
 
         String(producto.inner||""),
 
-        this.x+50,
+        this.x+16,
 
         y
 

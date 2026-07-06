@@ -107,8 +107,8 @@ const PDFConfig = {
 
         imagen: {
 
-            ancho: 11,
-            alto: 11
+            ancho: 12,
+            alto: 12
 
         },
 

@@ -333,13 +333,13 @@ const PDFFamilias = {
 
                 1:{
 
-                    cellWidth:28
+                    cellWidth:32
 
                 },
 
                 2:{
 
-                    cellWidth:76
+                    cellWidth:86
 
                 },
 
