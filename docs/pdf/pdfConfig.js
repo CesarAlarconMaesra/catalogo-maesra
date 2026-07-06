@@ -108,8 +108,8 @@ const PDFConfig = {
 
         imagen: {
 
-            ancho: 28,
-            alto: 28
+            ancho: 9,
+            alto: 9
 
         },
 
@@ -117,11 +117,11 @@ const PDFConfig = {
 
             margenSuperior: 14,
 
-            anchoProducto: 72,
+            anchoProducto: 78,
 
             alturaEncabezado: 7,
 
-            paddingCelda: 1.4
+            paddingCelda: 0.7
 
         }
 
@@ -140,7 +140,7 @@ const PDFConfig = {
             font: "helvetica",
             fontSize: 7,
 
-            cellPadding: 1.4,
+            cellPadding: 0.7,
 
             lineWidth: 0.1
 
