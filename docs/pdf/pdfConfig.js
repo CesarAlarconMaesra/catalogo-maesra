@@ -68,8 +68,7 @@ const PDFConfig = {
 
         tituloY: 90,
         clienteY: 110,
-        fechaY: 118
-
+        
     },
 
     // ======================================================
@@ -108,8 +107,8 @@ const PDFConfig = {
 
         imagen: {
 
-            ancho: 9,
-            alto: 9
+            ancho: 11,
+            alto: 11
 
         },
 
