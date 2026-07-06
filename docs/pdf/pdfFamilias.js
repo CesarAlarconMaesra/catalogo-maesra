@@ -151,54 +151,32 @@ const PDFFamilias = {
 
             try{
 
-                doc.addImage(
+	const tam = Math.min(imgW,imgH);
 
-                    base64,
+	const posX =
+	    imgX + (imgW-tam)/2;
 
-                    "JPEG",
+	const posY =
+	    imgY + (imgH-tam)/2;
 
-                    imgX,
+	doc.addImage(
 
-                    imgY,
+	    base64,
 
-                    imgW,
+	    "JPEG",
 
-                    imgH
+	    posX,
 
-                );
+	    posY,
 
+	    tam,
+
+	    tam
+
+	);
             }
 
             catch(e){}
-
-        }
-
-        //----------------------------------------------------
-        // Marca
-        //----------------------------------------------------
-
-        if(familia.marca){
-
-            doc.setFont(
-                PDFConfig.fuente,
-                "normal"
-            );
-
-            doc.setFontSize(6);
-
-            doc.setTextColor(
-                ...PDFConfig.colores.grisOscuro
-            );
-
-            doc.text(
-
-                familia.marca,
-
-                imgX,
-
-                imgY + imgH + 3
-
-            );
 
         }
 
@@ -349,25 +327,25 @@ const PDFFamilias = {
 
                 0:{
 
-                    cellWidth:16
+                    cellWidth:18
 
                 },
 
                 1:{
 
-                    cellWidth:18
+                    cellWidth:22
 
                 },
 
                 2:{
 
-                    cellWidth:46
+                    cellWidth:72
 
                 },
 
                 3:{
 
-                    cellWidth:8,
+                    cellWidth:12,
 
                     halign:"center"
 
@@ -405,52 +383,65 @@ const PDFFamilias = {
                 // Continuación de tabla
                 //--------------------------------------
 
-                if(data.pageNumber>1){
+if(data.pageNumber>1){
 
-                    const area =
-                        PDFLayout.areaTrabajo();
+    const area =
+        PDFLayout.areaTrabajo();
 
-                    doc.setFont(
-                        PDFConfig.fuente,
-                        "bold"
-                    );
+    doc.setFillColor(255,255,255);
 
-                    doc.setFontSize(10);
+    doc.rect(
 
-                    doc.setTextColor(
-                        ...PDFConfig.colores.negro
-                    );
+        area.x,
 
-                    doc.text(
+        area.y-3,
 
-                        familia.familia,
+        area.w,
 
-                        margenNormal,
+        8,
 
-                        area.y
+        "F"
 
-                    );
+    );
 
-                    doc.setDrawColor(
-                        ...PDFConfig.colores.linea
-                    );
+    doc.setFont(
+        PDFConfig.fuente,
+        "bold"
+    );
 
-                    doc.setLineWidth(.20);
+    doc.setFontSize(10);
 
-                    doc.line(
+    doc.setTextColor(
+        ...PDFConfig.colores.negro
+    );
 
-                        margenNormal,
+    doc.text(
 
-                        area.y+2,
+        familia.familia,
 
-                        area.x+area.w,
+        area.x,
 
-                        area.y+2
+        area.y
 
-                    );
+    );
 
-                }
+    doc.setDrawColor(
+        ...PDFConfig.colores.linea
+    );
 
+    doc.line(
+
+        area.x,
+
+        area.y+2,
+
+        area.x+area.w,
+
+        area.y+2
+
+    );
+
+}
             }
 
         });
