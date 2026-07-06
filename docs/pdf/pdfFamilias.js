@@ -271,11 +271,11 @@ const PDFFamilias = {
 
                 "Producto",
 
-                "U",
+                "Unidad",
 
-                "M",
+                "Master:",
 
-                "I"
+                "Inner:"
 
             ]],
 
@@ -333,13 +333,13 @@ const PDFFamilias = {
 
                 1:{
 
-                    cellWidth:22
+                    cellWidth:28
 
                 },
 
                 2:{
 
-                    cellWidth:72
+                    cellWidth:76
 
                 },
 
