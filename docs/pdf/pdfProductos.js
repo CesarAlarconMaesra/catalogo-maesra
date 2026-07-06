@@ -215,27 +215,6 @@ dibujarTexto(producto,inicioY){
 
     y += 3.5;
 
-    //--------------------------------------
-    // Marca
-    //--------------------------------------
-
-    doc.setFontSize(6);
-
-    doc.setFont(undefined,"bold");
-
-    doc.setTextColor(30);
-
-    doc.text(
-
-        producto.marca || "",
-
-        this.x+3,
-
-        y
-
-    );
-
-    y += 4;
 
     //--------------------------------------
     // Producto
@@ -280,8 +259,8 @@ dibujarTexto(producto,inicioY){
     //--------------------------------------
 
 doc.setFontSize(6);
-
-doc.setTextColor(90);
+doc.setFont(undefined,"bold");
+doc.setTextColor(70);
 
 doc.text(
     "Marca:",
@@ -291,52 +270,51 @@ doc.text(
 
 doc.text(
     producto.marca || "",
-    this.x+16,
+    this.x+15,
     y
 );
 
-y += 3;
+y += 3.5;
 
+oc.setFontSize(5.8);
+
+doc.setTextColor(90);
+
+// Unidad
+
+doc.setFont(undefined,"bold");
+doc.text("U:", this.x+3, y);
+
+doc.setFont(undefined,"normal");
 doc.text(
-    "Unidad:",
-    this.x+3,
+    String(producto.unidad || ""),
+    this.x+8,
     y
 );
 
-doc.text(
-    producto.unidad || "",
-    this.x+16,
-    y
-);
+// Master
 
-y += 3;
+doc.setFont(undefined,"bold");
+doc.text("M:", this.x+22, y);
 
-doc.text(
-    "Master:",
-    this.x+3,
-    y
-);
-
+doc.setFont(undefined,"normal");
 doc.text(
     String(producto.master || ""),
-    this.x+16,
+    this.x+27,
     y
 );
 
-y += 3;
+// Inner
 
-doc.text(
-    "Inner:",
-    this.x+3,
-    y
-);
+doc.setFont(undefined,"bold");
+doc.text("I:", this.x+39, y);
 
+doc.setFont(undefined,"normal");
 doc.text(
     String(producto.inner || ""),
-    this.x+16,
+    this.x+43,
     y
 );
-
 },
 //==========================================================
 // SIGUIENTE POSICIÓN
