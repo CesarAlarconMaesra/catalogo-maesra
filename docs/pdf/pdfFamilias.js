@@ -218,7 +218,7 @@ const PDFFamilias = {
         startY,
         inicioX
     ){
-
+	let indiceRegistrado = false;
         const body = familia.articulos.map(a => ([
 
             a.marca || "",
@@ -242,7 +242,7 @@ const PDFFamilias = {
             inicioX;
 
         doc.autoTable({
-	let indiceRegistrado = false;
+	
             startY,
 
             margin:{
