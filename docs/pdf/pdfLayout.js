@@ -54,17 +54,18 @@ const PDFLayout = {
     // AGREGAR ENTRADA AL ÍNDICE
     // ======================================================
 
-    agregarIndice(nombre) {
+    agregarIndice(nombre,pagina = null){
 
-        this.indice.push({
+    this.indice.push({
 
-            nombre,
+        nombre,
 
-            pagina: this.paginaActual
+        pagina: pagina ??
+                this.doc.getCurrentPageInfo().pageNumber
 
-        });
+    });
 
-    },
+},
 
     // ======================================================
     // NUEVA PÁGINA

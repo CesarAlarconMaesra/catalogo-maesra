@@ -36,10 +36,7 @@ const PDFFamilias = {
 
     async dibujarFamilia(doc,familia){
 
-        PDFLayout.agregarIndice(
-            familia.familia
-        );
-
+        
         //----------------------------------------------------
         // Verificar espacio disponible
         //----------------------------------------------------
@@ -218,7 +215,7 @@ const PDFFamilias = {
         startY,
         inicioX
     ){
-	let indiceRegistrado = false;
+	
         const body = familia.articulos.map(a => ([
 
             a.marca || "",
@@ -235,13 +232,16 @@ const PDFFamilias = {
 
         ]));
 
-        const margenNormal =
-            PDFConfig.margen.izquierdo;
+	const margenNormal =
+	    PDFConfig.margen.izquierdo;
 
-        const margenTabla =
-            inicioX;
+	const margenTabla =
+	    inicioX;
 
-        doc.autoTable({
+	// Registrar solo una vez
+	let indiceRegistrado = false;
+
+	doc.autoTable({
 	
             startY,
 
