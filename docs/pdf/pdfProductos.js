@@ -307,7 +307,7 @@ doc.text(
 // Inner
 
 doc.setFont(undefined,"bold");
-doc.text("Inner:", this.x+39, y);
+doc.text("Inner:", this.x+33, y);
 
 doc.setFont(undefined,"normal");
 doc.text(

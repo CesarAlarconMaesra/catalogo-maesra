@@ -377,8 +377,6 @@ const PDFFamilias = {
 
                 PDFLayout.dibujarCabecera();
 
-                PDFLayout.dibujarPie();
-
               },
 });   // ← aquí termina autoTable()
 

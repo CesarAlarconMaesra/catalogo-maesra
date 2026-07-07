@@ -80,8 +80,6 @@ const PDFLayout = {
 
         this.dibujarCabecera();
 
-        this.dibujarPie();
-
     },
 
     // ======================================================
