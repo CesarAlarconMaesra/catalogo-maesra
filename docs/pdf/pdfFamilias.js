@@ -380,6 +380,9 @@ const PDFFamilias = {
                 PDFLayout.dibujarPie();
 
               },
+});   // ← aquí termina autoTable()
+
+},     // ← aquí termina dibujarTabla()
     //========================================================
     // CALCULAR ALTURA APROXIMADA DE UNA TABLA
     //========================================================
