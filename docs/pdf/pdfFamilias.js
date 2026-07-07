@@ -36,18 +36,21 @@ const PDFFamilias = {
 
     async dibujarFamilia(doc,familia){
 
-        
         //----------------------------------------------------
-        // Verificar espacio disponible
+        // Área de trabajo
         //----------------------------------------------------
 
-        const area =
+        let area =
             PDFLayout.areaTrabajo();
 
         let y =
             doc.lastAutoTable
             ? doc.lastAutoTable.finalY + 4
             : area.y;
+
+        //----------------------------------------------------
+        // Evitar comenzar una familia al final de la página
+        //----------------------------------------------------
 
         const alturaMinima = 28;
 
@@ -58,17 +61,29 @@ const PDFFamilias = {
             12
         ){
 
-            PDFLayout.nuevaPagina(
-                "FAMILIAS"
-            );
+            PDFLayout.nuevaPagina("FAMILIAS");
 
-            y =
-                PDFLayout.areaTrabajo().y;
+            area =
+                PDFLayout.areaTrabajo();
+
+            y = area.y;
 
         }
 
         //----------------------------------------------------
-        // TÍTULO
+        // Registrar índice
+        //----------------------------------------------------
+
+	PDFLayout.indice.push({
+
+    	nombre: familia.familia,
+
+	    pagina: doc.getCurrentPageInfo().pageNumber
+
+	});
+
+        //----------------------------------------------------
+        // Título
         //----------------------------------------------------
 
         doc.setFont(
@@ -93,7 +108,7 @@ const PDFFamilias = {
         );
 
         //----------------------------------------------------
-        // Línea inferior
+        // Línea separadora
         //----------------------------------------------------
 
         doc.setDrawColor(
@@ -118,9 +133,11 @@ const PDFFamilias = {
         // Imagen
         //----------------------------------------------------
 
-        const imgX = area.x;
+        const imgX =
+            area.x;
 
-        const imgY = y + 4;
+        const imgY =
+            y + 4;
 
         const imgW =
             PDFConfig.familias.imagen.ancho;
@@ -148,49 +165,43 @@ const PDFFamilias = {
 
             try{
 
-	const tam = Math.min(imgW,imgH);
+                this.dibujarImagen(
 
-	const posX =
-	    imgX + (imgW-tam)/2;
+                    doc,
 
-	const posY =
-	    imgY + (imgH-tam)/2;
+                    base64,
 
-	doc.addImage(
+                    imgX,
 
-	    base64,
+                    imgY,
 
-	    "JPEG",
+                    imgW,
 
-	    posX,
+                    imgH
 
-	    posY,
+                );
 
-	    tam,
-
-	    tam
-
-	);
             }
 
-            catch(e){}
+            catch(e){
+
+                console.warn(e);
+
+            }
 
         }
 
         //----------------------------------------------------
-        // Posición inicial de la tabla
+        // Tabla
         //----------------------------------------------------
 
-        const inicioTabla = imgY;
+        const inicioTabla =
+            imgY;
 
         const inicioX =
             imgX +
             imgW +
             3;
-
-        //----------------------------------------------------
-        // Dibujar tabla
-        //----------------------------------------------------
 
         await this.dibujarTabla(
 
@@ -205,6 +216,46 @@ const PDFFamilias = {
         );
 
     },
+//========================================================
+    // DIBUJAR IMAGEN DE LA FAMILIA
+    //========================================================
+
+    dibujarImagen(
+        doc,
+        base64,
+        x,
+        y,
+        ancho,
+        alto
+    ){
+
+        const tam =
+            Math.min(ancho,alto);
+
+        const posX =
+            x + ((ancho - tam) / 2);
+
+        const posY =
+            y + ((alto - tam) / 2);
+
+        doc.addImage(
+
+            base64,
+
+            "JPEG",
+
+            posX,
+
+            posY,
+
+            tam,
+
+            tam
+
+        );
+
+    },
+
     //========================================================
     // TABLA DE ARTÍCULOS
     //========================================================
@@ -215,43 +266,37 @@ const PDFFamilias = {
         startY,
         inicioX
     ){
-	
-        const body = familia.articulos.map(a => ([
 
-            a.marca || "",
+        const body =
+            familia.articulos.map(a=>([
 
-            a.codigo || "",
+                a.marca || "",
 
-            a.producto || "",
+                a.codigo || "",
 
-            a.unidad || "",
+                a.producto || "",
 
-            a.master || "",
+                a.unidad || "",
 
-            a.inner || ""
+                a.master || "",
 
-        ]));
+                a.inner || ""
 
-	const margenNormal =
-	    PDFConfig.margen.izquierdo;
+            ]));
 
-	const margenTabla =
-	    inicioX;
+        doc.autoTable({
 
-	// Registrar solo una vez
-	let indiceRegistrado = false;
-
-	doc.autoTable({
-	
             startY,
 
             margin:{
 
-                left:margenTabla,
+                left:inicioX,
 
                 right:PDFConfig.margen.derecho
 
             },
+
+            tableWidth:"wrap",
 
             theme:"grid",
 
@@ -260,8 +305,6 @@ const PDFFamilias = {
             rowPageBreak:"avoid",
 
             showHead:"everyPage",
-
-            tableWidth:"wrap",
 
             head:[[
 
@@ -273,9 +316,9 @@ const PDFFamilias = {
 
                 "Unidad",
 
-                "Master:",
+                "Master",
 
-                "Inner:"
+                "Inner"
 
             ]],
 
@@ -319,171 +362,73 @@ const PDFFamilias = {
 
             alternateRowStyles:{
 
-                fillColor:PDFConfig.colores.grisMuyClaro
+                fillColor:
+                    PDFConfig.colores.grisMuyClaro
 
             },
 
             columnStyles:{
 
                 0:{
-
                     cellWidth:18
-
                 },
 
                 1:{
-
-                    cellWidth:32
-
+                    cellWidth:30
                 },
 
                 2:{
-
-                    cellWidth:86
-
+                    cellWidth:92
                 },
 
                 3:{
-
                     cellWidth:12,
-
                     halign:"center"
-
                 },
 
                 4:{
-
-                    cellWidth:8,
-
+                    cellWidth:10,
                     halign:"center"
-
                 },
 
                 5:{
-
-                    cellWidth:8,
-
+                    cellWidth:10,
                     halign:"center"
-
                 }
 
             },
 
-            didDrawPage:(data)=>{
-
-                //--------------------------------------
-                // Cabecera y pie
-                //--------------------------------------
+            didDrawPage:()=>{
 
                 PDFLayout.dibujarCabecera();
-		if(!indiceRegistrado){
 
-        	PDFLayout.indice.push({
+                //PDFLayout.dibujarPie();
 
-            	nombre: familia.familia,
-
-            	pagina: doc.getCurrentPageInfo().pageNumber
+            }
 
         });
 
-        indiceRegistrado = true;
-
-    }
-
-}
-
-              },
-});   // ← aquí termina autoTable()
-
-},     // ← aquí termina dibujarTabla()
+    },
     //========================================================
     // CALCULAR ALTURA APROXIMADA DE UNA TABLA
     //========================================================
 
     calcularAlturaTabla(familia){
 
+        if(
+            !familia ||
+            !familia.articulos
+        ){
+
+            return 0;
+
+        }
+
         const filas =
-            familia.articulos
-            ? familia.articulos.length
-            : 0;
+            familia.articulos.length;
 
-        // Encabezado + filas
+        // Encabezado + altura aproximada por fila
         return 6 + (filas * 4.2);
-
-    },
-
-    //========================================================
-    // DIBUJAR INSIGNIA DE MARCA
-    //========================================================
-
-    dibujarInsignia(doc,texto,x,y){
-
-        if(!texto) return;
-
-        doc.setFillColor(
-            ...PDFConfig.colores.grisClaro
-        );
-
-        doc.roundedRect(
-
-            x,
-
-            y,
-
-            18,
-
-            5,
-
-            1,
-
-            1,
-
-            "F"
-
-        );
-
-        doc.setDrawColor(
-            ...PDFConfig.colores.linea
-        );
-
-        doc.roundedRect(
-
-            x,
-
-            y,
-
-            18,
-
-            5,
-
-            1,
-
-            1
-
-        );
-
-        doc.setFont(
-            PDFConfig.fuente,
-            "bold"
-        );
-
-        doc.setFontSize(5);
-
-        doc.setTextColor(
-            ...PDFConfig.colores.negro
-        );
-
-        doc.text(
-
-            texto,
-
-            x + 9,
-
-            y + 3.3,
-
-            {align:"center"}
-
-        );
 
     },
 
