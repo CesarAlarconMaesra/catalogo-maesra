@@ -379,74 +379,7 @@ const PDFFamilias = {
 
                 PDFLayout.dibujarPie();
 
-                //--------------------------------------
-                // Continuación de tabla
-                //--------------------------------------
-
-if(data.pageNumber>1){
-
-    const area =
-        PDFLayout.areaTrabajo();
-
-    doc.setFillColor(255,255,255);
-
-    doc.rect(
-
-        area.x,
-
-        area.y-3,
-
-        area.w,
-
-        8,
-
-        "F"
-
-    );
-
-    doc.setFont(
-        PDFConfig.fuente,
-        "bold"
-    );
-
-    doc.setFontSize(10);
-
-    doc.setTextColor(
-        ...PDFConfig.colores.negro
-    );
-
-    doc.text(
-
-        familia.familia,
-
-        area.x,
-
-        area.y
-
-    );
-
-    doc.setDrawColor(
-        ...PDFConfig.colores.linea
-    );
-
-    doc.line(
-
-        area.x,
-
-        area.y+2,
-
-        area.x+area.w,
-
-        area.y+2
-
-    );
-
-}
-            }
-
-        });
-
-    },
+              },
     //========================================================
     // CALCULAR ALTURA APROXIMADA DE UNA TABLA
     //========================================================

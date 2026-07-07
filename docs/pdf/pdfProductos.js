@@ -253,7 +253,7 @@ dibujarTexto(producto,inicioY){
     );
 
     y += nombre.length * 3.3;
-
+    y -= 2.5;
     //--------------------------------------
     // Empaque
     //--------------------------------------
@@ -283,7 +283,7 @@ doc.setTextColor(90);
 // Unidad
 
 doc.setFont(undefined,"bold");
-doc.text("U:", this.x+3, y);
+doc.text("Unidad:", this.x+3, y);
 
 doc.setFont(undefined,"normal");
 doc.text(
@@ -295,7 +295,7 @@ doc.text(
 // Master
 
 doc.setFont(undefined,"bold");
-doc.text("M:", this.x+22, y);
+doc.text("Master:", this.x+22, y);
 
 doc.setFont(undefined,"normal");
 doc.text(
@@ -307,7 +307,7 @@ doc.text(
 // Inner
 
 doc.setFont(undefined,"bold");
-doc.text("I:", this.x+39, y);
+doc.text("Inner:", this.x+39, y);
 
 doc.setFont(undefined,"normal");
 doc.text(
