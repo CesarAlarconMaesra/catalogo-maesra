@@ -242,7 +242,7 @@ const PDFFamilias = {
             inicioX;
 
         doc.autoTable({
-
+	let indiceRegistrado = false;
             startY,
 
             margin:{
@@ -376,6 +376,21 @@ const PDFFamilias = {
                 //--------------------------------------
 
                 PDFLayout.dibujarCabecera();
+		if(!indiceRegistrado){
+
+        	PDFLayout.indice.push({
+
+            	nombre: familia.familia,
+
+            	pagina: doc.getCurrentPageInfo().pageNumber
+
+        });
+
+        indiceRegistrado = true;
+
+    }
+
+}
 
               },
 });   // ← aquí termina autoTable()

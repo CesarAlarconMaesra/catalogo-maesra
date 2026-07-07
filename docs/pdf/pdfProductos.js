@@ -295,7 +295,7 @@ doc.text(
 // Master
 
 doc.setFont(undefined,"bold");
-doc.text("Master:", this.x+22, y);
+doc.text("Master:", this.x+18, y);
 
 doc.setFont(undefined,"normal");
 doc.text(
