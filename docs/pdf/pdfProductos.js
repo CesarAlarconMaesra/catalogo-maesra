@@ -288,7 +288,7 @@ doc.text("Unidad:", this.x+3, y);
 doc.setFont(undefined,"normal");
 doc.text(
     String(producto.unidad || ""),
-    this.x+10,
+    this.x+11,
     y
 );
 
@@ -300,7 +300,7 @@ doc.text("Master:", this.x+22, y);
 doc.setFont(undefined,"normal");
 doc.text(
     String(producto.master || ""),
-    this.x+33,
+    this.x+30,
     y
 );
 
@@ -312,7 +312,7 @@ doc.text("Inner:", this.x+39, y);
 doc.setFont(undefined,"normal");
 doc.text(
     String(producto.inner || ""),
-    this.x+43,
+    this.x+41,
     y
 );
 },
