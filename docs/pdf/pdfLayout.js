@@ -55,6 +55,11 @@ const PDFLayout = {
     // ======================================================
 
     agregarIndice(nombre,pagina = null){
+        console.log(
+        nombre,
+        this.paginaActual,
+        this.doc.getCurrentPageInfo().pageNumber
+    );
 
     this.indice.push({
 
