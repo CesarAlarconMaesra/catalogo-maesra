@@ -397,6 +397,21 @@ const PDFFamilias = {
                 }
 
             },
+	didParseCell:(data)=>{
+
+	    // Columna Código (índice 1)
+	    if(
+	        data.section === "body" &&
+	        data.column.index === 1
+	    ){
+
+	        data.cell.styles.fillColor = [205,163,42];   // Gold
+	        data.cell.styles.textColor = [0,0,0];
+	        data.cell.styles.fontStyle = "bold";
+
+	    }
+
+	},
 
             didDrawPage:()=>{
 
