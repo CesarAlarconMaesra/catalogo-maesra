@@ -405,7 +405,7 @@ const PDFFamilias = {
 	        data.column.index === 1
 	    ){
 
-	        data.cell.styles.fillColor = [198,155,42];   // Yellow
+	        data.cell.styles.fillColor = [253,199,22];   // Yellow
 	        data.cell.styles.textColor = [0,0,0];
 	        data.cell.styles.fontStyle = "bold";
 
