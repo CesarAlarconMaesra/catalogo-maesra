@@ -47,7 +47,7 @@ const PDFConfig = {
 
     header: {
 
-        alto: 18
+        alto: 20
 
     },
 

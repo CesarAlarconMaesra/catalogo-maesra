@@ -3,6 +3,7 @@
    pdfLayout.js
    Manejo de páginas, portada, índice y estilos generales
 ========================================================== */
+let encabezadoBase64 = null; //Primera línea del cambio de encabezado
 
 const PDFLayout = {
 
@@ -47,6 +48,15 @@ const PDFLayout = {
         }
 
         this.logo = logoBase64;
+
+	if(!encabezadoBase64){
+
+	    encabezadoBase64 =
+        await cargarImagenComoBase64(
+            "imagenes/Encabezado MAESRA.png"
+        );
+
+	}
 
     },
 
@@ -144,92 +154,27 @@ const PDFLayout = {
 
         const doc = this.doc;
 
-        const margen = PDFConfig.margen.izquierdo;
+        if(encabezadoBase64){
 
-        // Fondo blanco
+        doc.addImage(
 
-        doc.setFillColor(255,255,255);
+            encabezadoBase64,
 
-        doc.rect(
+            "PNG",
+
             0,
+
             0,
+
             this.pageW,
-            PDFConfig.header.alto,
-            "F"
-        );
 
-        // Línea inferior
-
-        doc.setDrawColor(...PDFConfig.colores.linea);
-        doc.setLineWidth(PDFConfig.lineas.normal);
-
-        doc.line(
-            margen,
-            PDFConfig.header.alto,
-            this.pageW - margen,
-            PDFConfig.header.alto
-        );
-
-        // Logo
-
-        if(this.logo){
-
-            try{
-
-                doc.addImage(
-                    this.logo,
-                    "JPEG",
-                    margen,
-                    4,
-                    PDFConfig.logo.anchoCabecera,
-                    PDFConfig.logo.altoCabecera
-                );
-
-            }catch(e){}
-
-        }
-
-        // Título
-
-        doc.setFont(PDFConfig.fuente,"bold");
-
-        doc.setFontSize(PDFConfig.tamaño.subtitulo);
-
-        doc.setTextColor(...PDFConfig.colores.negro);
-
-        doc.text(
-
-            this.tituloActual,
-
-            this.pageW/2,
-
-            10,
-
-            {align:"center"}
+            18
 
         );
 
-        // Año
+    }
 
-        doc.setFont(PDFConfig.fuente,"normal");
-
-        doc.setFontSize(PDFConfig.tamaño.pequeño);
-
-        doc.setTextColor(...PDFConfig.colores.grisOscuro);
-
-        doc.text(
-
-            PDFConfig.version,
-
-            this.pageW - margen,
-
-            9,
-
-            {align:"right"}
-
-        );
-
-    },
+}
     
     // ======================================================
     // PIE DE PÁGINA
