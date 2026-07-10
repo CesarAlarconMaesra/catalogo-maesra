@@ -154,27 +154,27 @@ const PDFLayout = {
 
         const doc = this.doc;
 
-        if(encabezadoBase64){
+        if (encabezadoBase64) {
 
-        doc.addImage(
+            doc.addImage(
 
-            encabezadoBase64,
+                encabezadoBase64,
 
-            "PNG",
+                "PNG",
 
-            0,
+                0,
 
-            0,
+                0,
 
-            this.pageW,
+                this.pageW,
 
-            18
+                18
 
-        );
+            );
 
-    }
+        }
 
-}
+    },
     
     // ======================================================
     // PIE DE PÁGINA
