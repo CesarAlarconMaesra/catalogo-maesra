@@ -52,8 +52,8 @@ const PDFLayout = {
 	if(!encabezadoBase64){
 
 	    encabezadoBase64 =
-        await cargarImagenComoBase64(
-            "imagenes/Encabezado MAESRA.png"
+        await cargarImagenOptimizada(
+            "imagenes/Encabezado MAESRA.png", 1400
         );
 
 	}
