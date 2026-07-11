@@ -53,7 +53,7 @@ const PDFLayout = {
 
 	    encabezadoBase64 =
         await cargarImagenOptimizada(
-            "imagenes/Encabezado-MAESRA.png", 1400
+            "img/Encabezado-MAESRA.png", 1400
         );
 
 	}
