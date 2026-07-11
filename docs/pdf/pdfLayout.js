@@ -168,7 +168,7 @@ const PDFLayout = {
 
                 this.pageW,
 
-                18
+                17
 
             );
 
