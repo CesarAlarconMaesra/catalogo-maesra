@@ -525,7 +525,7 @@ function enviarWhatsApp(){
 
   msg += `💰 TOTAL: $${total.toFixed(2)}`;
 
-  window.open(`https://wa.me/5216565292879?text=${msg}`);
+  window.open(`https://wa.me/5216561500410?text=${msg}`);
 }
 
 // ===============================
