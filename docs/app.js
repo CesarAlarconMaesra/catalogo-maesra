@@ -316,6 +316,21 @@ function guardarCarrito() {
   calcularTotalCarrito();
 }
 
+/* ===============================
+VACIAR CARRITO
+=============================== */
+
+function vaciarCarrito() {
+
+  if (carrito.length === 0) return;
+
+  if (confirm("¿Deseas vaciar el carrito?")) {
+    carrito.length = 0;
+    guardarCarrito();
+  }
+
+}
+
 function actualizarContadorCarrito() {
   const contador = document.getElementById("contadorCarrito");
   if (!contador) return;
