@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (p.producto && p.producto.toLowerCase().includes(texto)) ||
         (p.codigo && p.codigo.toLowerCase().includes(texto)) ||
         (p.marca && p.marca.toLowerCase().includes(texto))
+	(p.familia || "").toLowerCase().includes(texto)
       );
 
       mostrarProductos(filtrados);
