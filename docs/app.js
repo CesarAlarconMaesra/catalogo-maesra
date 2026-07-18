@@ -26,25 +26,46 @@ document.addEventListener("DOMContentLoaded", () => {
   calcularTotalCarrito();
   cargarProductos();
 
-  /* ===== BUSCADOR ===== */
+ /* ===== BUSCADOR ===== */
 
-  const buscador = document.getElementById("buscador");
+const buscador = document.getElementById("buscador");
 
-  if (buscador) {
+if (buscador) {
+
     buscador.addEventListener("input", e => {
 
-      const texto = e.target.value.toLowerCase();
+        const texto = e.target.value
+            .trim()
+            .toLowerCase();
 
-      const filtrados = productos.filter(p =>
-        (p.producto && p.producto.toLowerCase().includes(texto)) ||
-        (p.codigo && p.codigo.toLowerCase().includes(texto)) ||
-        (p.marca && p.marca.toLowerCase().includes(texto))
-	(p.familia || "").toLowerCase().includes(texto)
-      );
+        const filtrados = productos.filter(p => {
 
-      mostrarProductos(filtrados);
+            return [
+
+                p.codigo,
+                p.producto,
+                p.marca,
+                p.familia,
+                p.unidad,
+                p.master,
+                p.inner
+
+            ].some(valor =>
+
+                (valor ?? "")
+                    .toString()
+                    .toLowerCase()
+                    .includes(texto)
+
+            );
+
+        });
+
+        mostrarProductos(filtrados);
+
     });
-  }
+
+}
 
   /* ===== MODAL PASSWORD ===== */
 
